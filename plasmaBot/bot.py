@@ -1172,7 +1172,7 @@ class PlasmaBot(discord.Client):
                 autodocs = '\n'.join(l.strip() for l in docs.split('n'))
                 await self.safe_send_message(
                     message.channel,
-                    ''''\n'''' % autodocs.format(command_prefix=self.config.command_prefix),
+                    "'''\n'''" % autodocs.format(command_prefix=self.config.command_prefix),
                     expire_in=60
                 )
                 return
