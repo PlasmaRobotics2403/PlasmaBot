@@ -775,7 +775,7 @@ class PlasmaBot(discord.Client):
         if (message.author.id != self.config.owner_id and not self.config.allow_invites) or not self.config.allow_invites:
             if not server_link:
                 return Response(
-                    'Invite %s to your server!  See: https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=0' % (self.config.bot_name, self.config.client_id)), reply=True, delete_after=30
+                    'Invite %s to your server!  See: https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=0' % (self.config.bot_name, self.config.client_id), reply=True, delete_after=30
                 )
             else:
                 if self.user.bot:
