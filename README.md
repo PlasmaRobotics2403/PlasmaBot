@@ -1,6 +1,6 @@
-# RhinoBot: The music bot for Discord.
+# PlasmaBot: A Superior Discord Bot.
 
-MusicBot is a Discord music bot written in [Python](https://www.python.org "Python homepage"). It plays requested songs and if the queue becomes empty it will play through a list of existing songs.
+PlasmaBot is a Discord music bot written in [Python](https://www.python.org "Python homepage"). It plays requested songs and if the queue becomes empty it will play through a list of existing songs.
 
 ### How do I set it up?
 
@@ -12,6 +12,7 @@ MusicBot is a Discord music bot written in [Python](https://www.python.org "Pyth
 ### Commands
 
 Commands are listed [here](https://github.com/SexualRhinoceros/MusicBot/wiki/Commands-list "Commands list").
+New Commands are Constantly Being Added.
 
 ### Configuration
 
@@ -22,7 +23,7 @@ Download the bot, set the dependencies up, then run `runbot.bat`! (or `run.sh` o
 
 If you have any errors, read the FAQ. If that didn't help, you can ask for assistance on the discord help server. Is is recommended to take screenshots so the developers can see errors.
 
-[Rhino Help Server](http://discord.me/rhinohelp "Discord link")
+[Development / Help Server](https://discord.gg/011Vbr8fyWLZrMG7s "Discord link")
 
 ### FAQ
 
