@@ -739,7 +739,7 @@ class PlasmaBot(discord.Client):
             commands = []
 
             for att in dir(self):
-                if att.startswith('cmd_') and (att != 'cmd_help' or att != 'cmd_auto':
+                if att.startswith('cmd_') and (att != 'cmd_help' or att != 'cmd_auto'):
                     command_name = att.replace('cmd_', '').lower()
                     commands.append("{}{}".format(self.config.command_prefix, command_name))
 
