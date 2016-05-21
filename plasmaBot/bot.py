@@ -1098,7 +1098,7 @@ class PlasmaBot(discord.Client):
         else:
             return
         
-        autoHandler = "auto_%s" % autocmd
+        autoHandler = "auto_%s" % autocmd.lower()
         
         autoargspec = inspect.signature(autoHandler)
         autoparams = argspec.parameters.copy()
