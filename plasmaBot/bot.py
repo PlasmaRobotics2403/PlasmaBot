@@ -767,16 +767,15 @@ class PlasmaBot(discord.Client):
     async def cmd_invite(self, message, server_link):
         """
         Usage:
-        >joinserver invite_link
+        >invite (invite_link if not bot account)
             
-        Asks the bot to join a server.  Note: Bot accounts cannot use invite links.
+        Asks the bot to join a server.  Invite Link only needed if bot is not a "BOT"
         """
         
         if (message.author.id != self.config.owner_id and not self.config.allow_invites) or not self.config.allow_invites:
             if not server_link:
                 return Response(
-                    'Invite %s to your server!  See: https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=0' % (self.config.bot_name, self.config.client_id)),
-                    reply=True, delete_after=30
+                    'Invite %s to your server!  See: https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=0' % (self.config.bot_name, self.config.client_id)),reply=True, delete_after=30
                 )
             else:
                 if self.user.bot:
