@@ -1208,8 +1208,7 @@ class PlasmaBot(discord.Client):
         except Exception:
             traceback.print_exc()
             if self.config.debug_mode:
-            await self.safe_send_message(message.channel, "```\n%s\n```" % traceback.format_exc())
-            raise
+                await self.safe_send_message(message.channel, "```\n%s\n```" % traceback.format_exc())
         # End of AutoReply Processor (YAY)
         
     async def auto_watergame(self, message):
