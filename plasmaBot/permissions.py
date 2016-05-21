@@ -10,6 +10,10 @@ class PermissionsDefaults:
 
     CommandWhiteList = set()
     CommandBlackList = set()
+    
+    AutoWhiteList = set()
+    AutoBlackList = set()
+    
     IgnoreNonVoice = set()
     GrantToRoles = set()
     UserList = set()
@@ -91,6 +95,8 @@ class PermissionGroup:
 
         self.command_whitelist = section_data.get('CommandWhiteList', fallback=PermissionsDefaults.CommandWhiteList)
         self.command_blacklist = section_data.get('CommandBlackList', fallback=PermissionsDefaults.CommandBlackList)
+        self.auto_whitelist = section_data.get('AutoWhiteList', fallback=PermissionsDefaults.AutoWhiteList)
+        self.auto_blacklist = section_data.get('AutoBlackList', fallback=PermissionsDefaults.AutoBlackList)
         self.ignore_non_voice = section_data.get('IgnoreNonVoice', fallback=PermissionsDefaults.IgnoreNonVoice)
         self.granted_to_roles = section_data.get('GrantToRoles', fallback=PermissionsDefaults.GrantToRoles)
         self.user_list = section_data.get('UserList', fallback=PermissionsDefaults.UserList)
@@ -110,6 +116,12 @@ class PermissionGroup:
 
         if self.command_blacklist:
             self.command_blacklist = set(self.command_blacklist.lower().split())
+        
+        if self.auto_whitelist:
+            self.auto_whitelist = set(self.auto_whitelist.lower().split())
+                        
+        if self.auto_blacklist:
+            self.auto_blacklist = set(self.auto_blacklist.lower().split())
 
         if self.ignore_non_voice:
             self.ignore_non_voice = set(self.ignore_non_voice.lower().split())
