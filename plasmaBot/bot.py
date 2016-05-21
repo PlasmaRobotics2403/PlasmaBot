@@ -1188,29 +1188,40 @@ class PlasmaBot(discord.Client):
                     message.channel, content,
                     expire_in = response.delete_after if self.config.delete_messages else 0,
                     also_delete=message if self.config.delete_invoking else None
-            
-            except (exceptions.CommandError, exceptions.HelpfulError, exceptions.ExtractionError) as e:
-                print("{0.__class__}: {0.message}".format(e))
-                
-                expirein = e.expire_in if self.config.delete_messages else None
-                alsodelete = message if self.config.delete_invoking else None
-                                                       
-                await self.safe_send_message(
-                    message.channel,
-                    '```\n%s\n```' % e.message,
-                    expire_in=expirein,
-                    also_delete=alsodelete
                 )
+            
+        except (exceptions.CommandError, exceptions.HelpfulError, exceptions.ExtractionError) as e:
+            print("{0.__class__}: {0.message}".format(e))
+                
+            expirein = e.expire_in if self.config.delete_messages else None
+            alsodelete = message if self.config.delete_invoking else None
+                                                       
+            await self.safe_send_message(
+                message.channel,
+                '```\n%s\n```' % e.message,
+                expire_in=expirein,
+                also_delete=alsodelete
+            )
                                     
-            except exceptions.Signal:
-                raise
+        except exceptions.Signal:
+            raise
                                             
-            except Exception:
-                traceback.print_exc()
-                if self.config.debug_mode:
-                await self.safe_send_message(message.channel, '```\n%s\n```' % traceback.format_exc())
+        except Exception:
+            traceback.print_exc()
+            if self.config.debug_mode:
+            await self.safe_send_message(message.channel, '```\n%s\n```' % traceback.format_exc())
         # End of AutoReply Processor (YAY)
-                                             
+        
+    async def auto_watergame(self, message):
+        """
+        Usage:
+            watergame
+            
+        Confirmed!
+        """
+    
+        return Response('Confirmed!', reply=True, delete_after=30)
+    
     # Music Module Commands
 
     async def cmd_play(self, player, channel, author, permissions, leftover_args, song_url):
