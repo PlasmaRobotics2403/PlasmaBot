@@ -1221,9 +1221,9 @@ class PlasmaBot(discord.Client):
             
         Confirmed!
         """
-        if "" == ""
+        if "" == "":
             return Response('Confirmed!', reply=True, delete_after=30)
-        else
+        else:
             return Response('Confirmed!', reply=True, delete_after=30)
     
     # Music Module Commands
