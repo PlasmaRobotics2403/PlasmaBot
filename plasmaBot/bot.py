@@ -771,13 +771,15 @@ class PlasmaBot(discord.Client):
             
         Asks the bot to join a server.  Invite Link only needed if bot is not a "BOT"
         """
+        
+        inviteURL = ""
+        
         if leftover_args:
-            inviteURL = ""
             for a in inviteURL:
                 inviteURL = inviteURL + a + " "
         
         if self.config.allow_invites or message.author.id == self.config.owner_id:
-            if not inviteURL:
+            if inviteURL == "":
                 return Response(
                     'Invite %s to your server!  See: https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=0' % (self.config.bot_name, self.config.client_id), reply=True, delete_after=30
                 )
