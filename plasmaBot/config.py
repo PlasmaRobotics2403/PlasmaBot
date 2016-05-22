@@ -73,7 +73,7 @@ class Config:
         self.autojoin_channels =  config.get('BotConfiguration', 'AutojoinChannels', fallback=ConfigDefaults.autojoin_channels)
         self.delete_messages  = config.getboolean('BotConfiguration', 'DeleteMessages', fallback=ConfigDefaults.delete_messages)
         self.delete_invoking = config.getboolean('BotConfiguration', 'DeleteInvoking', fallback=ConfigDefaults.delete_invoking)
-        self.allow_invites = config.getboolean('BotConfiguration', 'AllowInvites', fallback=ConfigDefaults.delete_invoking)
+        self.allow_invites = config.getboolean('BotConfiguration', 'AllowInvites', fallback=ConfigDefaults.allow_invites)
         
         self.blacklist_file = config.get('Files', 'BlacklistFile', fallback=ConfigDefaults.blacklist_file)
         self.auto_playlist_file = config.get('Files', 'AutoPlaylistFile', fallback=ConfigDefaults.auto_playlist_file)
@@ -187,6 +187,7 @@ class ConfigDefaults:
     bound_channels = set()
     autojoin_channels = set()
     delete_messages = True
+    allow_invites = True
 
     default_volume = 0.15
     skips_required = 4
