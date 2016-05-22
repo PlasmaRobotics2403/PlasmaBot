@@ -764,29 +764,30 @@ class PlasmaBot(discord.Client):
             return Response("%s's id is `%s`" % (usr.name, usr.id), reply=True, delete_after=35)
 
 
-    async def cmd_invite(self, message, server_link):
+    async def cmd_invite(self, message, leftover_args):
         """
         Usage:
         >invite (invite_link if not bot account)
             
         Asks the bot to join a server.  Invite Link only needed if bot is not a "BOT"
         """
+        if leftover_args:
+            inviteURL = ""
+            for a in inviteURL:
+                inviteURL = inviteURL + a + " "
         
         if self.config.allow_invites or message.author.id == self.config.owner_id:
-            if not server_link:
+            if not inviteURL:
                 return Response(
                     'Invite %s to your server!  See: https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=0' % (self.config.bot_name, self.config.client_id), reply=True, delete_after=30
                 )
             else:
                 if self.user.bot:
                     return Response(
-                        "Bot accounts can't use invite links!  See: "
-                        "https://discordapp.com/developers/docs/topics/oauth2#adding-bots-to-guilds",
-                        reply=True, delete_after=30
-                    )
-        
+                        'Invite %s to your server!  See: https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=0' % (self.config.bot_name, self.config.client_id), reply=True, delete_after=30
+                        )
                 try:
-                    await self.accept_invite(server_link)
+                    await self.accept_invite(inviteURL)
                     return Response(":+1:")
         
                 except:
