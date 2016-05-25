@@ -1847,10 +1847,11 @@ class PlasmaBot(discord.Client):
             if self.config.bound_channels and message.channel.id not in self.config.bound_channels and not message.channel.is_private:
                 return
 
-            command = 'auto'
-            
-            args = message_content.split( )
-            handler = getattr(self, 'cmd_auto', None)
+            amessage = "message"
+            areply = false
+            adelete_after = 60
+
+            response = Response(message, reply = areply, delete_message = adelete_after )
 
         else:
             if message.author == self.user:
@@ -1867,102 +1868,104 @@ class PlasmaBot(discord.Client):
             if not handler:
                 return
 
-        if message.channel.is_private:
-            if not (message.author.id == self.config.owner_id and command == 'joinserver'):
-                await self.send_message(message.channel, 'You cannot use PlasmaBot in a private message.')
+            if message.channel.is_private:
+                if not (message.author.id == self.config.owner_id and command == 'joinserver'):
+                    await self.send_message(message.channel, 'You cannot use PlasmaBot in a private message.')
+                    return
+
+            if message.author.id in self.blacklist and message.author.id != self.config.owner_id:
+                self.safe_print("[User blacklisted] {0.id}/{0.name} ({1})".format(message.author, message_content))
                 return
 
-        if message.author.id in self.blacklist and message.author.id != self.config.owner_id:
-            self.safe_print("[User blacklisted] {0.id}/{0.name} ({1})".format(message.author, message_content))
-            return
+            else:
+                self.safe_print("[Command] {0.id}/{0.name} ({1})".format(message.author, message_content))
 
-        else:
-            self.safe_print("[Command] {0.id}/{0.name} ({1})".format(message.author, message_content))
+            user_permissions = self.permissions.for_user(message.author)
 
-        user_permissions = self.permissions.for_user(message.author)
+            argspec = inspect.signature(handler)
+            params = argspec.parameters.copy()
 
-        argspec = inspect.signature(handler)
-        params = argspec.parameters.copy()
+            # noinspection PyBroadException
+            try:
+                if user_permissions.ignore_non_voice and command in user_permissions.ignore_non_voice:
+                    await self._check_ignore_non_voice(message)
 
-        # noinspection PyBroadException
-        try:
-            if user_permissions.ignore_non_voice and command in user_permissions.ignore_non_voice:
-                await self._check_ignore_non_voice(message)
+                handler_kwargs = {}
+                if params.pop('message', None):
+                    handler_kwargs['message'] = message
 
-            handler_kwargs = {}
-            if params.pop('message', None):
-                handler_kwargs['message'] = message
+                if params.pop('channel', None):
+                    handler_kwargs['channel'] = message.channel
 
-            if params.pop('channel', None):
-                handler_kwargs['channel'] = message.channel
+                if params.pop('author', None):
+                    handler_kwargs['author'] = message.author
 
-            if params.pop('author', None):
-                handler_kwargs['author'] = message.author
+                if params.pop('server', None):
+                    handler_kwargs['server'] = message.server
 
-            if params.pop('server', None):
-                handler_kwargs['server'] = message.server
+                if params.pop('player', None):
+                    handler_kwargs['player'] = await self.get_player(message.channel)
 
-            if params.pop('player', None):
-                handler_kwargs['player'] = await self.get_player(message.channel)
+                if params.pop('permissions', None):
+                    handler_kwargs['permissions'] = user_permissions
 
-            if params.pop('permissions', None):
-                handler_kwargs['permissions'] = user_permissions
+                if params.pop('user_mentions', None):
+                    handler_kwargs['user_mentions'] = list(map(message.server.get_member, message.raw_mentions))
 
-            if params.pop('user_mentions', None):
-                handler_kwargs['user_mentions'] = list(map(message.server.get_member, message.raw_mentions))
+                if params.pop('channel_mentions', None):
+                    handler_kwargs['channel_mentions'] = list(map(message.server.get_channel, message.raw_channel_mentions))
 
-            if params.pop('channel_mentions', None):
-                handler_kwargs['channel_mentions'] = list(map(message.server.get_channel, message.raw_channel_mentions))
+                if params.pop('voice_channel', None):
+                    handler_kwargs['voice_channel'] = message.server.me.voice_channel
 
-            if params.pop('voice_channel', None):
-                handler_kwargs['voice_channel'] = message.server.me.voice_channel
+                if params.pop('leftover_args', None):
+                    handler_kwargs['leftover_args'] = args
 
-            if params.pop('leftover_args', None):
-                handler_kwargs['leftover_args'] = args
+                args_expected = []
+                for key, param in list(params.items()):
+                    doc_key = '[%s=%s]' % (key, param.default) if param.default is not inspect.Parameter.empty else key
+                    args_expected.append(doc_key)
 
-            args_expected = []
-            for key, param in list(params.items()):
-                doc_key = '[%s=%s]' % (key, param.default) if param.default is not inspect.Parameter.empty else key
-                args_expected.append(doc_key)
+                    if not args and param.default is not inspect.Parameter.empty:
+                        params.pop(key)
+                        continue
 
-                if not args and param.default is not inspect.Parameter.empty:
-                    params.pop(key)
-                    continue
+                    if args:
+                        arg_value = args.pop(0)
+                        handler_kwargs[key] = arg_value
+                        params.pop(key)
 
-                if args:
-                    arg_value = args.pop(0)
-                    handler_kwargs[key] = arg_value
-                    params.pop(key)
+                if message.author.id != self.config.owner_id:
+                    if user_permissions.command_whitelist and command not in user_permissions.command_whitelist:
+                        raise exceptions.PermissionsError(
+                            "This command is not enabled for your group (%s)." % user_permissions.name,
+                            expire_in=20)
 
-            if message.author.id != self.config.owner_id:
-                if user_permissions.command_whitelist and command not in user_permissions.command_whitelist:
-                    raise exceptions.PermissionsError(
-                        "This command is not enabled for your group (%s)." % user_permissions.name,
-                        expire_in=20)
+                    elif user_permissions.command_blacklist and command in user_permissions.command_blacklist:
+                        raise exceptions.PermissionsError(
+                            "This command is disabled for your group (%s)." % user_permissions.name,
+                            expire_in=20)
 
-                elif user_permissions.command_blacklist and command in user_permissions.command_blacklist:
-                    raise exceptions.PermissionsError(
-                        "This command is disabled for your group (%s)." % user_permissions.name,
-                        expire_in=20)
+                if params:
+                    docs = getattr(handler, '__doc__', None)
+                    if not docs:
+                        docs = 'Usage: {}{} {}'.format(
+                            self.config.command_prefix,
+                            command,
+                            ' '.join(args_expected)
+                        )
 
-            if params:
-                docs = getattr(handler, '__doc__', None)
-                if not docs:
-                    docs = 'Usage: {}{} {}'.format(
-                        self.config.command_prefix,
-                        command,
-                        ' '.join(args_expected)
+                    docs = '\n'.join(l.strip() for l in docs.split('\n'))
+                    await self.safe_send_message(
+                        message.channel,
+                        '```\n%s\n```' % docs.format(command_prefix=self.config.command_prefix),
+                        expire_in=60
                     )
+                    return
 
-                docs = '\n'.join(l.strip() for l in docs.split('\n'))
-                await self.safe_send_message(
-                    message.channel,
-                    '```\n%s\n```' % docs.format(command_prefix=self.config.command_prefix),
-                    expire_in=60
-                )
-                return
+                response = await handler(**handler_kwargs)
 
-            response = await handler(**handler_kwargs)
+        try:
             if response and isinstance(response, Response):
                 content = response.content
                 if response.reply:
