@@ -1990,7 +1990,9 @@ class PlasmaBot(discord.Client):
                     await self.safe_send_message(message.channel, '```\n%s\n```' % traceback.format_exc())
 
         try:
+            print("test")
             if response and isinstance(response, Response):
+                print("test2")
                 content = response.content
                 if response.reply:
                     content = '%s, %s' % (message.author.mention, content)
