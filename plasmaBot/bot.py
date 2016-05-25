@@ -1989,7 +1989,7 @@ class PlasmaBot(discord.Client):
                 if self.config.debug_mode:
                     await self.safe_send_message(message.channel, '```\n%s\n```' % traceback.format_exc())
 
-        if cmdready:
+        try:
             if response and isinstance(response, Response):
                 content = response.content
                 if response.reply:
@@ -2000,6 +2000,27 @@ class PlasmaBot(discord.Client):
                     expire_in=response.delete_after if self.config.delete_messages else 0,
                     also_delete=message if self.config.delete_invoking else None
                 )
+
+        except (exceptions.CommandError, exceptions.HelpfulError, exceptions.ExtractionError) as e:
+            print("{0.__class__}: {0.message}".format(e))
+
+            expirein = e.expire_in if self.config.delete_messages else None
+            alsodelete = message if self.config.delete_invoking else None
+
+            await self.safe_send_message(
+                message.channel,
+                '```\n%s\n```' % e.message,
+                expire_in=expirein,
+                also_delete=alsodelete
+            )
+ 
+        except exceptions.Signal:
+            raise
+
+        except Exception:
+            traceback.print_exc()
+            if self.config.debug_mode:
+                await self.safe_send_message(message.channel, '```\n%s\n```' % traceback.format_exc())
 
     async def on_voice_state_update(self, before, after):
         if not all([before, after]):
