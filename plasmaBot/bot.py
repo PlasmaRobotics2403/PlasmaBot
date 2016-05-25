@@ -1853,6 +1853,8 @@ class PlasmaBot(discord.Client):
 
             response = Response(message, reply = areply, delete_message = adelete_after )
 
+            cmdready = true
+
         else:
             if message.author == self.user:
                 self.safe_print("Ignoring command from myself (%s)" % message.content)
@@ -1964,8 +1966,9 @@ class PlasmaBot(discord.Client):
                     return
 
                 response = await handler(**handler_kwargs)
+                cmdready = true
 
-        try:
+        if cmdready:
             if response and isinstance(response, Response):
                 content = response.content
                 if response.reply:
