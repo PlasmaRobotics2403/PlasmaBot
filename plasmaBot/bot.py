@@ -1853,7 +1853,7 @@ class PlasmaBot(discord.Client):
 
             response = Response(message, reply = areply, delete_message = adelete_after )
 
-            cmdready = true
+            print("ting")
 
         else:
             if message.author == self.user:
@@ -1966,7 +1966,6 @@ class PlasmaBot(discord.Client):
                     return
 
                 response = await handler(**handler_kwargs)
-                cmdready = true
 
             except (exceptions.CommandError, exceptions.HelpfulError, exceptions.ExtractionError) as e:
                 print("{0.__class__}: {0.message}".format(e))
