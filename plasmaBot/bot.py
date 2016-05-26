@@ -1854,7 +1854,7 @@ class PlasmaBot(discord.Client):
             print("ting-3")
 
             auto_content = "message"
-            auto_reply = False
+            auto_reply = True
             auto_delete_after = 60
 
             if auto_reply:
