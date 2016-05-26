@@ -1854,7 +1854,7 @@ class PlasmaBot(discord.Client):
             print("ting-3")
 
             amessage = "message"
-            areply = false
+            areply = False
             adelete_after = 60
 
             response = Response(message, reply = areply, delete_message = adelete_after )
