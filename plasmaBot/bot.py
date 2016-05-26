@@ -1853,13 +1853,45 @@ class PlasmaBot(discord.Client):
 
             print("ting-3")
 
-            amessage = "message"
-            areply = False
-            adelete_after = 60
+            auto_content = "message"
+            auto_reply = False
+            auto_delete_after = 60
 
-            response = Response(message, reply = areply, delete_message = adelete_after )
+            if auto_reply:
+                auto_message = '%s, %s' % (message.author.mention, auto_content)
+
+            else:
+                auto_message = auto_content
 
             print("ting")
+
+            try:
+                sentmsg = await self.safe_send_message(
+                    message.channel, auto_message,
+                    expire_in=auto_delete_after if self.config.delete_messages else 0,
+                    also_delete=message if self.config.delete_invoking else None
+                )
+
+            except (exceptions.CommandError, exceptions.HelpfulError, exceptions.ExtractionError) as e:
+                print("{0.__class__}: {0.message}".format(e))
+
+                expirein = e.expire_in if self.config.delete_messages else None
+                alsodelete = message if self.config.delete_invoking else None
+
+                await self.safe_send_message(
+                    message.channel,
+                    '```\n%s\n```' % e.message,
+                    expire_in=expirein,
+                    also_delete=alsodelete
+                )
+     
+            except exceptions.Signal:
+                raise
+
+            except Exception:
+                traceback.print_exc()
+                if self.config.debug_mode:
+                    await self.safe_send_message(message.channel, '```\n%s\n```' % traceback.format_exc())
 
         else:
             if message.author == self.user:
@@ -1973,6 +2005,19 @@ class PlasmaBot(discord.Client):
 
                 response = await handler(**handler_kwargs)
 
+                print("test")
+                if response and isinstance(response, Response):
+                    print("test2")
+                    content = response.content
+                    if response.reply:
+                        content = '%s, %s' % (message.author.mention, content)
+
+                    sentmsg = await self.safe_send_message(
+                        message.channel, content,
+                        expire_in=response.delete_after if self.config.delete_messages else 0,
+                        also_delete=message if self.config.delete_invoking else None
+                    )
+
             except (exceptions.CommandError, exceptions.HelpfulError, exceptions.ExtractionError) as e:
                 print("{0.__class__}: {0.message}".format(e))
 
@@ -1993,41 +2038,6 @@ class PlasmaBot(discord.Client):
                 traceback.print_exc()
                 if self.config.debug_mode:
                     await self.safe_send_message(message.channel, '```\n%s\n```' % traceback.format_exc())
-
-        try:
-            print("test")
-            if response and isinstance(response, Response):
-                print("test2")
-                content = response.content
-                if response.reply:
-                    content = '%s, %s' % (message.author.mention, content)
-
-                sentmsg = await self.safe_send_message(
-                    message.channel, content,
-                    expire_in=response.delete_after if self.config.delete_messages else 0,
-                    also_delete=message if self.config.delete_invoking else None
-                )
-
-        except (exceptions.CommandError, exceptions.HelpfulError, exceptions.ExtractionError) as e:
-            print("{0.__class__}: {0.message}".format(e))
-
-            expirein = e.expire_in if self.config.delete_messages else None
-            alsodelete = message if self.config.delete_invoking else None
-
-            await self.safe_send_message(
-                message.channel,
-                '```\n%s\n```' % e.message,
-                expire_in=expirein,
-                also_delete=alsodelete
-            )
- 
-        except exceptions.Signal:
-            raise
-
-        except Exception:
-            traceback.print_exc()
-            if self.config.debug_mode:
-                await self.safe_send_message(message.channel, '```\n%s\n```' % traceback.format_exc())
 
     async def on_voice_state_update(self, before, after):
         if not all([before, after]):
