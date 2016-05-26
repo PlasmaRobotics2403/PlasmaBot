@@ -1840,12 +1840,18 @@ class PlasmaBot(discord.Client):
         message_content = message.content.strip()
         if not message_content.startswith(self.config.command_prefix):
 
+            print("ting-1")
+
             if message.author == self.user:
                 self.safe_print("Ignoring command from myself (%s)" % message.content)
                 return
 
+            print("ting-2")
+
             if self.config.bound_channels and message.channel.id not in self.config.bound_channels and not message.channel.is_private:
                 return
+
+            print("ting-3")
 
             amessage = "message"
             areply = false
