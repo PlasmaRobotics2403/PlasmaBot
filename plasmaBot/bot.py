@@ -8,6 +8,7 @@ import aiohttp
 import discord
 import asyncio
 import traceback
+import sqlite3
 
 from discord import utils
 from discord.object import Object
@@ -26,6 +27,7 @@ from plasmaBot.player import MusicPlayer
 from plasmaBot.config import Config, ConfigDefaults
 from plasmaBot.permissions import Permissions, PermissionsDefaults
 from plasmaBot.utils import load_file, write_file, sane_round_int
+from plasmaBot.database import PRDatabase
 
 from . import exceptions
 from . import downloader
