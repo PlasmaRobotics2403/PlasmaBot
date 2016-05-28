@@ -18,14 +18,10 @@ class PRDatabase:
     
 
     def tableDoesExist(self, objname):
-        self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='{name}';".format(name = objname))
+        self.cursor.execute(""" SELECT COUNT(*) FROM sqlite_master WHERE name = ?  """, (tablename, ))
         testCount = self.cursor.fetchone()
     
-        if testCount == 1:
-            return True
-
-        else:
-            return False
+        return bool(testCount[0])
 
     def __del__(self):
         self.connection.close()
