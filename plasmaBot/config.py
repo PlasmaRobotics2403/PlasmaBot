@@ -77,7 +77,7 @@ class Config:
         
         self.blacklist_file = config.get('Files', 'BlacklistFile', fallback=ConfigDefaults.blacklist_file)
         self.auto_playlist_file = config.get('Files', 'AutoPlaylistFile', fallback=ConfigDefaults.auto_playlist_file)
-        self.autoreply_file = config.get('Files', 'AutoReplyFile', fallback=ConfigDefaults.auto_playlist_file)
+        self.autoreply_file = config.get('Files', 'AutoReplyFile', fallback=ConfigDefaults.auto_reply_file)
 
         self.default_volume = config.getfloat('MusicModule', 'DefaultVolume', fallback=ConfigDefaults.default_volume)
         self.skips_required = config.getint('MusicModule', 'SkipsRequired', fallback=ConfigDefaults.skips_required)
@@ -204,6 +204,7 @@ class ConfigDefaults:
     options_file = 'config/options.ini'
     blacklist_file = 'config/blacklist.txt'
     auto_playlist_file = 'config/autoplaylist.txt'
+    auto_reply_file = 'data/autoreply.db'
 
 # These two are going to be wrappers for the id lists, with add/remove/load/save functions
 # and id/object conversion so types aren't an issue

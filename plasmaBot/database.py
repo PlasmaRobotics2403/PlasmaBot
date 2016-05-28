@@ -36,8 +36,8 @@ class AutoReplyDatabase:
         self.cur = self.db.cursor
 
         if not self.db.doesExist("table","DEFAULT"):
-            self.cur.execute("CREATE TABLE DEFAULT(HANDLER TEXT PRIMARY KEY NOT NULL, RESPONSE TEXT NOT NULL, REPLY INT NOT NULL, DELETE INT NOT NULL, DELETETIME INT)")
-            self.cur.execute("INSERT INTO DEFAULT VALUES('PlasmaBotTestAutoReply', 'Autoreplies are correctly enabled', 1, 1, 20)")
+            self.cur.execute("CREATE TABLE DEFAULT ( HANDLER TEXT PRIMARY KEY NOT NULL, RESPONSE TEXT NOT NULL, REPLY INT NOT NULL, DELETE INT NOT NULL, DELETETIME INT )")
+            self.cur.execute("INSERT INTO DEFAULT VALUES ( 'PlasmaBotTestAutoReply', 'Autoreplies are correctly enabled', 1, 1, 20 )")
             self.conn.commit()
 
     def findResponse(self, objtable, objhandler):
@@ -75,7 +75,7 @@ class AutoReplyDatabase:
             
     def addAutoReply(self, server, handler, response, reply, delete, delete_time):
         if not self.db.doesExist("table", "S{serverID}".format(serverID = server)):
-            self.cur.execute("CREATE TABLE S{serverID}(HANDLER TEXT PRIMARY KEY NOT NULL, RESPONSE TEXT NOT NULL, REPLY INT NOT NULL, DELETE INT NOT NULL, DELETETIME INT)".format(serverID = server))
+            self.cur.execute("CREATE TABLE S{serverID} ( HANDLER TEXT PRIMARY KEY NOT NULL, RESPONSE TEXT NOT NULL, REPLY INT NOT NULL, DELETE INT NOT NULL, DELETETIME INT )".format(serverID = server))
         
         self.cur.execute("SELECT RESPONSE FROM S{serverID} WHERE HANDLER = {autoHandler}".format(serverID = server, autoHandler = handler))
         
@@ -96,7 +96,7 @@ class AutoReplyDatabase:
             else:
                 deleteINT = 0
     
-            self.cur.execute("INSERT INTO S{serverID} VALUES({autoHandler}, {autoResponse, {autoReplyINT}, {autoDeleteINT}, {autoDeleteTime})".format(autoHandler = handler, autoResponse = autoResponse, autoReplyINT = replyINT, autoDeleteINT = deleteINT, autoDeleteTime = delete_time))
+            self.cur.execute("INSERT INTO S{serverID} VALUES ({autoHandler}, {autoResponse, {autoReplyINT}, {autoDeleteINT}, {autoDeleteTime} )".format(autoHandler = handler, autoResponse = autoResponse, autoReplyINT = replyINT, autoDeleteINT = deleteINT, autoDeleteTime = delete_time))
                 
             status = True
             autoResponse = response
