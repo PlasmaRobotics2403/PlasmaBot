@@ -17,14 +17,15 @@ class PRDatabase:
         return self.cur
     
 
-    def doesExist(self, objtype, objname):
-        tqcount = self.cursor.execute("SELECT name FROM sqlite_master WHERE type='{type}' AND name='{name}';"\
-            .format(type = objtype, name = objname))
+    def tableDoesExist(self, objname):
+        self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='{name}';".format(name = objname))
+        testCount = self.cursor.fetchone()
     
-        if tqcount == 1:
+        if testCount == 1:
             return True
 
-        return False
+        else:
+            return False
 
     def __del__(self):
         self.connection.close()
@@ -35,13 +36,13 @@ class AutoReplyDatabase:
         self.conn = self.db.connection
         self.cur = self.db.cursor
 
-        if not self.db.doesExist("table","GLOBAL"):
+        if not self.db.tableDoesExist("GLOBAL"):
             self.cur.execute("CREATE TABLE GLOBAL ( HANDLER TEXT PRIMARY KEY NOT NULL, RESPONSE TEXT NOT NULL, REPLYTF INT NOT NULL, DELETETF INT NOT NULL, DELETETIME INT );")
             self.cur.execute("INSERT INTO GLOBAL VALUES ( 'PlasmaBotTestAutoReply', 'Autoreplies are correctly enabled', 1, 1, 20 );")
             self.conn.commit()
 
     def findResponse(self, objtable, objhandler):
-        if not self.db.doesExist("table", "{tableID}".format(tableID = objtable)):
+        if not self.db.tableDoesExist("{tableID}".format(tableID = objtable)):
             autoArray = [1, None, None, None, None]
             return autoArray
         
@@ -74,7 +75,7 @@ class AutoReplyDatabase:
         return autoArray
             
     def addAutoReply(self, server, handler, response, reply, delete, delete_time):
-        if not self.db.doesExist("table", "S{serverID}".format(serverID = server)):
+        if not self.db.tableDoesExist("S{serverID}".format(serverID = server)):
             self.cur.execute("CREATE TABLE S{serverID} ( HANDLER TEXT PRIMARY KEY NOT NULL, RESPONSE TEXT NOT NULL, REPLYTF INT NOT NULL, DELETETF INT NOT NULL, DELETETIME INT )".format(serverID = server))
             self.conn.commit()
         
