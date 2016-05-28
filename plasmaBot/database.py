@@ -18,7 +18,7 @@ class PRDatabase:
     
 
     def tableDoesExist(self, objname):
-        self.cursor.execute(""" SELECT COUNT(*) FROM sqlite_master WHERE name = ?  """, (tablename, ))
+        self.cursor.execute(""" SELECT COUNT(*) FROM sqlite_master WHERE name = {name}  """.format(name = objname))
         testCount = self.cursor.fetchone()
     
         return bool(testCount[0])
