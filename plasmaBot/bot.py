@@ -1854,7 +1854,7 @@ class PlasmaBot(discord.Client):
             
             auto_handler = message.content.replace(' ', '-').lower()
             
-            autoG = self.auto.findResponse("DEFAULT", auto_handler)
+            autoG = self.auto.findResponse("GLOBAL", auto_handler)
             autoS = self.auto.findResponse("S{ServerID}".format(ServerID = message.channel.server.id), auto_handler)
             
             if not autoG[0] == 0:
