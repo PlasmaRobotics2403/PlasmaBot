@@ -36,7 +36,7 @@ class AutoReplyDatabase:
         self.cur = self.db.cursor
 
         if not self.db.doesExist("table","GLOBAL"):
-            self.cur.execute("CREATE TABLE GLOBAL ( HANDLER TEXT PRIMARY KEY NOT NULL, RESPONSE TEXT NOT NULL, REPLY INT NOT NULL, DELETE INT NOT NULL, DELETETIME INT );")
+            self.cur.execute("CREATE TABLE GLOBAL ( HANDLER TEXT PRIMARY KEY NOT NULL, RESPONSE TEXT NOT NULL, REPLYTF INT NOT NULL, DELETETF INT NOT NULL, DELETETIME INT );")
             self.cur.execute("INSERT INTO GLOBAL VALUES ( 'PlasmaBotTestAutoReply', 'Autoreplies are correctly enabled', 1, 1, 20 );")
             self.conn.commit()
 
@@ -75,7 +75,7 @@ class AutoReplyDatabase:
             
     def addAutoReply(self, server, handler, response, reply, delete, delete_time):
         if not self.db.doesExist("table", "S{serverID}".format(serverID = server)):
-            self.cur.execute("CREATE TABLE S{serverID} ( HANDLER TEXT PRIMARY KEY NOT NULL, RESPONSE TEXT NOT NULL, REPLY INT NOT NULL, DELETE INT NOT NULL, DELETETIME INT )".format(serverID = server))
+            self.cur.execute("CREATE TABLE S{serverID} ( HANDLER TEXT PRIMARY KEY NOT NULL, RESPONSE TEXT NOT NULL, REPLYTF INT NOT NULL, DELETETF INT NOT NULL, DELETETIME INT )".format(serverID = server))
             self.conn.commit()
         
         self.cur.execute("SELECT RESPONSE FROM S{serverID} WHERE HANDLER = {autoHandler};".format(serverID = server, autoHandler = handler))
