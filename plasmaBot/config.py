@@ -77,6 +77,7 @@ class Config:
         
         self.blacklist_file = config.get('Files', 'BlacklistFile', fallback=ConfigDefaults.blacklist_file)
         self.auto_playlist_file = config.get('Files', 'AutoPlaylistFile', fallback=ConfigDefaults.auto_playlist_file)
+        self.autoreply_file = config.get('Files', 'AutoReplyFile', fallback=ConfigDefaults.auto_playlist_file)
 
         self.default_volume = config.getfloat('MusicModule', 'DefaultVolume', fallback=ConfigDefaults.default_volume)
         self.skips_required = config.getint('MusicModule', 'SkipsRequired', fallback=ConfigDefaults.skips_required)

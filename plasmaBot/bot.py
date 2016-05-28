@@ -27,7 +27,7 @@ from plasmaBot.player import MusicPlayer
 from plasmaBot.config import Config, ConfigDefaults
 from plasmaBot.permissions import Permissions, PermissionsDefaults
 from plasmaBot.utils import load_file, write_file, sane_round_int
-from plasmaBot.database import PRDatabase
+from plasmaBot.database import PRDatabase, AutoReplyDatabase
 
 from . import exceptions
 from . import downloader
@@ -77,6 +77,7 @@ class PlasmaBot(discord.Client):
         self.aiosession = aiohttp.ClientSession(loop=self.loop)
 
         self.config = Config(config_file)
+        self.auto = AutoReplyDatabase(self.config.autoreply_file)
         self.permissions = Permissions(perms_file, grant_all=[self.config.owner_id])
         self.permissions = Permissions(perms_file, grant_all=[self.config.bug_test_id])
 
@@ -1842,22 +1843,33 @@ class PlasmaBot(discord.Client):
         message_content = message.content.strip()
         if not message_content.startswith(self.config.command_prefix):
 
-            print("ting-1")
-
             if message.author == self.user:
                 self.safe_print("Ignoring command from myself (%s)" % message.content)
                 return
 
-            print("ting-2")
-
             if self.config.bound_channels and message.channel.id not in self.config.bound_channels and not message.channel.is_private:
                 return
 
-            print("ting-3")
-
-            auto_content = message.content
-            auto_reply = True
-            auto_delete_after = 60
+            print("before content")
+            
+            auto_handler = message.content.replace(' ', '-').lower()
+            
+            autoG = self.auto.findResponse("DEFAULT", auto_handler)
+            autoS = self.auto.findResponse("S{ServerID}".format(ServerID = message.channel.server.id), auto_handler)
+            
+            if not autoG[0] == 0:
+                if not autoS[0] == 0:
+                    print("No Autoreply Found")
+                else:
+                    auto_content = autoS[1]
+                    auto_reply = autoS[2]
+                    auto_deleteq = autoS[3]
+                    auto_delete_after = autoS[4]
+            else:
+                auto_content = autoG[1]
+                auto_reply = autoG[2]
+                auto_deleteq = autoG[3]
+                auto_delete_after = autoS[4]
 
             if auto_reply:
                 auto_message = '%s, %s' % (message.author.mention, auto_content)
@@ -1865,14 +1877,15 @@ class PlasmaBot(discord.Client):
             else:
                 auto_message = auto_content
 
-            print("ting")
+            print("after content set")
 
             try:
                 sentmsg = await self.safe_send_message(
                     message.channel, auto_message,
                     expire_in=auto_delete_after if self.config.delete_messages else 0,
-                    also_delete=message if self.config.delete_invoking else None
+                    also_delete=message if self.config.delete_invoking and auto_deleteq else None
                 )
+                print("message sent")
 
             except (exceptions.CommandError, exceptions.HelpfulError, exceptions.ExtractionError) as e:
                 print("{0.__class__}: {0.message}".format(e))
@@ -1911,7 +1924,7 @@ class PlasmaBot(discord.Client):
                 return
 
             if message.channel.is_private:
-                if not (message.author.id == self.config.owner_id and command == 'joinserver'):
+                if not (message.author.id == self.config.owner_id and command == 'invite'):
                     await self.send_message(message.channel, 'You cannot use PlasmaBot in a private message.')
                     return
 
