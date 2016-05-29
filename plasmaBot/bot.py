@@ -1092,7 +1092,7 @@ class PlasmaBot(discord.Client):
         """
         
         if leftover_args:
-            messageToSend = "/tts "
+            messageToSend = "MESSAGE: "
             for a in leftover_args:
                 messageToSend = messageToSend + a + " "
             
