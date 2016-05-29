@@ -1092,15 +1092,17 @@ class PlasmaBot(discord.Client):
         """
         
         if leftover_args:
-            messageToSend = "MESSAGE: "
+            messageToSend = ""
             for a in leftover_args:
                 messageToSend = messageToSend + a + " "
             
+            messageToSend = messageToSend + " (" + discord.utils.find(lambda m: m.id == author.id, self.get_all_members()) + ")"
+
             await self.safe_send_message(
                 message.channel,
                 messageToSend,
                 tts = True,
-                expire_in=20 if self.config.delete_messages else 0,
+                expire_in=0.1,
                 also_delete=message if self.config.delete_invoking else None
             )
 
