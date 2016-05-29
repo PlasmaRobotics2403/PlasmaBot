@@ -1083,7 +1083,7 @@ class PlasmaBot(discord.Client):
             
             return Response('%s' % messageToSend, reply=True, delete_after=120)
 
-    async def cmd_tts(self, message, leftover_args):
+    async def cmd_tts(self, message, author, leftover_args):
         """
         Usage:
             >tts Message
