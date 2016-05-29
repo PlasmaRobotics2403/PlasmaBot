@@ -1114,11 +1114,11 @@ class PlasmaBot(discord.Client):
                 also_delete=message if self.config.delete_invoking else None
             )
 
-            if channel.permissions_for(server.me).change_nicknames:
-                try:
-                    await self.change_nickname(server.me, mynick)
-                except Exception as e:
-                    raise exceptions.CommandError(e, expire_in=20)
+            #if channel.permissions_for(server.me).change_nicknames:
+            #    try:
+            #        await self.change_nickname(server.me, mynick)
+            #    except Exception as e:
+            #        raise exceptions.CommandError(e, expire_in=20)
 
             return
 
