@@ -1054,7 +1054,7 @@ class PlasmaBot(discord.Client):
 
     async def cmd_disconnect(self, server, message):
         await self.disconnect_voice_client(server)
-        return Response(":hear_no_evil: (%s)" % message.server.me.voice_channel, delete_after=20)
+        return Response("Disconneceted from (%s)" % message.server.me.voice_channel, delete_after=20)
 
     async def cmd_restart(self, channel):
         await self.safe_send_message(channel, ":wave:")
