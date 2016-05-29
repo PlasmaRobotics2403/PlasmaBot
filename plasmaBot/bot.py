@@ -1120,7 +1120,7 @@ class PlasmaBot(discord.Client):
                 message.channel,
                 messageToSend,
                 tts = True,
-                expire_in=5,
+                expire_in=0.01,
                 also_delete=message if self.config.delete_invoking else None
             )
 
@@ -1900,6 +1900,8 @@ class PlasmaBot(discord.Client):
             print("before content")
             
             auto_handler = message.content.replace(' ', '-').lower()
+
+            print("beforedb")
             
             autoG = self.auto.findResponse("GLOBAL", auto_handler)
             autoS = self.auto.findResponse("S{ServerID}".format(ServerID = message.channel.server.id), auto_handler)
