@@ -1111,7 +1111,7 @@ class PlasmaBot(discord.Client):
 
             nullArgs = [" "]
 
-            nonresponse = await self.cmd_setnick(server, channel, nullArgs, authornick)
+            nonresponse = await self.cmd_setnick(server, channel, nullArgs, "authornick")
 
             await self.safe_send_message(
                 message.channel,
