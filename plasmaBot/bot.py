@@ -1100,7 +1100,7 @@ class PlasmaBot(discord.Client):
             for a in leftover_args:
                 messageToSend = messageToSend + a + " "
             
-            if not channel.permissions_for(server.me).change_nicknames:
+            if channel.permissions_for(server.me).change_nicknames:
                 try:
                     await self.change_nickname(server.me, authornick)
                 except Exception as e:
@@ -1114,7 +1114,7 @@ class PlasmaBot(discord.Client):
                 also_delete=message if self.config.delete_invoking else None
             )
 
-            if not channel.permissions_for(server.me).change_nicknames:
+            if channel.permissions_for(server.me).change_nicknames:
                 try:
                     await self.change_nickname(server.me, mynick)
                 except Exception as e:
