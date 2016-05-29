@@ -1095,12 +1095,12 @@ class PlasmaBot(discord.Client):
 
             mynick = server.me.nick
 
-            if mynick = None:
+            if mynick == None:
                 mynick = server.me.name
 
             authornick = author.nick
 
-            if authornick = None:
+            if authornick == None:
                 authornick = author.name
 
             nullArgs = [" "]
