@@ -1083,7 +1083,7 @@ class PlasmaBot(discord.Client):
             
             return Response('%s' % messageToSend, reply=True, delete_after=120)
 
-    async def cmd_tts(self, message, author, author.extras, leftover_args):
+    async def cmd_tts(self, message, author, authorextras, leftover_args):
         """
         Usage:
             >tts Message
@@ -1096,7 +1096,7 @@ class PlasmaBot(discord.Client):
             for a in leftover_args:
                 messageToSend = messageToSend + a + " "
             
-            messageToSend = messageToSend + " (from " + autor.extras.name + ")"
+            messageToSend = messageToSend + " (from " + authorextras.name + ")"
 
             await self.safe_send_message(
                 message.channel,
@@ -1983,8 +1983,8 @@ class PlasmaBot(discord.Client):
                 if params.pop('author', None):
                     handler_kwargs['author'] = message.author
 
-                if params.pop('author.extras', None):
-                    handler_kwargs['author.extras'] = discord.utils.find(lambda m: m.id == message.author.id, self.get_all_members())
+                if params.pop('authorextras', None):
+                    handler_kwargs['authorextras'] = discord.utils.find(lambda m: m.id == message.author.id, self.get_all_members())
 
                 if params.pop('server', None):
                     handler_kwargs['server'] = message.server
