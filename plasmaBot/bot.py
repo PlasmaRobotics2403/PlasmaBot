@@ -1110,6 +1110,9 @@ class PlasmaBot(discord.Client):
             for a in leftover_args:
                 messageToSend = messageToSend + a + " "
 
+            if not channel.permissions_for(server.me).change_nicknames:
+                messageToSend = messageToSend + "(From " + authornick ")"
+
             nullArgs = [" "]
 
             nonresponse = await self.cmd_setnick(server, channel, nullArgs, authornick)
