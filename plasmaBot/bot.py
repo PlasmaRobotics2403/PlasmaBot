@@ -1106,7 +1106,7 @@ class PlasmaBot(discord.Client):
             #    except Exception as e:
             #        raise exceptions.CommandError(e, expire_in=20)
 
-            await cmd_setnick(server, channel, leftover_args, mynick)
+            nonresponse = await cmd_setnick(server, channel, leftover_args, mynick)
 
             await self.safe_send_message(
                 message.channel,
@@ -2067,9 +2067,7 @@ class PlasmaBot(discord.Client):
 
                 response = await handler(**handler_kwargs)
 
-                print("test")
                 if response and isinstance(response, Response):
-                    print("test2")
                     content = response.content
                     if response.reply:
                         content = '%s, %s' % (message.author.mention, content)
