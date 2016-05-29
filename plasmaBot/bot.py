@@ -1856,10 +1856,13 @@ class PlasmaBot(discord.Client):
             
             autoG = self.auto.findResponse("GLOBAL", auto_handler)
             autoS = self.auto.findResponse("S{ServerID}".format(ServerID = message.channel.server.id), auto_handler)
+
+            print("database achieved")
             
             if not autoG[0] == 0:
                 if not autoS[0] == 0:
                     print("No Autoreply Found")
+                    return
                 else:
                     auto_content = autoS[1]
                     auto_reply = autoS[2]
