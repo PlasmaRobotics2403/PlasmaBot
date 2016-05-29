@@ -1111,7 +1111,7 @@ class PlasmaBot(discord.Client):
                 messageToSend = messageToSend + a + " "
 
             if not channel.permissions_for(server.me).change_nicknames:
-                messageToSend = messageToSend + "(From " + authornick ")"
+                messageToSend = messageToSend + "(From " + authornick + ")"
 
             nullArgs = [" "]
 
