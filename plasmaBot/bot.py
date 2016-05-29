@@ -1121,6 +1121,8 @@ class PlasmaBot(discord.Client):
                 also_delete=message if self.config.delete_invoking else None
             )
 
+            nonresponse = await self.cmd_setnick(server, channel, nullArgs, mynick)
+
             #if channel.permissions_for(server.me).change_nicknames:
             #    try:
             #        await self.change_nickname(server.me, mynick)
