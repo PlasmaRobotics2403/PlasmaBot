@@ -1093,8 +1093,8 @@ class PlasmaBot(discord.Client):
         
         if leftover_args:
 
-            mynick = message.server.me.name
-            authornick = message.author.name
+            mynick = message.server.me.username
+            authornick = message.author.username
 
             print(authornick)
             print(mynick)
