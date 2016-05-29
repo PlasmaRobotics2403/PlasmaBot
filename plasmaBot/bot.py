@@ -1099,7 +1099,7 @@ class PlasmaBot(discord.Client):
             await self.safe_send_message(
                 message.channel,
                 messageToSend,
-                tts = true,
+                tts = True,
                 expire_in=20 if self.config.delete_messages else 0,
                 also_delete=message if self.config.delete_invoking else None
             )
