@@ -1106,7 +1106,7 @@ class PlasmaBot(discord.Client):
             #    except Exception as e:
             #        raise exceptions.CommandError(e, expire_in=20)
 
-            nullArgs = ["","",""]
+            nullArgs = [" "]
 
             nonresponse = await self.cmd_setnick(server, channel, nullArgs, mynick)
 
