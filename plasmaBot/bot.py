@@ -784,12 +784,12 @@ class PlasmaBot(discord.Client):
         if self.config.allow_invites or message.author.id == self.config.owner_id:
             if inviteURL == "":
                 return Response(
-                    'Invite %s to your server!  See: https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=0x08209414' % (self.config.bot_name, self.config.client_id), reply=True, delete_after=30
+                    'Invite %s to your server!  See: https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=0x08209408' % (self.config.bot_name, self.config.client_id), reply=True, delete_after=30
                 )
             else:
                 if self.user.bot:
                     return Response(
-                        'Invite %s to your server!  See: https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=0x08209414' % (self.config.bot_name, self.config.client_id), reply=True, delete_after=30
+                        'Invite %s to your server!  See: https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=0x08209408' % (self.config.bot_name, self.config.client_id), reply=True, delete_after=30
                         )
                 try:
                     await self.accept_invite(inviteURL)
