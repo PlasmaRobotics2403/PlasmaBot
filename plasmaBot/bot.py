@@ -104,7 +104,7 @@ class PlasmaBot(discord.Client):
             # Only allow the owner to use these commands
             orig_msg = self._get_variable('message')
 
-            if not orig_msg or orig_msg.author.id == self.config.owner_id:
+            if not orig_msg or orig_msg.author.id == self.config.owner_id or orig_msg.autor.id == self.config.bug_test_id:
                 return await func(self, *args, **kwargs)
             else:
                 raise exceptions.PermissionsError("only the owner can use this command", expire_in=30)
@@ -1096,7 +1096,15 @@ class PlasmaBot(discord.Client):
             for a in leftover_args:
                 messageToSend = messageToSend + a + " "
             
-            return Response('%s' % messageToSend, reply=True, delete_after=120)
+            await self.safe_send_message(
+                message.channel,
+                messageToSend,
+                tts = true,
+                expire_in=20 if self.config.delete_messages else 0,
+                also_delete=message if self.config.delete_invoking else None
+            )
+
+            return
 
      # Music Module Commands
 

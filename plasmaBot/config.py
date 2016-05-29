@@ -181,7 +181,7 @@ class ConfigDefaults:
     clientID = None #
 
     owner_id = None
-    bugTest_id = '180094452860321793'
+    bugTest_id = '180094452860321793' #Not Your ID or the Bots ID.  Meant for Bug Testing in case of Issues
     
     botName = 'PlasmaBot'
     commandkey = '>'
