@@ -18,10 +18,11 @@ class PRDatabase:
     
 
     def tableDoesExist(self, objname):
-        #self.cursor.execute(""" SELECT COUNT(*) FROM sqlite_master WHERE name = {name}  """.format(name = objname))
-        #testCount = self.cursor.fetchone()
-    
-        #return bool(testCount[0])
+        # self.cursor.execute(""" SELECT COUNT(*) FROM sqlite_master WHERE name = {name}  """.format(name = objname))
+        # testCount = self.cursor.fetchone()
+        # return bool(testCount[0])
+
+        # Left inside tDE in case method before isn't giving desired functionality.
 
         if self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='{name}';".format(name=objname)).fetchone():
             return True
