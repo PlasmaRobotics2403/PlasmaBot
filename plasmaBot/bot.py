@@ -1083,6 +1083,21 @@ class PlasmaBot(discord.Client):
             
             return Response('%s' % messageToSend, reply=True, delete_after=120)
 
+    async def cmd_tts(self, message, leftover_args):
+        """
+        Usage:
+            >tts Message
+            
+        Tell PlasmaBot to say something with /tts to the channel in which it was said.
+        """
+        
+        if leftover_args:
+            messageToSend = "/tts "
+            for a in leftover_args:
+                messageToSend = messageToSend + a + " "
+            
+            return Response('%s' % messageToSend, reply=True, delete_after=120)
+
      # Music Module Commands
 
     async def cmd_play(self, player, channel, author, permissions, leftover_args, song_url):
