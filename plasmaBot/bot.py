@@ -1052,7 +1052,7 @@ class PlasmaBot(discord.Client):
         return Response(":ok_hand:", delete_after=20)
 
 
-    async def cmd_disconnect(self, server):
+    async def cmd_disconnect(self, server, message):
         await self.disconnect_voice_client(server)
         return Response(":hear_no_evil: (%s)" % message.server.me.voice_channel, delete_after=20)
 
