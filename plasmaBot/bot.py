@@ -1103,22 +1103,18 @@ class PlasmaBot(discord.Client):
             if authornick == None:
                 authornick = author.name
 
-            nullArgs = [" "]
-
-            nonresponse = await self.cmd_setnick(server, channel, nullArgs, authornick)
-
             print(authornick)
             print(mynick)
 
             messageToSend = ""
             for a in leftover_args:
                 messageToSend = messageToSend + a + " "
-            
-            #if channel.permissions_for(server.me).change_nicknames:
-            #    try:
-            #        await self.change_nickname(server.me, authornick)
-            #    except Exception as e:
-            #        raise exceptions.CommandError(e, expire_in=20)
+
+            nullArgs = [" "]
+
+            nonresponse = await self.cmd_setnick(server, channel, nullArgs, authornick)
+
+            time.sleep(0.5)
 
             await self.safe_send_message(
                 message.channel,
@@ -1128,13 +1124,9 @@ class PlasmaBot(discord.Client):
                 also_delete=message if self.config.delete_invoking else None
             )
 
-            nonresponse = await self.cmd_setnick(server, channel, nullArgs, mynick)
+            time.sleep(0.5)
 
-            #if channel.permissions_for(server.me).change_nicknames:
-            #    try:
-            #        await self.change_nickname(server.me, mynick)
-            #    except Exception as e:
-            #        raise exceptions.CommandError(e, expire_in=20)
+            nonresponse = await self.cmd_setnick(server, channel, nullArgs, mynick)
 
             return
 
