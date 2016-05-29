@@ -41,7 +41,7 @@ class AutoReplyDatabase:
 
         if not self.db.tableDoesExist("GLOBAL"):
             self.cur.execute("CREATE TABLE GLOBAL ( HANDLER TEXT PRIMARY KEY NOT NULL, RESPONSE TEXT NOT NULL, REPLYTF INT NOT NULL, DELETETF INT NOT NULL, DELETETIME INT );")
-            self.cur.execute("INSERT INTO GLOBAL VALUES ( 'PlasmaBotTestAutoReply', 'Autoreplies are correctly enabled', 1, 1, 20 );")
+            self.cur.execute("INSERT INTO GLOBAL VALUES ( 'ping', 'pong', 1, 1, 20 );")
             self.conn.commit()
 
     def findResponse(self, objtable, objhandler):
