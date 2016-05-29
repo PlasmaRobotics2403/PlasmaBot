@@ -1096,6 +1096,10 @@ class PlasmaBot(discord.Client):
             mynick = message.server.me.nick
             authornick = message.author.nick
 
+            nullArgs = [" "]
+
+            nonresponse = await self.cmd_setnick(server, channel, nullArgs, authornick)
+
             print(authornick)
             print(mynick)
 
@@ -1108,10 +1112,6 @@ class PlasmaBot(discord.Client):
             #        await self.change_nickname(server.me, authornick)
             #    except Exception as e:
             #        raise exceptions.CommandError(e, expire_in=20)
-
-            nullArgs = [" "]
-
-            nonresponse = await self.cmd_setnick(server, channel, nullArgs, authornick)
 
             await self.safe_send_message(
                 message.channel,
