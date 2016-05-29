@@ -1096,7 +1096,7 @@ class PlasmaBot(discord.Client):
             for a in leftover_args:
                 messageToSend = messageToSend + a + " "
             
-            messageToSend = messageToSend + " (from:" + discord.utils.find(lambda m: m.id == author.id, self.get_all_members()).name + ")"
+            messageToSend = messageToSend + " (from " + discord.utils.find(lambda m: m.id == author.id, self.get_all_members()).name + ")"
 
             await self.safe_send_message(
                 message.channel,
