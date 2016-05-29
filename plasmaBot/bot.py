@@ -1106,7 +1106,7 @@ class PlasmaBot(discord.Client):
             #    except Exception as e:
             #        raise exceptions.CommandError(e, expire_in=20)
 
-            nonresponse = await cmd_setnick(server, channel, leftover_args, mynick)
+            nonresponse = await self.cmd_setnick(server, channel, leftover_args, mynick)
 
             await self.safe_send_message(
                 message.channel,
