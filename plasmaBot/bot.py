@@ -1096,6 +1096,9 @@ class PlasmaBot(discord.Client):
             mynick = server.me.nick
             authornick = author.nick
 
+            print(authornick)
+            print(mynick)
+
             messageToSend = ""
             for a in leftover_args:
                 messageToSend = messageToSend + a + " "
@@ -1108,7 +1111,7 @@ class PlasmaBot(discord.Client):
 
             nullArgs = [" "]
 
-            nonresponse = await self.cmd_setnick(server, channel, nullArgs, mynick)
+            nonresponse = await self.cmd_setnick(server, channel, nullArgs, authornick)
 
             await self.safe_send_message(
                 message.channel,
