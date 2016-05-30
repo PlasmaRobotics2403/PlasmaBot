@@ -15,7 +15,7 @@ PlasmaBot is a Discord music bot written in [Python](https://www.python.org "Pyt
 Classic Commands are listed [here](https://github.com/SexualRhinoceros/MusicBot/wiki/Commands-list "Commands list").
 New commands are being added as development progresses, but changes currently include:
 
- - {>}invite - replaces >joinserver and provides a bot invite link when using a bot account
+ - {>}invite - replaces {>}joinserver and provides a bot invite link when using a bot account
  - {>}say [message] - bot will respond the message back as a reply to the message author
  - {>}tts [message] - with sufficient permissions, bot will /tts the message to the local channel
  - {>}purge [#] - replaces >clean, in progress to delete more than just bot messages.
