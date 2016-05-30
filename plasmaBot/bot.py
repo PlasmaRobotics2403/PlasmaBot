@@ -2010,9 +2010,6 @@ class PlasmaBot(discord.Client):
                 if params.pop('author', None):
                     handler_kwargs['author'] = message.author
 
-                if params.pop('authorextras', None):
-                    handler_kwargs['authorextras'] = discord.utils.find(lambda m: m.id == message.author.id, self.get_all_members())
-
                 if params.pop('server', None):
                     handler_kwargs['server'] = message.server
 
