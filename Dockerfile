@@ -1,6 +1,6 @@
 FROM ubuntu:14.04
 
-MAINTAINER Sidesplitter, https://github.com/SexualRhinoceros/MusicBot
+MAINTAINER ADetectionAlgorithm, https://github.com/PlasmaRobotics2403/PlasmaBot
 
 #Install dependencies
 RUN sudo apt-get install software-properties-common -y \
@@ -18,14 +18,14 @@ RUN sudo apt-get install wget \
     && wget https://bootstrap.pypa.io/get-pip.py \
     && sudo python3.5 get-pip.py
 
-#Add musicBot
-ADD . /musicBot
-WORKDIR /musicBot
+#Add plasmaBot
+ADD . /PlasmaBot
+WORKDIR /PlasmaBot
 
 #Install PIP dependencies
 RUN sudo pip install -r requirements.txt
 
 #Add volume for configuration
-VOLUME /musicBot/config
+VOLUME /PlasmaBot/config
 
 CMD python3.5 run.py
