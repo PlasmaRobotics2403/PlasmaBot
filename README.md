@@ -15,25 +15,25 @@ PlasmaBot is a Discord music bot written in [Python](https://www.python.org "Pyt
 Classic Commands are listed [here](https://github.com/SexualRhinoceros/MusicBot/wiki/Commands-list "Commands list").
 New commands are being added as development progresses, but changes currently include:
 
- - >invite - replaces >joinserver and provides a bot invite link when using a bot account
- - >say [message] - bot will respond the message back as a reply to the message author
- - >tts [message] - with sufficient permissions, bot will /tts the message to the local channel
- - >purge [#] - replaces >clean, in progress to delete more than just bot messages.
+ - {>}invite - replaces >joinserver and provides a bot invite link when using a bot account
+ - {>}say [message] - bot will respond the message back as a reply to the message author
+ - {>}tts [message] - with sufficient permissions, bot will /tts the message to the local channel
+ - {>}purge [#] - replaces >clean, in progress to delete more than just bot messages.
  
 Future Commands will include:
 
- - >kick [UserMention] - kicks a user from the current server
- - >ban [UserMention] - bans a user from the current server
- - >mute [text | voice | Default: all] [channel | Default: server] [UserMention] - mutes a user in the given server or channel
+ - {>}kick [UserMention] - kicks a user from the current server
+ - {>}ban [UserMention] - bans a user from the current server
+ - {>}mute [text | voice | Default: all] [channel | Default: server] [UserMention] - mutes a user in the given server or channel
  
- - >addAR [message] - adds an autoreply to the current server
- - >addGlobalAR [message] - adds an autoreply to the global table
+ - {>}addAR [message] - adds an autoreply to the current server
+ - {>}addGlobalAR [message] - adds an autoreply to the global table
  
- - >giveRole [userMention] [roleName] - gives a role to a mentioned user
- - >removeRole [userMention] [roleName] - removes a role from a mentioned user
+ - {>}giveRole [userMention] [roleName] - gives a role to a mentioned user
+ - {>}removeRole [userMention] [roleName] - removes a role from a mentioned user
 
- - >setTGChannel [channelMention | ChannelID] [telegramURL] - links a telegram channel to a giving Discord Channel
- - >unlinkTGChannel - unlinks the currentChannel from TG, or the server from TG if only 1 TG channel
+ - {>}setTGChannel [channelMention | ChannelID] [telegramURL] - links a telegram channel to a giving Discord Channel
+ - {>}unlinkTGChannel - unlinks the currentChannel from TG, or the server from TG if only 1 TG channel
  
 More improvement ideas to come!
 
