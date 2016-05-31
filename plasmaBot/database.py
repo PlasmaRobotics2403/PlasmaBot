@@ -9,13 +9,13 @@ class PRDatabase:
         self.connection.execute('pragma foreign_keys = on')
         self.connection.commit()
         self.cursor = self.connection.cursor()
-    
+
 
     def query(self, arg):
         self.cursor.execute(arg)
         self.connection.commit()
         return self.cur
-    
+
 
     def tableDoesExist(self, objname):
         # self.cursor.execute(""" SELECT COUNT(*) FROM sqlite_master WHERE name = {name}  """.format(name = objname))
@@ -48,14 +48,14 @@ class AutoReplyDatabase:
         if not self.db.tableDoesExist("{tableID}".format(tableID = objtable)):
             autoArray = [1, None, None, None, None]
             return autoArray
-        
+
         self.cur.execute("SELECT * FROM {table} WHERE Name = '{handler}';".format(table = objtable, handler = objhandler))
         autoValue = self.cur.fetchone()
-        
+
         if autoValue is None:
             autoArray = [2, None, None, None, None]
             return autoArray
-        
+
         autoResponse = autoValue[1]
 
         if autoValue[2] == 1:
@@ -76,20 +76,20 @@ class AutoReplyDatabase:
         autoArray = [0, autoResponse, autoReply, autoDelete, autoDeleteTime]
 
         return autoArray
-            
+
     def addAutoReply(self, server, handler, response, reply, delete, delete_time):
-        if not self.db.tableDoesExist("S{serverID}".format(serverID = server)):
+        if not self.db.tableDoesExist("S{serverID}".format(serverID=server.ID)):
             self.cur.execute("CREATE TABLE S{serverID} ( HANDLER TEXT PRIMARY KEY NOT NULL, RESPONSE TEXT NOT NULL, REPLYTF INT NOT NULL, DELETETF INT NOT NULL, DELETETIME INT )".format(serverID = server))
             self.conn.commit()
-        
-        self.cur.execute("SELECT RESPONSE FROM S{serverID} WHERE HANDLER = {autoHandler};".format(serverID = server, autoHandler = handler))
-        
+
+        self.cur.execute("SELECT RESPONSE FROM S{serverID} WHERE HANDLER = {autoHandler};".format(serverID = server.ID, autoHandler = handler))
+
         possibleResponse = self.cur.fetchone()
-        
+
         if data is None:
             status = False
             autoResponse = data[0]
-        
+
         else:
             if reply:
                 replyINT = 1
@@ -100,17 +100,17 @@ class AutoReplyDatabase:
                 deleteINT = 1
             else:
                 deleteINT = 0
-    
+
             self.cur.execute("INSERT INTO S{serverID} VALUES ({autoHandler}, {autoResponse, {autoReplyINT}, {autoDeleteINT}, {autoDeleteTime} );".format(autoHandler = handler, autoResponse = autoResponse, autoReplyINT = replyINT, autoDeleteINT = deleteINT, autoDeleteTime = delete_time))
             self.conn.commit()
-    
+
             status = True
             autoResponse = response
-                
+
         confirmationArray = [status, autoResponse]
-            
+
         return confirmationArray
-    
+
     def __del__(self):
         self.conn.close()
         del self.db
