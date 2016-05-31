@@ -876,7 +876,7 @@ class PlasmaBot(discord.Client):
         delete_invokes = True
         delete_all = channel.permissions_for(author).manage_messages or self.config.owner_id == author.id
 
-        def check(message):
+        def check(message): # Modify this function to provide more than just bot messages.
             if is_possible_command_invoke(message) and delete_invokes:
                 return delete_all or message.author == author
             return message.author == self.user
@@ -1979,7 +1979,7 @@ class PlasmaBot(discord.Client):
                 return
 
             if message.channel.is_private:
-                if not (message.author.id == self.config.owner_id and command == 'invite'):
+                if not (message.author.id == self.config.owner_id or command == 'invite'):
                     await self.send_message(message.channel, 'You cannot use PlasmaBot in a private message.')
                     return
 
