@@ -14,4 +14,3 @@ import musicbot.plugins.meta
 import musicbot.plugins.moderation
 import musicbot.plugins.music
 import musicbot.plugins.server
-import musicbot.plugins.shitpost
