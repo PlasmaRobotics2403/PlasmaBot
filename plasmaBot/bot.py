@@ -29,6 +29,8 @@ from plasmaBot.permissions import Permissions, PermissionsDefaults
 from plasmaBot.utils import load_file, write_file, sane_round_int
 from plasmaBot.database import PRDatabase, AutoReplyDatabase
 
+from plasmaBot.plugins import *
+
 from . import exceptions
 from . import downloader
 from .opus_loader import load_opus_lib
@@ -727,7 +729,7 @@ class PlasmaBot(discord.Client):
         if command:
             cmd = getattr(self, 'cmd_' + command, None)
             if cmd:
-                return Response(
+                return Response( #Remove ''' to remove code block
                     "```\n{}```".format(
                         dedent(cmd.__doc__),
                         command_prefix=self.config.command_prefix
@@ -757,7 +759,7 @@ class PlasmaBot(discord.Client):
         """
         Usage:
         >id [@user]
-        
+
         Tells the user their id or the id of another user.
         """
         if not user_mentions:
@@ -771,16 +773,16 @@ class PlasmaBot(discord.Client):
         """
         Usage:
         >invite (invite_link if not bot account)
-            
+
         Asks the bot to join a server.  Invite Link only needed if bot is not a "BOT"
         """
-        
+
         inviteURL = ""
-        
+
         if leftover_args:
             for a in inviteURL:
                 inviteURL = inviteURL + a + " "
-        
+
         if self.config.allow_invites or message.author.id == self.config.owner_id:
             if inviteURL == "":
                 return Response(
@@ -794,7 +796,7 @@ class PlasmaBot(discord.Client):
                 try:
                     await self.accept_invite(inviteURL)
                     return Response(":+1:")
-        
+
                 except:
                     raise exceptions.CommandError('Invalid URL provided:\n{}\n'.format(server_link), expire_in=30)
         else:
@@ -802,7 +804,7 @@ class PlasmaBot(discord.Client):
                 'Invitations are not enabled for %s.  Please contact the botAdmin if you believe this is an error' % self.config.bot_name,
                 reply=True, delete_after=30
             )
-    
+
     # Mod Commands
 
     async def cmd_blacklist(self, message, user_mentions, option, something):
@@ -884,7 +886,7 @@ class PlasmaBot(discord.Client):
         if self.user.bot:
             if channel.permissions_for(server.me).manage_messages:
                 deleted = await self.purge_from(channel, check=check, limit=search_range, before=message)
-                return Response('Cleaned up {} message{}.'.format(len(deleted), 's' * bool(deleted)), delete_after=15)
+                return Response('Purged {} message{} from .'.format(len(deleted), 's' * bool(deleted)), delete_after=15)
 
         deleted = 0
         async for entry in self.logs_from(channel, search_range, before=message):
@@ -1072,25 +1074,25 @@ class PlasmaBot(discord.Client):
         """
         Usage:
             >say Message
-            
+
         Tell PlasmaBot to say something to the channel in which it was said.
         """
-        
+
         if leftover_args:
             messageToSend = ""
             for a in leftover_args:
                 messageToSend = messageToSend + a + " "
-            
+
             return Response('%s' % messageToSend, reply=True, delete_after=120)
 
     async def cmd_tts(self, message, server, channel, author, authorextras, leftover_args):
         """
         Usage:
             >tts Message
-            
+
         Tell PlasmaBot to say something with /tts to the channel in which it was said.
         """
-        
+
         if leftover_args:
 
             mynick = server.me.nick
@@ -1901,16 +1903,16 @@ class PlasmaBot(discord.Client):
                 return
 
             print("before content")
-            
+
             auto_handler = message.content.replace(' ', '-').lower()
 
             print("beforedb")
-            
+
             autoG = self.auto.findResponse("GLOBAL", auto_handler)
             autoS = self.auto.findResponse("S{ServerID}".format(ServerID = message.channel.server.id), auto_handler)
 
             print("database achieved")
-            
+
             if not autoG[0] == 0:
                 if not autoS[0] == 0:
                     print("No Autoreply Found")
@@ -1954,7 +1956,7 @@ class PlasmaBot(discord.Client):
                     expire_in=expirein,
                     also_delete=alsodelete
                 )
-     
+
             except exceptions.Signal:
                 raise
 
@@ -2000,7 +2002,7 @@ class PlasmaBot(discord.Client):
                 if user_permissions.ignore_non_voice and command in user_permissions.ignore_non_voice:
                     await self._check_ignore_non_voice(message)
 
-                handler_kwargs = {} 
+                handler_kwargs = {}
                 if params.pop('message', None):
                     handler_kwargs['message'] = message
 
@@ -2098,7 +2100,7 @@ class PlasmaBot(discord.Client):
                     expire_in=expirein,
                     also_delete=alsodelete
                 )
-     
+
             except exceptions.Signal:
                 raise
 
@@ -2119,9 +2121,9 @@ class PlasmaBot(discord.Client):
 
         my_voice_channel = after.server.me.voice_channel  # This should always work, right?
         auto_paused = self.server_specific_data[after.server]['auto_paused']
-        
+
         player = await self.get_player(my_voice_channel)
-            
+
         num_deaf = sum(1 for m in my_voice_channel.voice_members if (
             m.deaf or m.self_deaf))
 

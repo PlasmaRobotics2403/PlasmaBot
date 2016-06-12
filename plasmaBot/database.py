@@ -41,11 +41,14 @@ class AutoReplyDatabase:
 
         if not self.db.tableDoesExist("GLOBAL"):
             self.cur.execute("CREATE TABLE GLOBAL ( HANDLER TEXT PRIMARY KEY NOT NULL, RESPONSE TEXT NOT NULL, REPLYTF INT NOT NULL, DELETETF INT NOT NULL, DELETETIME INT );")
+            print("creating database: GLOBAL"))
             self.cur.execute("INSERT INTO GLOBAL VALUES ( 'ping', 'pong', 1, 1, 20 );")
+            print("Values: ['ping', 'pong', 1, 1, 20] inserted into GLOBAL")
             self.conn.commit()
 
     def findResponse(self, objtable, objhandler):
         if not self.db.tableDoesExist("{tableID}".format(tableID = objtable)):
+            print("[DBError]: Table {tableID} does not exist.".format(tableID=objtable))
             autoArray = [1, None, None, None, None]
             return autoArray
 
@@ -79,6 +82,7 @@ class AutoReplyDatabase:
 
     def addAutoReply(self, server, handler, response, reply, delete, delete_time):
         if not self.db.tableDoesExist("S{serverID}".format(serverID=server.ID)):
+            print("creating database: S{serverID}...").format(serverID=server.ID))
             self.cur.execute("CREATE TABLE S{serverID} ( HANDLER TEXT PRIMARY KEY NOT NULL, RESPONSE TEXT NOT NULL, REPLYTF INT NOT NULL, DELETETF INT NOT NULL, DELETETIME INT )".format(serverID = server))
             self.conn.commit()
 
