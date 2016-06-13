@@ -9,7 +9,7 @@ def command(name):
         return f
     return decorate
 
-# import musicbot.plugins.meta
-# import musicbot.plugins.moderation
-import musicbot.plugins.music
-# import musicbot.plugins.server
+# import plasmaBot.plugins.meta
+# import plasmaBot.plugins.moderation
+import plasmaBot.plugins.music
+# import plasmaBot.plugins.server
