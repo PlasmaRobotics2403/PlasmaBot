@@ -724,7 +724,7 @@ class PlasmaBot(discord.Client):
                     command_name = att.replace('cmd_', '').lower()
                     commands.append("{}{}\n".format(self.config.command_prefix, command_name))
 
-            helpmsg += " ".join(commands)
+            helpmsg += "".join(commands)
             helpmsg += "```\n"
             helpmsg += "Bot Currently in BETA.  Join the discussion at: \nhttps://github.com/PlasmaRobotics2403/PlasmaBot"
 
