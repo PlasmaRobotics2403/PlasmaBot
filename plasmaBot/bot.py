@@ -716,7 +716,7 @@ class PlasmaBot(discord.Client):
                 return Response("No such command", delete_after=10)
 
         else:
-            helpmsg = "**{bot_name}'s Commands**\n\n'''".format(bot_name = self.config.bot_name)
+            helpmsg = "**{bot_name}'s Commands**\n\n```".format(bot_name = self.config.bot_name)
             commands = []
 
             for att in dir(self):
@@ -725,7 +725,7 @@ class PlasmaBot(discord.Client):
                     commands.append("{}{}\n".format(self.config.command_prefix, command_name))
 
             helpmsg += " ".join(commands)
-            helpmsg += "'''\n"
+            helpmsg += "```\n"
             helpmsg += "Bot Currently in BETA.  Join the discussion at: \nhttps://github.com/PlasmaRobotics2403/PlasmaBot"
 
             return Response(helpmsg, reply=True, delete_after=60)
