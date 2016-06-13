@@ -25,7 +25,7 @@ from collections import defaultdict
 
 from plasmaBot.playlist import Playlist
 from plasmaBot.player import MusicPlayer
-from plasmaBot.structures import Response, skipState
+from plasmaBot.structures import Response, SkipState
 from plasmaBot.config import Config, ConfigDefaults
 from plasmaBot.permissions import Permissions, PermissionsDefaults
 from plasmaBot.utils import load_file, write_file, sane_round_int
