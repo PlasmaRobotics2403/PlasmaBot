@@ -17,7 +17,7 @@ from plasmaBot.utils import load_file, write_file, sane_round_int
 from plasmaBot.exceptions import PlasmaBotException, CommandError, ExtractionError, WrongEntryTypeError, PermissionsError, HelpfulError
 
 @command("test1234")
-async def cmd_id(self, author, user_mentions):
+async def cmd_id(self, author, user_mentions=None):
     """
     Usage:
         {command_prefix}id [@user]
