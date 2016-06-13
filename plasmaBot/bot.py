@@ -31,7 +31,7 @@ from plasmaBot.permissions import Permissions, PermissionsDefaults
 from plasmaBot.utils import load_file, write_file, sane_round_int
 from plasmaBot.database import PRDatabase, AutoReplyDatabase
 
-from plasmaBot.plugins import all_commands
+from plasmaBot.plugins.plimport import all_commands
 
 from . import exceptions
 from . import downloader
