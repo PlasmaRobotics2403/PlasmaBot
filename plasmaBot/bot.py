@@ -716,17 +716,17 @@ class PlasmaBot(discord.Client):
                 return Response("No such command", delete_after=10)
 
         else:
-            helpmsg = "**Commands**\n```"
+            helpmsg = "**{bot_name}'s Commands**\n\n".format(bot_name = self.config.bot_name)
             commands = []
 
             for att in dir(self):
                 if att.startswith('cmd_') and (att != 'cmd_help' or att != 'cmd_auto'):
                     command_name = att.replace('cmd_', '').lower()
-                    commands.append("{}{}".format(self.config.command_prefix, command_name))
+                    commands.append("{}{}\n".format(self.config.command_prefix, command_name))
 
             helpmsg += ", ".join(commands)
-            helpmsg += "```"
-            helpmsg += "Bot Currently in BETA.  Join the discussion at: /nhttps://github.com/PlasmaRobotics2403/PlasmaBot"
+            helpmsg += ""
+            helpmsg += "Bot Currently in BETA.  Join the discussion at: \nhttps://github.com/PlasmaRobotics2403/PlasmaBot"
 
             return Response(helpmsg, reply=True, delete_after=60)
 
