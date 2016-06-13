@@ -94,7 +94,7 @@ class PlasmaBot(discord.Client):
             print("Warning: Autoplaylist is empty, disabling.")
             self.config.auto_playlist = False
 
-        self.headers['user-agent'] += ' PlasmaBot/%s' % BOTVERSION
+        self.http.user_agent += ' PlasmaBot/%s' % BOTVERSION
 
         # TODO: Do these properly
         ssd_defaults = {'last_np_msg': None, 'auto_paused': False}
