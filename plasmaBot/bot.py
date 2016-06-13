@@ -338,11 +338,11 @@ class PlasmaBot(discord.Client):
             playlist = Playlist(self)
             player = MusicPlayer(self, voice_client, playlist) \
                 .on('play', self.on_player_player_play) \
-                .on('resume', self.on_player_player_resume) \
-                .on('pause', self.on_player_player_pause) \
-                .on('stop', self.self.on_player_player_stop) \
+                .on('resume', self.on_player_resume) \
+                .on('pause', self.on_player_pause) \
+                .on('stop', self.self.on_player_stop) \
                 .on('finished-playing', self.on_player_finished_playing) \
-                .on('entry-added', self.on_player_player_entry_added)
+                .on('entry-added', self.on_player_entry_added)
 
             player.skip_state = SkipState()
             self.players[server.id] = player
