@@ -82,7 +82,7 @@ class AutoReplyDatabase:
 
     def addAutoReply(self, server, handler, response, reply, delete, delete_time):
         if not self.db.tableDoesExist("S{serverID}".format(serverID=server.ID)):
-            print("creating database: S{serverID}...").format(serverID=server.ID))
+            print("creating database: S{serverID}...".format(serverID=server.ID))
             self.cur.execute("CREATE TABLE S{serverID} ( HANDLER TEXT PRIMARY KEY NOT NULL, RESPONSE TEXT NOT NULL, REPLYTF INT NOT NULL, DELETETF INT NOT NULL, DELETETIME INT )".format(serverID = server))
             self.conn.commit()
 
