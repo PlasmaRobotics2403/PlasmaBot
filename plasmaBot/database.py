@@ -41,7 +41,7 @@ class AutoReplyDatabase:
 
         if not self.db.tableDoesExist("GLOBAL"):
             self.cur.execute("CREATE TABLE GLOBAL ( HANDLER TEXT PRIMARY KEY NOT NULL, RESPONSE TEXT NOT NULL, REPLYTF INT NOT NULL, DELETETF INT NOT NULL, DELETETIME INT );")
-            print("creating database: GLOBAL"))
+            print("creating database: GLOBAL")
             self.cur.execute("INSERT INTO GLOBAL VALUES ( 'ping', 'pong', 1, 1, 20 );")
             print("Values: ['ping', 'pong', 1, 1, 20] inserted into GLOBAL")
             self.conn.commit()
