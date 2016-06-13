@@ -301,7 +301,7 @@ class PlasmaBot(discord.Client):
             await vc.disconnect()
         except:
             print("Error disconnecting during reconnect")
- +          traceback.print_exc()
+            traceback.print_exc()
 
         await asyncio.sleep(0.1)
 
