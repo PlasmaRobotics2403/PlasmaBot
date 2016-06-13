@@ -1062,7 +1062,11 @@ class PlasmaBot(discord.Client):
         Tell PlasmaBot to say something with /tts to the channel in which it was said.
         """
 
+        print("test")
+
         if leftover_args:
+
+            print("test2")
 
             mynick = server.me.nick
 
@@ -1089,7 +1093,7 @@ class PlasmaBot(discord.Client):
             nonresponse = await self.cmd_setnick(server, channel, nullArgs, authornick)
 
             time.sleep(0.5)
-
+            print("test3")
             await self.safe_send_message(
                 message.channel,
                 messageToSend,
