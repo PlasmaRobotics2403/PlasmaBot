@@ -340,7 +340,7 @@ class PlasmaBot(discord.Client):
                 .on('play', self.on_player_play) \
                 .on('resume', self.on_player_resume) \
                 .on('pause', self.on_player_pause) \
-                .on('stop', self.self.on_player_stop) \
+                .on('stop', self.on_player_stop) \
                 .on('finished-playing', self.on_player_finished_playing) \
                 .on('entry-added', self.on_player_entry_added)
 
