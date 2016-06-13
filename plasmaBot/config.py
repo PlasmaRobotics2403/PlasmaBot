@@ -55,10 +55,9 @@ class Config:
                 ),
                 preface="An error has occured parsing the config:\n"
             )
-                
-                
+
+
         self._login_token = config.get('Credentials', 'Token', fallback=ConfigDefaults.token)
-        self.client_id = config.get('Credentials', 'ClientID', fallback=ConfigDefaults.clientID)
         self._email = config.get('Credentials', 'Email', fallback=ConfigDefaults.email)
         self._password = config.get('Credentials', 'Password', fallback=ConfigDefaults.password)
 
@@ -74,7 +73,7 @@ class Config:
         self.delete_messages  = config.getboolean('BotConfiguration', 'DeleteMessages', fallback=ConfigDefaults.delete_messages)
         self.delete_invoking = config.getboolean('BotConfiguration', 'DeleteInvoking', fallback=ConfigDefaults.delete_invoking)
         self.allow_invites = config.getboolean('BotConfiguration', 'AllowInvites', fallback=ConfigDefaults.allow_invites)
-        
+
         self.blacklist_file = config.get('Files', 'BlacklistFile', fallback=ConfigDefaults.blacklist_file)
         self.auto_playlist_file = config.get('Files', 'AutoPlaylistFile', fallback=ConfigDefaults.auto_playlist_file)
         self.autoreply_file = config.get('Files', 'AutoReplyFile', fallback=ConfigDefaults.auto_reply_file)
@@ -87,7 +86,7 @@ class Config:
         self.auto_summon = config.getboolean('MusicModule', 'AutoSummon', fallback=ConfigDefaults.auto_summon)
         self.auto_playlist = config.getboolean('MusicModule', 'UseAutoPlaylist', fallback=ConfigDefaults.auto_playlist)
         self.auto_pause = config.getboolean('MusicModule', 'AutoPause', fallback=ConfigDefaults.auto_pause)
-        
+
         self.debug_mode = config.getboolean('Debug', 'DebugMode', fallback=ConfigDefaults.debug_mode)
 
         self.run_checks()
@@ -178,11 +177,10 @@ class ConfigDefaults:
     email = None    #
     password = None # This is not where you put your login info.
     token = None    # Place your login info in 'config/options.ini'
-    clientID = None #
 
     owner_id = None
     bugTest_id = '180094452860321793' #Not Your ID or the Bots ID.  Meant for Bug Testing in case of Issues
-    
+
     botName = 'PlasmaBot'
     commandkey = '>'
     bound_channels = set()
