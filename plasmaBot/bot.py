@@ -695,7 +695,7 @@ class PlasmaBot(discord.Client):
     async def cmd_help(self, command=None):
         """
         Usage:
-            >help [command]
+            {command_prefix}help [command]
 
         Prints a help message.
         If a command is specified, it prints a help message for that command.
@@ -734,7 +734,7 @@ class PlasmaBot(discord.Client):
     async def cmd_id(self, author, user_mentions):
         """
         Usage:
-        >id [@user]
+        {command_prefix}id [@user]
 
         Tells the user their id or the id of another user.
         """
@@ -748,7 +748,7 @@ class PlasmaBot(discord.Client):
     async def cmd_invite(self, message, leftover_args, server_link=None):
         """
         Usage:
-        >invite (invite_link if not bot account)
+        {command_prefix}invite (invite_link if not bot account)
 
         Replies with the Bot's Invite Link (Or Accepts with a URL if not a BOT Account)
         """
@@ -779,7 +779,7 @@ class PlasmaBot(discord.Client):
     async def cmd_blacklist(self, message, user_mentions, option, something):
         """
         Usage:
-            >blacklist [ + | - | add | remove ] @UserName [@UserName2 ...]
+            {command_prefix}blacklist [ + | - | add | remove ] @UserName [@UserName2 ...]
 
         Add or remove users to the blacklist.
         Blacklisted users are forbidden from using bot commands.
@@ -826,7 +826,7 @@ class PlasmaBot(discord.Client):
     async def cmd_purge(self, message, channel, server, author, search_range=50):
         """
         Usage:
-            >purge [range]
+            {command_prefix}purge [range]
 
         Removes up to [range] messages the bot has posted in chat. Default: 50, Max: 1000
         """
@@ -884,7 +884,7 @@ class PlasmaBot(discord.Client):
     async def cmd_listids(self, server, author, leftover_args, cat='all'):
         """
         Usage:
-            >listids [categories]
+            {command_prefix}listids [categories]
 
         Lists the ids for various things.  Categories are:
            all, users, roles, channels
@@ -941,7 +941,7 @@ class PlasmaBot(discord.Client):
     async def cmd_perms(self, author, channel, server, permissions):
         """
         Usage:
-            >perms
+            {command_prefix}perms
 
         Sends the user a list of their permissions.
         """
@@ -961,7 +961,7 @@ class PlasmaBot(discord.Client):
     async def cmd_setname(self, leftover_args, name):
         """
         Usage:
-            >setname name
+            {command_prefix}setname name
 
         Changes the bot's username.
         Note: This operation is limited by discord to twice per hour.
@@ -980,7 +980,7 @@ class PlasmaBot(discord.Client):
     async def cmd_setnick(self, server, channel, leftover_args, nick):
         """
         Usage:
-            >setnick nick
+            {command_prefix}setnick nick
 
         Changes the bot's nickname.
         """
@@ -1001,7 +1001,7 @@ class PlasmaBot(discord.Client):
     async def cmd_setavatar(self, message, url=None):
         """
         Usage:
-            >setavatar [url]
+            {command_prefix}setavatar [url]
 
         Changes the bot's avatar.
         Attaching a file and leaving the url parameter blank also works.
@@ -1042,7 +1042,7 @@ class PlasmaBot(discord.Client):
     async def cmd_say(self, message, leftover_args):
         """
         Usage:
-            >say Message
+            {command_prefix}say Message
 
         Tell PlasmaBot to say something to the channel in which it was said.
         """
@@ -1057,7 +1057,7 @@ class PlasmaBot(discord.Client):
     async def cmd_tts(self, message, server, channel, author, authorextras, leftover_args):
         """
         Usage:
-            >tts Message
+            {command_prefix}tts Message
 
         Tell PlasmaBot to say something with /tts to the channel in which it was said.
         """
@@ -1109,8 +1109,8 @@ class PlasmaBot(discord.Client):
     async def cmd_play(self, player, channel, author, permissions, leftover_args, song_url):
         """
         Usage:
-            >play song_link
-            >play text to search for
+            {command_prefix}play song_link
+            {command_prefix}play text to search for
 
         Adds the song to the playlist.  If a link is not provided, the first
         result from a youtube search is added to the queue.
@@ -1394,7 +1394,7 @@ class PlasmaBot(discord.Client):
     async def cmd_search(self, player, channel, author, permissions, leftover_args):
         """
         Usage:
-            >search [service] [number] query
+            {command_prefix}search [service] [number] query
 
         Searches a service for a video and adds it to the queue.
         - service: any one of the following services:
@@ -1405,7 +1405,7 @@ class PlasmaBot(discord.Client):
           - defaults to 1 if unspecified
           - note: If your search query starts with a number,
                   you must put your query in quotes
-            - ex: >search 2 "I ran seagulls"
+            - ex: {command_prefix}search 2 "I ran seagulls"
         """
 
         if permissions.max_songs and player.playlist.count_for_user(author) > permissions.max_songs:
@@ -1524,7 +1524,7 @@ class PlasmaBot(discord.Client):
     async def cmd_np(self, player, channel, server, message):
         """
         Usage:
-            >np
+            {command_prefix}np
 
         Displays the current song in chat.
         """
@@ -1555,7 +1555,7 @@ class PlasmaBot(discord.Client):
     async def cmd_summon(self, channel, author, voice_channel):
         """
         Usage:
-            >summon
+            {command_prefix}summon
 
         Call the bot to the summoner's voice channel.
         """
@@ -1596,7 +1596,7 @@ class PlasmaBot(discord.Client):
     async def cmd_pause(self, player):
         """
         Usage:
-            >pause
+            {command_prefix}pause
 
         Pauses playback of the current song.
         """
@@ -1610,7 +1610,7 @@ class PlasmaBot(discord.Client):
     async def cmd_resume(self, player):
         """
         Usage:
-            >resume
+            {command_prefix}resume
 
         Resumes playback of a paused song.
         """
@@ -1624,7 +1624,7 @@ class PlasmaBot(discord.Client):
     async def cmd_shuffle(self, channel, player):
         """
         Usage:
-            >shuffle
+            {command_prefix}shuffle
 
         Shuffles the playlist.
         """
@@ -1646,7 +1646,7 @@ class PlasmaBot(discord.Client):
     async def cmd_clear(self, player, author):
         """
         Usage:
-            >clear
+            {command_prefix}clear
 
         Clears the playlist.
         """
@@ -1657,7 +1657,7 @@ class PlasmaBot(discord.Client):
     async def cmd_skip(self, player, channel, author, message, permissions, voice_channel):
         """
         Usage:
-            >skip
+            {command_prefix}skip
 
         Skips the current song when enough votes are cast, or by the bot owner.
         """
@@ -1724,7 +1724,7 @@ class PlasmaBot(discord.Client):
     async def cmd_volume(self, message, player, new_volume=None):
         """
         Usage:
-            >volume (+/-)[volume]
+            {command_prefix}volume (+/-)[volume]
 
         Sets the playback volume. Accepted values are from 1 to 100.
         Putting + or - before the volume will make the volume change relative to the current volume.
@@ -1766,7 +1766,7 @@ class PlasmaBot(discord.Client):
     async def cmd_queue(self, channel, player):
         """
         Usage:
-            >queue
+            {command_prefix}queue
 
         Prints the current song queue.
         """
@@ -1814,7 +1814,7 @@ class PlasmaBot(discord.Client):
     async def cmd_pldump(self, channel, song_url):
         """
         Usage:
-            >pldump url
+            {command_prefix}pldump url
 
         Dumps the individual urls of a playlist
         """
