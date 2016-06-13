@@ -8,6 +8,7 @@ from io import BytesIO
 from textwrap import dedent
 
 from plasmaBot.plugins import command
+from plasmaBot.structures import Response
 from plasmaBot.playlist import Playlist
 from plasmaBot.player import MusicPlayer
 from plasmaBot.config import Config, ConfigDefaults

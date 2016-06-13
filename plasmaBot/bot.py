@@ -25,6 +25,7 @@ from collections import defaultdict
 
 from plasmaBot.playlist import Playlist
 from plasmaBot.player import MusicPlayer
+from plasmaBot.structures import Response, skipState
 from plasmaBot.config import Config, ConfigDefaults
 from plasmaBot.permissions import Permissions, PermissionsDefaults
 from plasmaBot.utils import load_file, write_file, sane_round_int
@@ -40,32 +41,6 @@ from .constants import DISCORD_MSG_CHAR_LIMIT, AUDIO_CACHE_PATH
 
 
 load_opus_lib()
-
-
-class SkipState:
-    def __init__(self):
-        self.skippers = set()
-        self.skip_msgs = set()
-
-    @property
-    def skip_count(self):
-        return len(self.skippers)
-
-    def reset(self):
-        self.skippers.clear()
-        self.skip_msgs.clear()
-
-    def add_skipper(self, skipper, msg):
-        self.skippers.add(skipper)
-        self.skip_msgs.add(msg)
-        return self.skip_count
-
-
-class Response:
-    def __init__(self, content, reply=False, delete_after=0):
-        self.content = content
-        self.reply = reply
-        self.delete_after = delete_after
 
 
 class PlasmaBot(discord.Client):
