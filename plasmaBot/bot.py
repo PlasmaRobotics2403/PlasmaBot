@@ -337,7 +337,7 @@ class PlasmaBot(discord.Client):
 
             playlist = Playlist(self)
             player = MusicPlayer(self, voice_client, playlist) \
-                .on('play', self.on_player_player_play) \
+                .on('play', self.on_player_play) \
                 .on('resume', self.on_player_resume) \
                 .on('pause', self.on_player_pause) \
                 .on('stop', self.self.on_player_stop) \
@@ -387,7 +387,7 @@ class PlasmaBot(discord.Client):
     async def on_player_stop(self, **_):
         await self.update_now_playing()
 
-    async def on_player_player_finished_playing(self, player, **_):
+    async def on_player_finished_playing(self, player, **_):
         if not player.playlist.entries and not player.current_entry and self.config.auto_playlist:
             while self.autoplaylist:
                 song_url = choice(self.autoplaylist)
