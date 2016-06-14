@@ -22,6 +22,7 @@ from textwrap import dedent
 from datetime import timedelta
 from random import choice, shuffle
 from collections import defaultdict
+from SQLiteHelper import SQLiteHelper as sq
 
 from plasmaBot.playlist import Playlist
 from plasmaBot.player import MusicPlayer
