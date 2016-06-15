@@ -30,7 +30,7 @@ from plasmaBot.structures import Response, SkipState
 from plasmaBot.config import Config, ConfigDefaults
 from plasmaBot.permissions import Permissions, PermissionsDefaults
 from plasmaBot.utils import load_file, write_file, sane_round_int
-from plasmaBot.database import PRDatabase, AutoReplyDatabase
+from plasmaBot.database import plasmaBotDatabase, autoReplyDatabase
 
 from plasmaBot.plugins import all_commands
 
@@ -56,7 +56,7 @@ class PlasmaBot(discord.Client):
         self.aiosession = aiohttp.ClientSession(loop=self.loop)
 
         self.config = Config(config_file)
-        self.auto = AutoReplyDatabase(self.config.autoreply_file)
+        self.auto = autoReplyDatabase(self.config.autoreply_file)
         self.permissions = Permissions(perms_file, grant_all=[self.config.owner_id])
         self.permissions = Permissions(perms_file, grant_all=[self.config.bug_test_id])
 

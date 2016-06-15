@@ -127,7 +127,7 @@ from SQLiteHelper import SQLiteHelper as sq
 class plasmaBotDatabase:
     def __init__(self, database_file):
         self.file_path = database_file
-        self.db = sq.Connect("database")
+        self.db = sq.Connect(database_file)
         self.con = self.db.getConn()
         self.cur = self.con.cursor()
 
@@ -138,7 +138,7 @@ class plasmaBotDatabase:
                 WHERE type = 'table'
                 AND table_name = '{0}'
                 """.format(table))
-        table_count = self.cursor.fetchone()[0]
+        table_count = self.cur.fetchone()[0]
         return bool(table_count)
 
     def __del__(self):
@@ -155,3 +155,32 @@ class autoReplyDatabase(plasmaBotDatabase):
             self.db.table("GLOBAL").withColumns("HANDLER", "REPLY", "REPLYBOOL", "DELETEBOOL", "DELETETIME").withDataTypes("TEXT PRIMARY KEY NOT NULL", "TEXT", "INT", "INT", "INT").createTable()
             self.db.table("GLOBAL").insert("ping", "pong", "0", "1", "30").into("HANDLER", "REPLY", "REPLYBOOL", "DELETEBOOL", "DELETERESPONSE")
             print("[DATA] GLOBAL AUTOREPLY DATABASE CREATED WITH AUTOREPLY [ping][pong][0][1][30]")
+
+    def autoDoesExist(self, table, handler):
+        self.cur.execute("""
+                SELECT COUNT(*)
+                FROM '{TABLE}'
+                WHERE HANDLER = '{HANDLER}'
+                """.format(TABLE = table, HANDLER = handler))
+        HandlerCount = self.cur
+
+
+    def addGlobal(self, handler, reply, replybool, deletebool, deletetime):
+        try:
+            if deletebool = True:
+                deletebool = 1
+            else:
+                deletebool = 0
+                deletetime = 0
+
+            if replybool = True:
+                replybool = 1
+            else:
+                replybool = 0
+
+            self.db.table("GLOBAL").insert(handler, reply, replybool, deletebool, deletetime).into("HANDLER", "REPLY", "REPLYBOOL", "DELETEBOOL", "DELETERESPONSE")
+            return True
+
+        except:
+            print("[DATA] ERROR IMPORTING [{HANDLER}][{REPLY}][{REPLYBOOL}][{DELETEBOOL}][{DELETETIME}] into GLOBAL AUTOREPLIES DATABASE".format(HANDLER = handler, REPLY = reply, REPLYBOOL = replybool, DELETEBOOL = deletebool, DELETETIME = deletetime))
+            return False
