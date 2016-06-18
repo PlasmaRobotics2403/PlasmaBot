@@ -757,7 +757,7 @@ class PlasmaBot(discord.Client):
         if self.config.allow_invites or message.author.id == self.config.owner_id:
             if self.user.bot:
                 appinfo = await self.application_info()
-                join_url = discord.utils.oauth_url(appinfo.id) + "&permissions=0x08209408"
+                join_url = discord.utils.oauth_url(appinfo.id) + "&permissions=66321471"
 
                 return Response(
                     'Invite %s to your server!  See: %s' % (self.config.bot_name, join_url), reply=True, delete_after=30

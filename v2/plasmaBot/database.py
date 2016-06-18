@@ -2,6 +2,7 @@ import os
 import sqlite3
 
 from SQLiteHelper import SQLiteHelper as sq
+from .exceptions import HelpfulError
 
 #import os
 #import sqlite3
@@ -156,14 +157,23 @@ class autoReplyDatabase(plasmaBotDatabase):
             self.db.table("GLOBAL").insert("ping", "pong", "0", "1", "30").into("HANDLER", "REPLY", "REPLYBOOL", "DELETEBOOL", "DELETERESPONSE")
             print("[DATA] GLOBAL AUTOREPLY DATABASE CREATED WITH AUTOREPLY [ping][pong][0][1][30]")
 
-    def autoDoesExist(self, table, handler):
+    def globalDoesExist(self, handler):
         self.cur.execute("""
                 SELECT COUNT(*)
-                FROM '{TABLE}'
-                WHERE HANDLER = '{HANDLER}'
-                """.format(TABLE = table, HANDLER = handler))
-        HandlerCount = self.cur
+                FROM 'GLOBAL'
+                WHERE HANDLER = '{0}'
+                """.format(handler))
+        HandlerCount = self.cur.fetchone()[0]
+        return bool(HandlerCount)
 
+    def localDoesExist(self, handler, serverTable):
+        self.cur.execute("""
+                SELECT COUNT(*)
+                FROM '{SID}'
+                WHERE HANDLER = '{HANDLER}'
+                """.format(SID = serverTable, HANDLER = handler))
+        HandlerCount = self.cur.fetchone()[0]
+        return bool(HandlerCount)
 
     def addGlobal(self, handler, reply, replybool, deletebool, deletetime):
         try:
@@ -178,9 +188,102 @@ class autoReplyDatabase(plasmaBotDatabase):
             else:
                 replybool = 0
 
-            self.db.table("GLOBAL").insert(handler, reply, replybool, deletebool, deletetime).into("HANDLER", "REPLY", "REPLYBOOL", "DELETEBOOL", "DELETERESPONSE")
-            return True
+            if not self.globalDoesExist(handler):
+                self.db.table("GLOBAL").insert(handler, reply, replybool, deletebool, deletetime).into("HANDLER", "REPLY", "REPLYBOOL", "DELETEBOOL", "DELETERESPONSE")
+                return [True, True]
+
+            else:
+                print("GLOBAL HANDLER ALREADY EXISTS")
+                print [True, False]
+        except:
+            print("[DATA] ERROR IMPORTING [{HANDLER}][{REPLY}][{REPLYBOOL}][{DELETEBOOL}][{DELETETIME}] into GLOBAL AUTOREPLIES DATABASE".format(HANDLER = handler, REPLY = reply, REPLYBOOL = replybool, DELETEBOOL = deletebool, DELETETIME = deletetime))
+            return [False, False]
+
+    def addLocal(self, serverID, handler, reply, replybool, deletebool, deletetime):
+
+        serverTable = S + serverID
+
+        try:
+            if deletebool = True:
+                deletebool = 1
+            else:
+                deletebool = 0
+                deletetime = 0
+
+            if replybool = True:
+                replybool = 1
+            else:
+                replybool = 0
+
+            if not super().tableExists(serverTable):
+                self.db.table(serverTable).withColumns("HANDLER", "REPLY", "REPLYBOOL", "DELETEBOOL", "DELETETIME").withDataTypes("TEXT PRIMARY KEY NOT NULL", "TEXT", "INT", "INT", "INT").createTable()
+                self.db.table(serverTable).insert(serverTable, "Server Autoreplies are Active", "1", "1", "30").into("HANDLER", "REPLY", "REPLYBOOL", "DELETEBOOL", "DELETERESPONSE")
+
+            if not self.localDoesExist(handler, serverTable):
+                self.db.table(serverTable).insert(handler, reply, replybool, deletebool, deletetime).into("HANDLER", "REPLY", "REPLYBOOL", "DELETEBOOL", "DELETERESPONSE")
+                return [True, True]
+            else:
+                return [True, False]
 
         except:
             print("[DATA] ERROR IMPORTING [{HANDLER}][{REPLY}][{REPLYBOOL}][{DELETEBOOL}][{DELETETIME}] into GLOBAL AUTOREPLIES DATABASE".format(HANDLER = handler, REPLY = reply, REPLYBOOL = replybool, DELETEBOOL = deletebool, DELETETIME = deletetime))
-            return False
+            return [False, False]
+
+    def getGlobal(self, handler):
+        try:
+            if self.globalDoesExist(handler):
+                handerData = db.table("GLOBAL").select("HANDLER", "REPLY", "REPLYBOOL", "DELETEBOOL", "DELETETIME").where("HANDLER").equals(handler).execute()
+
+                for entry in handerData:
+                    retReply = entry[1]
+
+                    if entry[2] = 1:
+                        retReplyBool = True
+                    else:
+                        retReplyBool = False
+
+                    if entry[3] = 1:
+                        retDeleteBool = True
+                    else:
+                        retDeleteBool = False
+
+                    if entry[3] = 1:
+                        retDeleteTime = entry[4]
+                    else:
+                        retDeleteTime = False
+
+                    return [True, retReply, retReplyBool, retDeleteBool, retDeleteTime]
+            else:
+                return [False, False, False, False, False]
+
+
+    def getLocal(self, serverID, handler):
+
+        serverTable = S + serverID
+
+        try:
+            if self.localDoesExist(handler, serverTable):
+                handerData = db.table(serverTable).select("HANDLER", "REPLY", "REPLYBOOL", "DELETEBOOL", "DELETETIME").where("HANDLER").equals(handler).execute()
+
+                for entry in handerData:
+                    retReply = entry[1]
+
+                    if entry[2] = 1:
+                        retReplyBool = True
+                    else:
+                        retReplyBool = False
+
+                    if entry[3] = 1:
+                        retDeleteBool = True
+                    else:
+                        retDeleteBool = False
+
+                    if entry[3] = 1:
+                        retDeleteTime = entry[4]
+                    else:
+                        retDeleteTime = False
+
+                    return [True, retReply, retReplyBool, retDeleteBool, retDeleteTime]
+
+            else:
+                return [False, False, False, False, False]
