@@ -82,7 +82,6 @@ class PIP(object):
         except ImportError:
             return False
 
-    # noinspection PyTypeChecker
     @classmethod
     def get_module_version(cls, mod):
         try:
@@ -104,12 +103,11 @@ class PIP(object):
 
 def main():
     if not sys.version_info >= (3, 5):
-        print("Python 3.5+ is required. This version is %s" % sys.version.split()[0])
+        print("[PB] Python 3.5+ is required. This version is %s" % sys.version.split()[0])
         print("Attempting to locate python 3.5...")
 
         pycom = None
 
-        # Maybe I should check for if the current dir is the plasmaBot folder, just in case
 
         if sys.platform.startswith('win'):
             try:
@@ -124,7 +122,8 @@ def main():
                     pass
 
             if pycom:
-                print("Python 3 found.  Launching bot...")
+                print("\nPython 3.5 found.  Re-starting PlasmaBot using: ")
+                print("  %s run.py\n" % pycom)
                 os.system('start cmd /k %s run.py' % pycom)
                 sys.exit(0)
 
@@ -135,13 +134,13 @@ def main():
                 pass
 
             if pycom:
-                print("\nPython 3 found.  Re-launching bot using: ")
+                print("\nPython 3.5 found.  Re-starting PlasmaBot using: ")
                 print("  %s run.py\n" % pycom)
 
                 os.execlp(pycom, pycom, 'run.py')
 
-        print("Please run the bot using python 3.5")
-        input("Press enter to continue . . .")
+        print("Please run the bot using Python3.5")
+        input("Press ENTER to continue . . .")
 
         return
 
@@ -154,15 +153,17 @@ def main():
     max_wait_time = 60
 
     while tryagain:
-        # Maybe I need to try to import stuff first, then actually import stuff
-        # It'd save me a lot of pain with all that awful exception type checking
 
         try:
             from plasmaBot import PlasmaBot
 
             m = PlasmaBot()
-            print("Connecting...", end='', flush=True)
+            print("[PB] Connecting to Discord...", end='', flush=True)
             m.run()
+
+        except KeyboardInterrupt:
+            print("\n[PB] Shutting Down...")
+            break
 
         except SyntaxError:
             traceback.print_exc()
@@ -174,19 +175,19 @@ def main():
 
                 # TODO: Better output
                 print(e)
-                print("Attempting to install dependencies...")
+                print("[PB] Attempting to install PlasmaBot dependencies...")
 
                 err = PIP.run_install('--upgrade -r requirements.txt')
 
                 if err:
-                    print("\nYou may need to %s to install dependencies." %
+                    print("\nYou should %s to install the PlasmaBot dependencies." %
                           ['use sudo', 'run as admin'][sys.platform.startswith('win')])
                     break
                 else:
-                    print("\nOk lets hope it worked\n")
+                    print("\nDependencies Installed\n")
             else:
                 traceback.print_exc()
-                print("Unknown ImportError, exiting.")
+                print("[PB] Unknown ImportError, closing.")
                 break
 
         except Exception as e:
