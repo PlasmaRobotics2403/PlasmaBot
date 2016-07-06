@@ -162,7 +162,8 @@ def main():
             m.run()
 
         except KeyboardInterrupt:
-            print("\n[PB] Shutting Down...")
+            print("\n[PB] Shutting Down...\n\nThanks for using PlasmaBot!")
+            m.shutdown()
             break
 
         except SyntaxError:

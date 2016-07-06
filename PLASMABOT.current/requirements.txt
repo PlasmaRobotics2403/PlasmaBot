@@ -1,1 +1,2 @@
 git+https://github.com/cookkkie/discord.py.git@async
+sqlitehelper
