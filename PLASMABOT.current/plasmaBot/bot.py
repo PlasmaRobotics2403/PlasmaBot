@@ -8,24 +8,31 @@ import asyncio
 
 import discord
 
+from . import exceptions
+
 from plasmaBot.config import Config, ConfigDefaults
 from plasmaBot.plugin import PBPluginManager, PBCommand, Response, PBPluginMeta, PBPlugin
 
-from plugins.default import DefaultPlugin
+from plasmaBot.plugins.bot_operation import BotOperation
 
 # Logging setup
 logger = logging.getLogger('discord')
 
 class PlasmaBot(discord.Client):
-    def __init__(self):
+    def __init__(self, shutdown_operator):
         super().__init__()
+
+        self.shutdown_state = shutdown_operator
+
+        print('[PB] Loading PlasmaBot Configuration...\n')
 
         self.config = Config()
 
-        self.version = '0.0.1-BETA-0.2'
+        print('[PB][CONFIG] Prefix is ({})\n'.format(self.config.prefix))
+
+        self.version = '0.0.1-BETA-0.3'
 
         self.plugin_manager = PBPluginManager(self)
-        print('in between pm and pl')
         self.plugin_manager.load_all()
 
     def run(self):
@@ -66,7 +73,7 @@ class PlasmaBot(discord.Client):
 
         enabled_plugins = await self.get_plugins()
         for plugin in enabled_plugins:
-            self.loop.create_task(plugin.on_ready(server))
+            self.loop.create_task(plugin.on_ready())
 
     async def on_server_join(self, server):
         if self.config.debug:
@@ -176,6 +183,20 @@ class PlasmaBot(discord.Client):
 
         if self.config.terminal_log:
             print('[PB][MESSAGE][' + message_context.upper() + '][' + message_type.upper() + ']' + cmd_message + ' "' + " \\n ".join(message.content.split("\n")).strip() + '" ~' + message.author.name + '(#' + message.author.discriminator + ')')
+
+        glob_cmd, *glob_args = message.content.strip().split()
+        glob_cmd = glob_cmd[len(self.config.prefix):].lower().strip()
+
+        if message_type == 'owner' and (glob_cmd == 'restart' or glob_cmd == 'shutdown'):
+            if glob_cmd == 'shutdown':
+                await self.safe_send_message(message.channel, ':skull_crossbones: {} is shutting down'.format(self.config.bot_name))
+                self.shutdown_state.bot_shutdown()
+                self.shutdown()
+            else:
+                await self.safe_send_message(message.channel, ':curly_loop: {} is restarting'.format(self.config.bot_name))
+                self.shutdown_state.bot_restart()
+                self.shutdown()
+            message_is_command = False
 
         server = message.server
         enabled_plugins = await self.get_plugins()

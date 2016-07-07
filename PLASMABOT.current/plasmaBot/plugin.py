@@ -1,6 +1,9 @@
 import inspect
 import logging
 import asyncio
+import traceback
+
+from . import exceptions
 
 # Logging setup
 logger = logging.getLogger('discord')
@@ -16,11 +19,10 @@ class PBPluginManager:
         plugin_instance = plugin(self.bot)
         self.bot.plugins.append(plugin_instance)
         if self.bot.config.debug:
-            print(" - loaded")
+            print(" - Sucessfully Loaded Plugin {0}\n".format(plugin.__name__))
 
     def load_all(self):
-        print('test')
-        for plugin in PBPluginMeta.all:
+        for plugin in PBPlugin.all:
             self.load(plugin)
 
     async def get_all(self, server=None):
@@ -51,13 +53,20 @@ class Response:
         self.delete_after = delete_after
 
 
+class PluginContainer:
+    def __init__(cls):
+        print('PluginContainer Initiated')
+
+    def add_plugin(cls, plugin):
+        if not hasattr(cls, ''):
+            print('test')
+
 class PBPluginMeta(type):
     def __init__(cls, name, bases, dct):
-        if not hasattr(cls, 'plugins'):
+        if not hasattr(cls, 'all'):
             cls.all = []
         else:
             cls.all.append(cls)
-
 
 class PBPlugin(object, metaclass=PBPluginMeta):
 
@@ -67,46 +76,25 @@ class PBPlugin(object, metaclass=PBPluginMeta):
 
     def __init__(self, plasmaBot):
         self.bot = plasmaBot
-        self.commands = []
-
-    @classmethod
-    def command(cls, key, purpose='', usage='', perm=None, context_global=False):
-        def command_decorator(self, command):
-            if key in self.commands:
-                raise Exception("[PB][PLUGIN] Duplicate Commands Detected")
-
-            self.commands[key] = PBCommand(command, purpose, usage, perm, context_global)
-            return command
-        return command_decorator
+        self.all = {}
 
     async def on_command(self, message, message_type, message_context): #check for blacklisted user tbd #check for server moderation role / perms, tbd #check for private channel, tbd
         message_content = message.content.strip()
 
-        command, *args = message_content.strip()
+        command, *args = message_content.split()
         command = command[len(self.bot.config.prefix):].lower().strip()
 
-        command_data = self.commands.get(command, None)
-
-        if not command_data:
+        handler = getattr(self, 'cmd_%s' % command, None)
+        if not handler:
+            if self.bot.config.debug:
+                print(' - No Command "{0}" Available'.format(command))
             return
         else:
-            handler = command_data.command
-            perm = command_data.perm
-            context_global = command_data.context_global
-
-            if message_content == 'direct' and not context_global:
-                if self.bot.config.terminal_log:
-                    print('- Command Not Applicable in Direct Messages') #possibly return message to channel if direct and not global
-                return
-            elif perm == 'owner' and not message_type == 'owner':
-                if self.bot.config.terminal_log:
-                    print('- Message Author not Bot Owner')
-                return
+            if False:
+                pass
             else:
                 argspec = inspect.signature(handler)
                 params = argspec.parameters.copy()
-
-                # noinspection PyBroadException
 
                 try:
                     handler_kwargs = {}
@@ -134,6 +122,12 @@ class PBPlugin(object, metaclass=PBPluginMeta):
                     if params.pop('voice_channel', None):
                         handler_kwargs['voice_channel'] = message.server.me.voice_channel
 
+                    if params.pop('message_type', None):
+                        handler_kwargs['message_type'] = message_type
+
+                    if params.pop('message_context', None):
+                        handler_kwargs['message_context'] = message_context
+
                     if params.pop('leftover_args', None):
                         handler_kwargs['leftover_args'] = args
 
@@ -152,20 +146,19 @@ class PBPlugin(object, metaclass=PBPluginMeta):
                             params.pop(key)
 
                     if params:
-                        cmd_purpose = command_data.purpose
-                        cmd_usage = command_data.usage
+                        docs = getattr(handler, '__doc__', None)
+                        if not docs:
+                            docs = 'Usage: {}{} {}'.format(
+                                self.bot.config.prefix,
+                                command,
+                                ' '.join(args_expected)
+                            )
 
-                        docs_message = 'Command "{}{}"\nPurpose: {}\nUsage: {}'.format(
-                            self.bot.config.prefix,
-                            command,
-                            cmd_purpose,
-                            cmd_usage
-                        )
-
+                        docs = '\n'.join(l.strip() for l in docs.split('\n'))
                         await self.safe_send_message(
                             message.channel,
-                            docs_message,
-                            expire_in=60
+                            '```\n%s\n```' % docs.format(command_prefix=self.bot.config.prefix),
+                            expire_in=60 if self.bot.config.delete_messages else 0
                         )
                         return
 
@@ -178,8 +171,8 @@ class PBPlugin(object, metaclass=PBPluginMeta):
 
                         sentmsg = await self.bot.safe_send_message(
                             message.channel, content,
-                            expire_in=response.delete_after if self.config.delete_messages else 0,
-                            also_delete=message if self.config.delete_invoking else None
+                            expire_in=response.delete_after if self.bot.config.delete_messages else 0,
+                            also_delete=message if self.bot.config.delete_invoking else None
                         )
 
                 except (exceptions.CommandError, exceptions.HelpfulError, exceptions.ExtractionError) as err:
@@ -195,6 +188,9 @@ class PBPlugin(object, metaclass=PBPluginMeta):
                         expire_in=expirein,
                         also_delete=alsodelete
                     )
+
+                except exceptions.Signal:
+                    raise
 
                 except Exception:
                     traceback.print_exc()
@@ -228,7 +224,13 @@ class PBPlugin(object, metaclass=PBPluginMeta):
     async def on_member_remove(self, member):
         pass
 
+    async def on_member_update(self, before, after):
+        pass
+
     async def on_server_join(self, server):
+        pass
+
+    async def on_server_remove(self, server):
         pass
 
     async def on_server_role_create(self, server, role):

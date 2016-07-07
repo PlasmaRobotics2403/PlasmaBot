@@ -7,6 +7,23 @@ import time
 import traceback
 import subprocess
 
+class ShutdownBus():
+    def __init__(self):
+        self.restart = False
+        self.shutdown = False
+
+    def bot_shutdown(self):
+        self.restart = False
+        self.shutdown = True
+
+    def bot_restart(self):
+        print("RESTARThfladASD")
+        self.restart = True
+        self.shutdown = True
+
+    def reset(self):
+        self.restart = False
+        self.shutdown = False
 
 class GIT(object):
     @classmethod
@@ -102,6 +119,9 @@ class PIP(object):
 
 
 def main():
+
+    sstate = ShutdownBus()
+
     if not sys.version_info >= (3, 5):
         print("[PB] Python 3.5+ is required. This version is %s" % sys.version.split()[0])
         print("Attempting to locate python 3.5...")
@@ -157,11 +177,11 @@ def main():
         try:
             from plasmaBot import PlasmaBot
 
-            m = PlasmaBot()
+            m = PlasmaBot(sstate)
             print("[PB] Connecting to Discord...", end='', flush=True)
             m.run()
 
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, SystemExit):
             print("\n[PB] Shutting Down...\n\nThanks for using PlasmaBot!")
             m.shutdown()
             break
@@ -192,18 +212,29 @@ def main():
                 break
 
         except Exception as e:
-            if hasattr(e, '__module__') and e.__module__ == 'plasmabot.exceptions':
+            if hasattr(e, '__module__') and e.__module__ == 'plasmaBot.exceptions':
                 if e.__class__.__name__ == 'HelpfulError':
                     print(e.message)
                     break
 
                 elif e.__class__.__name__ == "TerminateSignal":
+                    print("\n[PB] Shutting Down...\n\nThanks for using PlasmaBot!")
+                    m.shutdown()
                     break
 
                 elif e.__class__.__name__ == "RestartSignal":
                     loops = -1
             else:
-                traceback.print_exc()
+                if (sstate.shutdown is True):
+                    if sstate.restart is True:
+                        print("\n[PB] Restarting...\n\nThanks for using PlasmaBot!\n")
+                        loops = -1
+                        sstate.reset()
+                    else:
+                        print("\n[PB] Shutting Down...\n\nThanks for using PlasmaBot!")
+                        break
+                else:
+                    traceback.print_exc()
 
         finally:
             asyncio.set_event_loop(asyncio.new_event_loop())
