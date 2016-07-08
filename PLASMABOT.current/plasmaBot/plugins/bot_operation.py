@@ -7,7 +7,7 @@ import logging
 log = logging.getLogger('discord')
 
 class BotOperation(PBPlugin):
-    name = 'BotOperation'
+    name = 'Bot Operation Tools'
     requirements = None
     is_global = True
 

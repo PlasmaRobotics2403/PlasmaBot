@@ -8,10 +8,12 @@ import asyncio
 
 import discord
 
+from SQLiteHelper import SQLiteHelper as sq
+
 from . import exceptions
 
 from plasmaBot.config import Config, ConfigDefaults
-from plasmaBot.plugin import PBPluginManager, PBCommand, Response, PBPluginMeta, PBPlugin
+from plasmaBot.plugin import PBPluginManager, Response, PBPluginMeta, PBPlugin
 
 from plasmaBot.plugins.bot_operation import BotOperation
 
@@ -29,6 +31,8 @@ class PlasmaBot(discord.Client):
         self.config = Config()
 
         print('[PB][CONFIG] Prefix is ({})\n'.format(self.config.prefix))
+
+        self.message_list = {}
 
         self.version = '0.0.1-BETA-0.3'
 
@@ -96,6 +100,20 @@ class PlasmaBot(discord.Client):
         enabled_plugins = await self.get_plugins()
         for plugin in enabled_plugins:
             self.loop.create_task(plugin.on_server_remove(server))
+
+    def get_messages(self, channelID):
+        if not str(channelID) in self.message_list:
+            self.message_list[str(channelID)] = []
+        else:
+            return self.message_list[str(channelID)]
+
+    def store_messages(self, channelID, message):
+        if not  str(channelID) in self.message_list:
+            self.message_list[str(channelID)] = []
+
+        message_list = [message] + self.get_messages(channelID)
+
+        self.message_list[str(channelID)] = message_list
 
     async def _wait_delete_msg(self, message, delay):
         await asyncio.sleep(delay)
@@ -183,6 +201,8 @@ class PlasmaBot(discord.Client):
 
         if self.config.terminal_log:
             print('[PB][MESSAGE][' + message_context.upper() + '][' + message_type.upper() + ']' + cmd_message + ' "' + " \\n ".join(message.content.split("\n")).strip() + '" ~' + message.author.name + '(#' + message.author.discriminator + ')')
+
+        self.store_messages(message.channel.id, message)
 
         glob_cmd, *glob_args = message.content.strip().split()
         glob_cmd = glob_cmd[len(self.config.prefix):].lower().strip()

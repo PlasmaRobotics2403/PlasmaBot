@@ -38,20 +38,11 @@ class PBPluginManager:
                 plugins.append(plugin)
         return plugins
 
-class PBCommand:
-    def __init__(self, command, purpose, usage, perm, context_global):
-        self.command = command
-        self.purpose = purpose
-        self.usage = usage
-        self.perm = perm
-        self.context_global = context_global
-
 class Response:
     def __init__(self, content, reply=False, delete_after=0):
         self.content = content
         self.reply = reply
         self.delete_after = delete_after
-
 
 class PluginContainer:
     def __init__(cls):
@@ -76,7 +67,6 @@ class PBPlugin(object, metaclass=PBPluginMeta):
 
     def __init__(self, plasmaBot):
         self.bot = plasmaBot
-        self.all = {}
 
     async def on_command(self, message, message_type, message_context): #check for blacklisted user tbd #check for server moderation role / perms, tbd #check for private channel, tbd
         message_content = message.content.strip()
