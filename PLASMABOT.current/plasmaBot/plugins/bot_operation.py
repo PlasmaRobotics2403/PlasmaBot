@@ -33,6 +33,9 @@ class BotOperation(PBPlugin):
                 usage = command[1]
                 description = command[2]
 
+            if plugin == '':
+                return
+
             help_response = 'Usage for _'
             help_response += self.bot.config.prefix + help_command
             help_response += '_:\n     ' + usage + '\n\n'
