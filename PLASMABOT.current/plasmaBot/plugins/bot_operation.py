@@ -127,3 +127,25 @@ class BotOperation(PBPlugin):
         else:
             user = user_mentions[0]
             return Response("<@{0}>'s ID is `{0}`".format(user.id), reply=False, delete_after=30)
+
+    async def cmd_say(self, message_type, leftover_args):
+        """
+        Usage:
+            {command_prefix}say (message)
+
+        Get's a User's ID
+        """
+        silent = False
+        if message_type == 'owner':
+            if leftover_args[0] == 'silent':
+                silent = True
+                del leftover_args[0]
+
+        message_to_send = ''
+        for message_segment in leftover_args:
+            message_to_send += message_segment
+
+        if silent:
+            return Response(message_to_send, reply=False, delete_after=120)
+        else:
+            return Response(message_to_send, reply=True, delete_after=120)
