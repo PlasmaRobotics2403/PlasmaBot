@@ -3,6 +3,8 @@ import logging
 import asyncio
 import traceback
 
+from types import FunctionType
+
 from . import exceptions
 
 # Logging setup
@@ -13,27 +15,71 @@ class PBPluginManager:
         self.bot = plasmaBot
         self.bot.plugins = []
 
-    def load(self, plugin):
+    def load(self, plugin, column_list):
         if self.bot.config.debug:
             print("[PB][PLUGIN] Loading Plugin {0}".format(plugin.__name__))
+
+        plugin_commands = 0
+
+        for cmd_name, cmd_class in plugin.__dict__.items():
+            if type(cmd_class) == FunctionType:
+                if cmd_name.startswith('cmd_'):
+                    raw_command_list = self.bot.plugin_db.table('commands').select("COMMAND_KEY").execute()
+                    command_name = cmd_name[4:].lower().strip()
+
+                    for command in raw_command_list:
+                        if command[0] == command_name:
+                            print('[PB][COMMANDS] FATAL ERROR: Duplicate Command Detected')
+                            self.bot.shutdown_state.bot_shutdown()
+                            self.bot.shutdown()
+
+                    plugin_commands += 1
+
+                    command = getattr(plugin, cmd_name, None)
+                    doc = getattr(command, '__doc__', None)
+                    split_doc = doc.splitlines()
+
+                    command_usage = split_doc[2].strip().format(command_prefix = self.bot.config.prefix)
+                    command_description = split_doc[4].strip()
+
+                    self.bot.plugin_db.table('commands').insert(command_name, plugin.__name__, command_usage, command_description).into("COMMAND_KEY", "PLUGIN_NAME", "COMMAND_USAGE", "COMMAND_DESCRIPTION")
+
+        if not plugin.__name__ in column_list:
+            self.bot.plugin_db_cursor.execute("ALTER TABLE servers ADD COLUMN '%s' 'TEXT'" % plugin.__name__)
+
+        if plugin.globality is list:
+            globality = 'manual'
+            servers = ''
+            for serverID in plugin.globality:
+                servers += "^" + serverID
+            self.bot.plugin_db.table('plugins').insert(plugin.__name__, plugin.name, globality, servers).into("PLUGIN_NAME", "FANCY_NAME", "GLOBALITY", "SPECIAL_SERVERS")
+        else:
+            globality = plugin.globality
+            self.bot.plugin_db.table('plugins').insert(plugin.__name__, plugin.name, globality).into("PLUGIN_NAME", "FANCY_NAME", "GLOBALITY")
+
         plugin_instance = plugin(self.bot)
         self.bot.plugins.append(plugin_instance)
         if self.bot.config.debug:
+            if plugin_commands > 0:
+                print(" - {} commands registered".format(plugin_commands))
             print(" - Sucessfully Loaded Plugin {0}\n".format(plugin.__name__))
 
     def load_all(self):
+        raw_column_list = self.bot.plugin_db_cursor.execute("PRAGMA table_info(servers)")
+        column_list = []
+
+        for column in raw_column_list:
+            column_list = column_list + [column[1]]
+
         for plugin in PBPlugin.all:
-            self.load(plugin)
+            self.load(plugin, column_list)
 
     async def get_all(self, server=None):
         plugins = []
         for plugin in self.bot.plugins:
             if server:
-                #pull server plugins out of db
-                if plugin.is_global:
-                    plugins.append(plugin)
-                if plugin.__class__.__name__ in plugin_names:
-                    plugin.append(plugin)
+                pl_globality = type(plugin).globality
+                plugins.append(plugin)
             else:
                 plugins.append(plugin)
         return plugins
@@ -62,8 +108,7 @@ class PBPluginMeta(type):
 class PBPlugin(object, metaclass=PBPluginMeta):
 
     name = None
-    requirements = None
-    is_global = None
+    globality = None #can be [serverID, serverID, serverID] "all" or "choice"
 
     def __init__(self, plasmaBot):
         self.bot = plasmaBot
@@ -98,10 +143,12 @@ class PBPlugin(object, metaclass=PBPluginMeta):
                     if params.pop('author', None):
                         handler_kwargs['author'] = message.author
 
-                    if params.pop('server', None) and message_type == 'direct':
-                        print('- ERROR: global command ' + command + 'requests server value')
-                    elif params.pop('server', None):
-                        handler_kwargs['server'] = message.server
+                    if params.pop('server', None):
+                        if message_context == 'direct':
+                            print('- ERROR: global/direct command ' + command + 'requests server value')
+                            return
+                        else:
+                            handler_kwargs['server'] = message.server
 
                     if params.pop('user_mentions', None):
                         handler_kwargs['user_mentions'] = list(map(message.server.get_member, message.raw_mentions))
@@ -145,7 +192,7 @@ class PBPlugin(object, metaclass=PBPluginMeta):
                             )
 
                         docs = '\n'.join(l.strip() for l in docs.split('\n'))
-                        await self.safe_send_message(
+                        await self.bot.safe_send_message(
                             message.channel,
                             '```\n%s\n```' % docs.format(command_prefix=self.bot.config.prefix),
                             expire_in=60 if self.bot.config.delete_messages else 0
@@ -221,6 +268,9 @@ class PBPlugin(object, metaclass=PBPluginMeta):
         pass
 
     async def on_server_remove(self, server):
+        pass
+
+    async def on_server_update(self, before, after):
         pass
 
     async def on_server_role_create(self, server, role):

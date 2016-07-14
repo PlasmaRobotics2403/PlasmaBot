@@ -182,7 +182,7 @@ def main():
             m.run()
 
         except (KeyboardInterrupt, SystemExit):
-            print("\n[PB] Shutting Down...\n\nThanks for using PlasmaBot!")
+            print("\n[PB] Shutting Down...\n\nThanks for using PlasmaBot!\n--------------------------------------------------------")
             m.shutdown()
             break
 
@@ -216,14 +216,6 @@ def main():
                 if e.__class__.__name__ == 'HelpfulError':
                     print(e.message)
                     break
-
-                elif e.__class__.__name__ == "TerminateSignal":
-                    print("\n[PB] Shutting Down...\n\nThanks for using PlasmaBot!")
-                    m.shutdown()
-                    break
-
-                elif e.__class__.__name__ == "RestartSignal":
-                    loops = -1
             else:
                 if (sstate.shutdown is True):
                     if sstate.restart is True:
@@ -231,7 +223,7 @@ def main():
                         loops = -1
                         sstate.reset()
                     else:
-                        print("\n[PB] Shutting Down...\n\nThanks for using PlasmaBot!")
+                        print("\n[PB] Shutting Down...\n\nThanks for using PlasmaBot!\n--------------------------------------------------------")
                         break
                 else:
                     traceback.print_exc()

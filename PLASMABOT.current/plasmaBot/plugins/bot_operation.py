@@ -7,12 +7,70 @@ import logging
 log = logging.getLogger('discord')
 
 class BotOperation(PBPlugin):
-    name = 'Bot Operation Tools'
-    requirements = None
-    is_global = True
+    name = 'Standard Commands'
+    globality = 'all'
 
     def __init__(self, plasmaBot):
         super().__init__(plasmaBot)
+
+    async def cmd_help(self, help_command=None):
+        """
+        Usage:
+            {command_prefix}help [command]
+
+        Get a List of Bot Commands, or get help about a given Command.
+        """
+        if help_command:
+            help_command = help_command.lower().strip()
+            raw_commands_return = self.bot.plugin_db.table('commands').select("PLUGIN_NAME", "COMMAND_USAGE", "COMMAND_DESCRIPTION").where("COMMAND_KEY").equals(help_command).execute()
+
+            plugin = ''
+            usage = ''
+            description = ''
+
+            for command in raw_commands_return:
+                plugin = command[0]
+                usage = command[1]
+                description = command[2]
+
+            help_response = 'Usage for _'
+            help_response += self.bot.config.prefix + help_command
+            help_response += '_:\n     ' + usage + '\n\n'
+            help_response += description
+
+        else:
+            plugins_commands_dict = {}
+            raw_commands_return = self.bot.plugin_db.table('commands').select("COMMAND_KEY", "PLUGIN_NAME", "COMMAND_DESCRIPTION", "HELP_EXCLUDE").execute()
+
+            for command in raw_commands_return:
+                command_key = command[0]
+                plugin = command[1]
+                description = command[2]
+                exclude = command[3]
+
+                if not exclude == "YES":
+                    cmd_entry = command_key + ": " + description
+                    if not plugin in plugins_commands_dict:
+                        plugins_commands_dict[plugin] = [cmd_entry]
+                    else:
+                        plugins_commands_dict[plugin] = plugins_commands_dict[plugin] + [cmd_entry]
+
+            help_response = "**{}'s Commands:**\n```".format(self.bot.config.bot_name)
+
+            for plugin, commands in plugins_commands_dict.items():
+                raw_plugin_return = self.bot.plugin_db.table('plugins').select("FANCY_NAME").where("PLUGIN_NAME").equals(plugin).execute()
+
+                for item in raw_plugin_return:
+                    fancy_name = item[0]
+
+                help_response = help_response + fancy_name + '\n'
+
+                for command in commands:
+                    help_response = help_response + ' • ' + self.bot.config.prefix + command + '\n'
+
+            help_response = help_response + '```'
+
+        return Response(help_response, reply=False, delete_after=60)
 
     async def cmd_ping(self):
         """
@@ -28,7 +86,7 @@ class BotOperation(PBPlugin):
         Usage:
             {command_prefix}invite [server_link if not bot]
 
-        Invite the bot to a server!  Or, get the invite link if using a bot account.
+        Invite the bot or get it's Invite Link!
         """
 
         if self.bot.config.allow_invites or message_type=='owner':
