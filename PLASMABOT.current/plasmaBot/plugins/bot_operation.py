@@ -143,7 +143,7 @@ class BotOperation(PBPlugin):
 
         message_to_send = ''
         for message_segment in leftover_args:
-            message_to_send += message_segment
+            message_to_send += message_segment + ' '
 
         if silent:
             return Response(message_to_send, reply=False, delete_after=120)
