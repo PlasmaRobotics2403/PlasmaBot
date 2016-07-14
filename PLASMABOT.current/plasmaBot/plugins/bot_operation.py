@@ -128,24 +128,54 @@ class BotOperation(PBPlugin):
             user = user_mentions[0]
             return Response("<@{0}>'s ID is `{0}`".format(user.id), reply=False, delete_after=30)
 
-    async def cmd_say(self, message_type, leftover_args):
+    async def cmd_say(self, channel, message, author, message_type, leftover_args):
         """
         Usage:
             {command_prefix}say (message)
 
-        Get's a User's ID
+        Bot will respond with your Message
         """
         silent = False
+        sticky = False
+        delete = False
+
         if message_type == 'owner':
-            if leftover_args[0] == 'silent':
-                silent = True
-                del leftover_args[0]
+            if 'silent' in leftover_args or 'sticky' in leftover_args or 'delete' in leftover_args:
+                for keycheck in range(1,3):
+                    if leftover_args[0] == 'delete':
+                        print('tdelete')
+                        delete = True
+                        del leftover_args[0]
+                    if leftover_args[0] == 'silent':
+                        print('tsilent')
+                        silent = True
+                        del leftover_args[0]
+                    if leftover_args[0] == 'sticky':
+                        print('tstick')
+                        sticky = True
+                        del leftover_args[0]
 
         message_to_send = ''
         for message_segment in leftover_args:
             message_to_send += message_segment + ' '
 
-        if silent:
-            return Response(message_to_send, reply=False, delete_after=120)
+        if not sticky:
+            print('not sticky')
         else:
-            return Response(message_to_send, reply=True, delete_after=120)
+            print('sticky')
+
+        if delete:
+            print('deleted')
+            await self.bot.safe_delete_message(message)
+        else:
+            pass
+
+        if not silent:
+            print('not silent')
+            message_to_send = '<@{}>, '.format(author.id) + message_to_send
+        else:
+            print('silent')
+
+        await self.bot.safe_send_message(
+            channel, message_to_send,
+            expire_in=15 if not sticky else 0)
