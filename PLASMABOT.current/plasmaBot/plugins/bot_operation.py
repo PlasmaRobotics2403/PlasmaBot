@@ -114,3 +114,16 @@ class BotOperation(PBPlugin):
                 '{} is not currently accepting server invitations!'.format(self.bot.config.bot_name),
                 reply=True, delete_after=30
             )
+
+    async def cmd_id(self, author, user_mentions):
+        """
+        Usage:
+            {command_prefix}id
+
+        Get's a User's ID
+        """
+        if not user_mentions:
+            return Response('your ID is `{}`'.format(author.id), reply=True, delete_after=30)
+        else:
+            user = user_mentions[0]
+            return Response("<@{0}>'s ID is `{0}`".format(user.id), reply=False, delete_after=30)
