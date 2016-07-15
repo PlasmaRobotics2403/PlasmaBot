@@ -55,11 +55,11 @@ class TBAPlugin(PBPlugin):
                 return Response('Something went wrong when looking up the team.', reply=False, delete_after=30)
             if team.nickname == None:
                 return Response('Team does not exist.', reply=False, delete_after=30)
-            team_data = "Team " + str(team.team_number) + ": " + team.nickname + "\rFrom: " + team.location
+            team_data = "Team " + str(team.team_number) + ": " + team.nickname + "\nFrom: " + team.location
             if team.website != None:
-                team_data = team_data + "\rWebsite: " + team.website
+                team_data = team_data + "\nWebsite: " + team.website
             if team.motto != None:
-                team_data = team_data + '\rMotto: "' + team.motto + '"'
+                team_data = team_data + '\nMotto: "' + team.motto + '"'
             return Response(team_data, reply=False, delete_after=60)
 
         if cmd_type == 'event':
@@ -85,7 +85,7 @@ class TBAPlugin(PBPlugin):
             if key == '0':
                 return Response('No events found. Please ensure spelling is correct.', reply=False, delete_after=30)
             event = self.TBA.get_event(key)
-            event_data = event.name + "\rYear: " + str(event.year) + "\rLocation: " + event.location + "\rDates: " + event.start_date + " to " + event.end_date + "\rEvent Type: " + event.event_type_string + "\rhttps://www.thebluealliance.com/event/" + event.key
+            event_data = event.name + "\nYear: " + str(event.year) + "\nLocation: " + event.location + "\nDates: " + event.start_date + " to " + event.end_date + "\nEvent Type: " + event.event_type_string + "\nhttps://www.thebluealliance.com/event/" + event.key
             return Response(event_data, reply=False, delete_after=60)
 
         return Response('Invalid secondary command. Must be either "team" or "event"', reply=False, delete_after=60)
