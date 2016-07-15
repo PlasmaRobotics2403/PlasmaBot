@@ -10,7 +10,7 @@ import logging
 log = logging.getLogger('discord')
 
 class TBAPlugin(PBPlugin):
-    name = 'TBA (The Blue Alliance) Plugin'
+    name = 'TBA (The Blue Alliance)'
     globality = 'all'
     help_exclude = False
 
