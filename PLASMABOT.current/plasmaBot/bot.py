@@ -18,6 +18,7 @@ from plasmaBot.plugin import PBPluginManager, Response, PBPluginMeta, PBPlugin
 from plasmaBot.defaults.database_tables import dbt_plugins, dbt_commands, dbt_server
 
 from plasmaBot.plugins.bot_operation import BotOperation
+from plasmaBot.plugins.TBA import TBAPlugin
 
 # Logging setup
 logger = logging.getLogger('discord')

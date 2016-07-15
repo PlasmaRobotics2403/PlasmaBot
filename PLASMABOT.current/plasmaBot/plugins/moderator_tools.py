@@ -9,6 +9,7 @@ log = logging.getLogger('discord')
 class ModeratorTools(PBPlugin):
     name = 'Moderation Tools'
     globality = 'choice'
+    help_exclude = False
 
     def __init__(self, plasmaBot):
         super().__init__(plasmaBot)

@@ -42,20 +42,28 @@ class PBPluginManager:
                     command_usage = split_doc[2].strip().format(command_prefix = self.bot.config.prefix)
                     command_description = split_doc[4].strip()
 
-                    self.bot.plugin_db.table('commands').insert(command_name, plugin.__name__, command_usage, command_description).into("COMMAND_KEY", "PLUGIN_NAME", "COMMAND_USAGE", "COMMAND_DESCRIPTION")
+                    if plugin.help_exclude:
+                        self.bot.plugin_db.table('commands').insert(command_name, plugin.__name__, command_usage, command_description, "YES").into("COMMAND_KEY", "PLUGIN_NAME", "COMMAND_USAGE", "COMMAND_DESCRIPTION", "HELP_EXCLUDE")
+                    else:
+                        self.bot.plugin_db.table('commands').insert(command_name, plugin.__name__, command_usage, command_description).into("COMMAND_KEY", "PLUGIN_NAME", "COMMAND_USAGE", "COMMAND_DESCRIPTION")
 
         if not plugin.__name__ in column_list:
             self.bot.plugin_db_cursor.execute("ALTER TABLE servers ADD COLUMN '%s' 'TEXT'" % plugin.__name__)
+
+        if plugin.help_exclude:
+            pl_help_exclude = 'True'
+        else:
+            pl_help_exclude = 'False'
 
         if plugin.globality is list:
             globality = 'manual'
             servers = ''
             for serverID in plugin.globality:
                 servers += "^" + serverID
-            self.bot.plugin_db.table('plugins').insert(plugin.__name__, plugin.name, globality, servers).into("PLUGIN_NAME", "FANCY_NAME", "GLOBALITY", "SPECIAL_SERVERS")
+            self.bot.plugin_db.table('plugins').insert(plugin.__name__, plugin.name, globality, servers, pl_help_exclude).into("PLUGIN_NAME", "FANCY_NAME", "GLOBALITY", "SPECIAL_SERVERS", "PLUGIN_HELP_EXCLUDE")
         else:
             globality = plugin.globality
-            self.bot.plugin_db.table('plugins').insert(plugin.__name__, plugin.name, globality).into("PLUGIN_NAME", "FANCY_NAME", "GLOBALITY")
+            self.bot.plugin_db.table('plugins').insert(plugin.__name__, plugin.name, globality, pl_help_exclude).into("PLUGIN_NAME", "FANCY_NAME", "GLOBALITY", "PLUGIN_HELP_EXCLUDE")
 
         plugin_instance = plugin(self.bot)
         self.bot.plugins.append(plugin_instance)

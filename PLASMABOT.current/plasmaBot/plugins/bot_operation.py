@@ -9,6 +9,7 @@ log = logging.getLogger('discord')
 class BotOperation(PBPlugin):
     name = 'Standard Commands'
     globality = 'all'
+    help_exclude = False
 
     def __init__(self, plasmaBot):
         super().__init__(plasmaBot)
@@ -58,7 +59,7 @@ class BotOperation(PBPlugin):
                     else:
                         plugins_commands_dict[plugin] = plugins_commands_dict[plugin] + [cmd_entry]
 
-            help_response = "**{}'s Commands:**\n```".format(self.bot.config.bot_name)
+            help_response = "**{}'s Commands:**```\n".format(self.bot.config.bot_name)
 
             for plugin, commands in plugins_commands_dict.items():
                 raw_plugin_return = self.bot.plugin_db.table('plugins').select("FANCY_NAME").where("PLUGIN_NAME").equals(plugin).execute()

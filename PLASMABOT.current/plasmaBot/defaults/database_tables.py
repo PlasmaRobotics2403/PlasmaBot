@@ -1,7 +1,7 @@
 class dbt_plugins(object):
     def __init__(self):
-        self.columns = ["PLUGIN_NAME", "FANCY_NAME", "GLOBALITY", "SPECIAL_SERVERS"]
-        self.datatypes = ["TEXT PRIMARY KEY NOT NULL", "TEXT", "TEXT", "TEXT"]
+        self.columns = ["PLUGIN_NAME", "FANCY_NAME", "GLOBALITY", "SPECIAL_SERVERS", "PLUGIN_HELP_EXCLUDE"]
+        self.datatypes = ["TEXT PRIMARY KEY NOT NULL", "TEXT", "TEXT", "TEXT", "TEXT"]
         self.seed = []
 
 class dbt_commands(object):

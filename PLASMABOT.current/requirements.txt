@@ -1,2 +1,5 @@
 git+https://github.com/Rapptz/discord.py.git@master
 sqlitehelper
+requests
+datetime
+numpy<1.11.0

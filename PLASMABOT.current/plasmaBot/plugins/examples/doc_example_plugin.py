@@ -9,6 +9,7 @@ log = logging.getLogger('discord')
 class EXAMPLECOMMAND(PBPlugin):
     name = 'Example Command, Do Not Use' #A Fancy Name to be Associated with the Plugin
     globality = 'all' #The Globality of the Plugin (WIP).  Either string 'all', string 'optional', or a list [] with a list item for the different server IDs it will run on (manual plugin)
+    help_exclude = False #whether or not to exclude commands in this plugin from the help command
 
     def __init__(self, plasmaBot): #anything you need ran on plugin load, load it here.
         super().__init__(plasmaBot)

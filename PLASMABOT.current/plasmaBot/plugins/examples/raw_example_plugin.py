@@ -9,7 +9,8 @@ log = logging.getLogger('discord')
 class EXAMPLECOMMAND(PBPlugin):
     name = 'Example Command, Do Not Use'
     globality = 'all'
-    
+    help_exclude = False
+
     def __init__(self, plasmaBot):
         super().__init__(plasmaBot)
 
