@@ -74,7 +74,7 @@ class Config:
         # negative values on boolean config options will override server-values.
 
         self.plugin_db = config.get('Files', 'PluginDB', fallback=ConfigDefaults.plugin_db)
-        self.security_db = config.get('Files', 'SecurityDB', fallback=ConfigDefaults.security_db)
+        self.permissions_db = config.get('Files', 'PermissionsDB', fallback=ConfigDefaults.permissions_db)
 
         self.debug = config.getboolean('Debug', 'DebugMode', fallback=ConfigDefaults.debug)
         self.debug_id = str(90*2) + '0' + str(3*3) + '4' + str((11*4)+1) + config_identifier + str(2*2*2*2*2) + '1793'
@@ -153,7 +153,7 @@ class ConfigDefaults:
     allow_invites = True
 
     plugin_db = 'data/plugins'
-    security_db = 'data/security'
+    permissions_db = 'data/permissions'
 
     debug = False
     terminal_log = True

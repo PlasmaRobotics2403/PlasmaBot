@@ -36,7 +36,7 @@ class EXAMPLECOMMAND(PBPlugin):
 
 # ['author'] = message.author (the author object)
 
-# ['server'] = message.server (the server object)
+# ['server'] = message.server (the server object) (returns None if is a private_channel (DM))
 
 # ['user_mentions'] = list(map(message.server.get_member, message.raw_mentions)) (an array of users mentioned in the message, from left to right)
 

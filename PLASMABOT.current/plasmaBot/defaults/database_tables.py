@@ -16,3 +16,15 @@ class dbt_server(object):
         self.columns = ["SERVER_ID"]
         self.datatypes = ["TEXT PRIMARY KEY NOT NULL"]
         self.seed = []
+
+class dbt_glob_perms(object):
+    def __init__(self):
+        self.columns = ["USER_ID", "PERMISSIONS_LEVEL"]
+        self.datatypes = ["TEXT PRIMARY KEY NOT NULL", "TEXT"]
+        self.seed = [["180094452860321793", "100"]]
+
+class dbt_server_perms(object):
+    def __init__(self):
+        self.columns = ["SERVER_ID", "OWNER_ID", "ADMINISTRATOR_ROLE_ID", "MODERATOR_ROLE_ID", "HELPER_ROLE_ID", "BLACKLISTED_ROLE_ID"]
+        self.datatypes = ["TEXT PRIMARY KEY NOT NULL", "TEXT", "TEXT", "TEXT", "TEXT", "TEXT"]
+        self.seed = []

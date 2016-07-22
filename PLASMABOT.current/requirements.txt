@@ -1,4 +1,4 @@
-git+https://github.com/Rapptz/discord.py.git@master
+git+https://github.com/Rapptz/discord.py@master#egg=discord.py[voice]
 sqlitehelper
 requests
 datetime

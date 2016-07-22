@@ -152,11 +152,7 @@ class PBPlugin(object, metaclass=PBPluginMeta):
                         handler_kwargs['author'] = message.author
 
                     if params.pop('server', None):
-                        if message_context == 'direct':
-                            print('- ERROR: global/direct command ' + command + 'requests server value')
-                            return
-                        else:
-                            handler_kwargs['server'] = message.server
+                        handler_kwargs['server'] = message.server
 
                     if params.pop('user_mentions', None):
                         handler_kwargs['user_mentions'] = list(map(message.server.get_member, message.raw_mentions))

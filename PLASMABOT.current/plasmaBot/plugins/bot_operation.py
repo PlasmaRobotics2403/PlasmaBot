@@ -129,6 +129,15 @@ class BotOperation(PBPlugin):
             user = user_mentions[0]
             return Response("<@{0}>'s ID is `{0}`".format(user.id), reply=False, delete_after=30)
 
+    async def cmd_type(self, server, user_mentions):
+        """
+        Usage:
+            {command_prefix}type
+
+        Get's the type of the server.id object
+        """
+        return Response('server.id is type {}'.format(type(server.id)), reply=True, delete_after=30)
+
     async def cmd_say(self, channel, message, author, message_type, leftover_args):
         """
         Usage:
