@@ -66,10 +66,19 @@ class Config:
         self.owner_id = config.get('OwnerInfo', 'OwnerID', fallback=ConfigDefaults.owner_id)
 
         self.bot_name = config.get('BotConfiguration', 'BotName', fallback=ConfigDefaults.bot_name)
+
         self.prefix = config.get('BotConfiguration', 'CommandPrefix', fallback=ConfigDefaults.prefix)
         self.delete_messages = config.getboolean('BotConfiguration', 'DeleteMessages', fallback=ConfigDefaults.delete_messages)
         self.delete_invoking = config.getboolean('BotConfiguration', 'DeleteInvoking', fallback=ConfigDefaults.delete_invoking)
         self.allow_invites = config.getboolean('BotConfiguration', 'AllowInvites', fallback=ConfigDefaults.allow_invites)
+
+
+        self.bot_game = config.get('BotConfiguration', 'BotGame', fallback=ConfigDefaults.bot_game)
+
+        if '{prefix}' in self.bot_game:
+            self.bot_game = self.bot_game.replace('{prefix}', self.prefix)
+
+        self.bot_game_compiled = self.bot_game
 
         # negative values on boolean config options will override server-values.
 
@@ -147,6 +156,7 @@ class ConfigDefaults:
     owner_id = None
 
     bot_name = 'PlasmaBot'
+    bot_game = '{prefix}help | {server_count} servers'
     prefix = '>'
     delete_messages = True
     delete_invoking = False

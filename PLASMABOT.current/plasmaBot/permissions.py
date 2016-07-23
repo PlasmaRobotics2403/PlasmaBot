@@ -16,20 +16,20 @@ class Permissions:
 
         if not self.perm_db.table('global').tableExists():
             initiation_glob = dbt_glob_perms()
-            self.perm_db.table('global').init(initiation)
+            self.perm_db.table('global').init(initiation_glob)
         if not self.perm_db.table('servers').tableExists():
             initiation_serv = dbt_server_perms()
             self.perm_db.table('servers').init(initiation_serv)
 
         self.bot = plasmaBot
 
-    def set_server_permissions(self, server, admin_role_id, mod_role_id, helper_role_id, black_role_id):
-        current_server_return = self.perm_db.table('servers').select("OWNER_ID", "ADMINISTRATOR_ROLE_ID", "MODERATOR_ROLE_ID", "HELPER_ROLE_ID").where("SERVER_ID").equals(server.id).execute()
-        if len(current_server_return.fetchall()) >= 1:
-            if current_server_return.fetchall()[0][0] == server.id:
-        else:
+    #def set_server_permissions(self, server, admin_role_id, mod_role_id, helper_role_id, black_role_id):
+    #    current_server_return = self.perm_db.table('servers').select("OWNER_ID", "ADMINISTRATOR_ROLE_ID", "MODERATOR_ROLE_ID", "HELPER_ROLE_ID").where("SERVER_ID").equals(server.id).execute()
+    #    if len(current_server_return.fetchall()) >= 1:
+    #        if current_server_return.fetchall()[0][0] == server.id:
+    #    else:
 
-    def check_permissions(self, user, channel, server=None):
+    async def check_permissions(self, user, channel, server=None):
         # 0 = Blacklisted
         # 5 = Standard User / No Server Features Enabled
         # 10 = Standard User
@@ -67,7 +67,8 @@ class Permissions:
                 s_blacklist = row[4]
 
             if s_owner == '':
-                self.bot.safe_send_message(user, '{}, you should probably set up permissions roles for your server {}'.format(user.name, server.name))
+                await self.bot.safe_send_message(server.owner, '{}, you should probably set up permissions roles for your server _**{}**_'.format(server.owner.name, server.name))
+                return
 
             if user.id == s_owner:
                 permission_level = 50
@@ -87,7 +88,7 @@ class Permissions:
                 if role.id == s_helper:
                     permission_level = 25
                     return permission_level
-                if role.id = s_blacklist:
+                if role.id == s_blacklist:
                     permission_level = 0
                     return permission_level
 

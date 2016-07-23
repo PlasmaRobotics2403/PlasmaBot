@@ -129,16 +129,19 @@ class BotOperation(PBPlugin):
             user = user_mentions[0]
             return Response("<@{0}>'s ID is `{0}`".format(user.id), reply=False, delete_after=30)
 
-    async def cmd_type(self, server, user_mentions):
+    async def cmd_perms(self, channel, server, mentioned_user, user_mentions):
         """
         Usage:
-            {command_prefix}type
+            {command_prefix}perms
 
-        Get's the type of the server.id object
+        Get a mentioned user's permissions
         """
-        return Response('server.id is type {}'.format(type(server.id)), reply=True, delete_after=30)
+        user = user_mentions[0]
+        perms = await self.bot.permissions.check_permissions(user, channel, server)
 
-    async def cmd_say(self, channel, message, author, message_type, leftover_args):
+        return Response('User "{}" has permissions level {}'.format(user.mention, perms), reply=True, delete_after=30)
+
+    async def cmd_say(self, channel, message, author, message_type, message_context, leftover_args):
         """
         Usage:
             {command_prefix}say (message)
@@ -151,17 +154,19 @@ class BotOperation(PBPlugin):
 
         if message_type == 'owner':
             if 'silent' in leftover_args or 'sticky' in leftover_args or 'delete' in leftover_args:
-                for keycheck in range(1,3):
-                    if leftover_args[0] == 'delete':
-                        print('tdelete')
+                if message_context == 'direct':
+                    srange = range(1,2)
+                else:
+                    srange = range(1,3)
+
+                for keycheck in srange:
+                    if leftover_args[0] == 'delete' and not message_context == 'direct':
                         delete = True
                         del leftover_args[0]
                     if leftover_args[0] == 'silent':
-                        print('tsilent')
                         silent = True
                         del leftover_args[0]
                     if leftover_args[0] == 'sticky':
-                        print('tstick')
                         sticky = True
                         del leftover_args[0]
 
@@ -169,22 +174,15 @@ class BotOperation(PBPlugin):
         for message_segment in leftover_args:
             message_to_send += message_segment + ' '
 
-        if not sticky:
-            print('not sticky')
-        else:
-            print('sticky')
-
         if delete:
-            print('deleted')
             await self.bot.safe_delete_message(message)
         else:
             pass
 
         if not silent:
-            print('not silent')
             message_to_send = '<@{}>, '.format(author.id) + message_to_send
         else:
-            print('silent')
+            pass
 
         await self.bot.safe_send_message(
             channel, message_to_send,

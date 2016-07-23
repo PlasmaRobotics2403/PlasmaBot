@@ -13,6 +13,7 @@ from SQLiteHelper import SQLiteHelper as sq
 from . import exceptions
 
 from plasmaBot.config import Config, ConfigDefaults
+from plasmaBot.permissions import Permissions
 from plasmaBot.plugin import PBPluginManager, Response, PBPluginMeta, PBPlugin
 
 from plasmaBot.defaults.database_tables import dbt_plugins, dbt_commands, dbt_server
@@ -34,6 +35,8 @@ class PlasmaBot(discord.Client):
         print('[PB] Loading PlasmaBot Configuration...\n')
 
         self.config = Config()
+
+        self.permissions = Permissions(self.config.permissions_db, self)
 
         print("[PB][CONFIG] Currently Running PlasmaBot v{0}".format(self.version))
         print('[PB][CONFIG] Name is ({})'.format(self.config.bot_name))
@@ -105,6 +108,15 @@ class PlasmaBot(discord.Client):
         else:
             print("Currently on {} servers".format(len(self.servers)))
 
+        self.game = discord.Game(name=self.config.bot_game_compiled, type=1)
+
+        await self.change_status(self.game)
+
+        if '{server_count}' in self.config.bot_game:
+            self.config.bot_game_compiled = self.config.bot_game.replace('{server_count}', str(len(self.servers)))
+            self.game = discord.Game(name=self.config.bot_game_compiled, type=1)
+            await self.change_status(self.game)
+
         enabled_plugins = await self.get_plugins()
         for plugin in enabled_plugins:
             self.loop.create_task(plugin.on_ready())
@@ -116,6 +128,11 @@ class PlasmaBot(discord.Client):
                 server.owner.name
             ))
 
+        if '{server_count}' in self.config.bot_game:
+            self.config.bot_game_compiled = self.config.bot_game.replace('{server_count}', str(len(self.servers)))
+            self.game = discord.Game(name=self.config.bot_game_compiled, type=1)
+            await self.change_status(self.game)
+
         enabled_plugins = await self.get_plugins(server)
         for plugin in enabled_plugins:
             self.loop.create_task(plugin.on_server_join(server))
@@ -126,6 +143,11 @@ class PlasmaBot(discord.Client):
                 server.name,
                 server.owner.name
             ))
+
+        if '{server_count}' in self.config.bot_game:
+            self.config.bot_game_compiled = self.config.bot_game.replace('{server_count}', str(len(self.servers)))
+            self.game = discord.Game(name=self.config.bot_game_compiled, type=1)
+            await self.change_status(self.game)
 
         enabled_plugins = await self.get_plugins(server)
         for plugin in enabled_plugins:
@@ -327,15 +349,19 @@ class PlasmaBot(discord.Client):
         for plugin in enabled_plugins:
             self.loop.create_task(plugin.on_server_update(before, after))
 
-    async def on_server_role_create(self, server, role):
-        enabled_plugins = await self.get_plugins(server)
-        for plugin in enabled_plugins:
-            self.loop.create_task(plugin.on_server_role_create(server, role))
+    async def on_server_role_create(self, role):
+        server = role.server
 
-    async def on_server_role_delete(self, server, role):
         enabled_plugins = await self.get_plugins(server)
         for plugin in enabled_plugins:
-            self.loop.create_task(plugin.on_server_role_delete(server, role))
+            self.loop.create_task(plugin.on_server_role_create(role))
+
+    async def on_server_role_delete(self, role):
+        server = role.server
+
+        enabled_plugins = await self.get_plugins(server)
+        for plugin in enabled_plugins:
+            self.loop.create_task(plugin.on_server_role_delete(role))
 
     async def on_server_role_update(self, before, after):
         server = None

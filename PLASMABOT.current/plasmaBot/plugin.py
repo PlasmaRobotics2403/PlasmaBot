@@ -129,8 +129,6 @@ class PBPlugin(object, metaclass=PBPluginMeta):
 
         handler = getattr(self, 'cmd_%s' % command, None)
         if not handler:
-            if self.bot.config.debug:
-                print(' - No Command "{0}" Available'.format(command))
             return
         else:
             if False:
@@ -277,13 +275,13 @@ class PBPlugin(object, metaclass=PBPluginMeta):
     async def on_server_update(self, before, after):
         pass
 
-    async def on_server_role_create(self, server, role):
+    async def on_server_role_create(self, role):
         pass
 
-    async def on_server_role_delete(self, server, role):
+    async def on_server_role_delete(self, role):
         pass
 
-    async def on_server_role_update(self, server, role):
+    async def on_server_role_update(self, before, after):
         pass
 
     async def on_voice_state_update(self, before, after):
