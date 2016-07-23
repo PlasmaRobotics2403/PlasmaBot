@@ -185,18 +185,30 @@ class PBPlugin(object, metaclass=PBPluginMeta):
                             params.pop(key)
 
                     if params:
-                        docs = getattr(handler, '__doc__', None)
-                        if not docs:
-                            docs = 'Usage: {}{} {}'.format(
-                                self.bot.config.prefix,
-                                command,
-                                ' '.join(args_expected)
-                            )
+                        raw_commands_return = self.bot.plugin_db.table('commands').select("PLUGIN_NAME", "COMMAND_USAGE", "COMMAND_DESCRIPTION").where("COMMAND_KEY").equals(command).execute()
 
-                        docs = '\n'.join(l.strip() for l in docs.split('\n'))
+                        cmd_plugin = ''
+                        cmd_usage = ''
+                        cmd_description = ''
+
+                        for command_data in raw_commands_return:
+                            cmd_plugin = command_data[0]
+                            cmd_usage = command_data[1]
+                            cmd_description = command_data[2]
+
+                        raw_plugin_return = self.bot.plugin_db.table('plugins').select("FANCY_NAME").where("PLUGIN_NAME").equals(cmd_plugin).execute()
+                        for item in raw_plugin_return:
+                            cmd_plugin = item[0]
+
+                        help_response = '```Usage for ' + self.bot.config.prefix + command
+                        help_response += ' (' + cmd_plugin + '):'
+                        help_response += '\n     '
+                        help_response += cmd_usage + '\n\n'
+                        help_response += cmd_description + '```'
+
                         await self.bot.safe_send_message(
                             message.channel,
-                            '```\n%s\n```' % docs.format(command_prefix=self.bot.config.prefix),
+                            help_response,
                             expire_in=60 if self.bot.config.delete_messages else 0
                         )
                         return

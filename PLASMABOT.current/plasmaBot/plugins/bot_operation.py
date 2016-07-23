@@ -25,22 +25,27 @@ class BotOperation(PBPlugin):
             help_command = help_command.lower().strip()
             raw_commands_return = self.bot.plugin_db.table('commands').select("PLUGIN_NAME", "COMMAND_USAGE", "COMMAND_DESCRIPTION").where("COMMAND_KEY").equals(help_command).execute()
 
-            plugin = ''
-            usage = ''
-            description = ''
+            cmd_plugin = ''
+            cmd_usage = ''
+            cmd_description = ''
 
-            for command in raw_commands_return:
-                plugin = command[0]
-                usage = command[1]
-                description = command[2]
+            for command_data in raw_commands_return:
+                cmd_plugin = command_data[0]
+                cmd_usage = command_data[1]
+                cmd_description = command_data[2]
 
-            if plugin == '':
+            if cmd_plugin == '':
                 return
 
-            help_response = 'Usage for _'
-            help_response += self.bot.config.prefix + help_command
-            help_response += '_:\n     ' + usage + '\n\n'
-            help_response += description
+            raw_plugin_return = self.bot.plugin_db.table('plugins').select("FANCY_NAME").where("PLUGIN_NAME").equals(cmd_plugin).execute()
+            for item in raw_plugin_return:
+                cmd_plugin = item[0]
+
+            help_response = '```Usage for ' + self.bot.config.prefix + help_command
+            help_response += ' (' + cmd_plugin + '):'
+            help_response += '\n     '
+            help_response += cmd_usage + '\n\n'
+            help_response += cmd_description + '```'
 
         else:
             plugins_commands_dict = {}
