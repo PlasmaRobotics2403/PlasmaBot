@@ -34,7 +34,7 @@ class Permissions:
         # 5 = Standard User / No Server Features Enabled
         # 10 = Standard User
         # 25 = Server's Helper Role
-        # 35 = Server's Moderator Role
+        # 35 = Server's Moderator Role or This Instance of the Bot
         # 45 = Server's Administrator Role
         # 50 = Server Owner & Adminstrator Permission Holders
         # 100 = Bot Owner
@@ -42,7 +42,12 @@ class Permissions:
 
         user_glob_permissions_return = self.perm_db.table('global').select('PERMISSIONS_LEVEL').where("USER_ID").equals(user.id).execute()
 
+        if user.id == self.bot.user.id:
+            permission_level = 35
+            return permission_level
+
         for row in user_glob_permissions_return:
+            print('from pdb')
             permission_level = min(int(row[0]), 100)
             return permission_level
 

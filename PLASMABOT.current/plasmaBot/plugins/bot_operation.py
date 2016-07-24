@@ -160,11 +160,11 @@ class BotOperation(PBPlugin):
         if message_type == 'owner':
             if 'silent' in leftover_args or 'sticky' in leftover_args or 'delete' in leftover_args:
                 if message_context == 'direct':
-                    srange = range(1,2)
+                    srange = range(0,1)
                 else:
-                    srange = range(1,3)
-
+                    srange = range(0,2)
                 for keycheck in srange:
+                    leftover_args = leftover_args + ['']
                     if leftover_args[0] == 'delete' and not message_context == 'direct':
                         delete = True
                         del leftover_args[0]
@@ -183,6 +183,9 @@ class BotOperation(PBPlugin):
             await self.bot.safe_delete_message(message)
         else:
             pass
+
+        if leftover_args[0] == '':
+            return
 
         if not silent:
             message_to_send = '<@{}>, '.format(author.id) + message_to_send
