@@ -32,6 +32,7 @@ class Permissions:
     async def check_permissions(self, user, channel, server=None):
         # 0 = Blacklisted
         # 5 = Standard User / No Server Features Enabled
+        # 9 = Server User on Server without configured permissions
         # 10 = Standard User
         # 25 = Server's Helper Role
         # 35 = Server's Moderator Role or This Instance of the Bot
@@ -47,7 +48,6 @@ class Permissions:
             return permission_level
 
         for row in user_glob_permissions_return:
-            print('from pdb')
             permission_level = min(int(row[0]), 100)
             return permission_level
 
@@ -71,15 +71,16 @@ class Permissions:
                 s_helper = row[3]
                 s_blacklist = row[4]
 
-            if s_owner == '':
-                await self.bot.safe_send_message(server.owner, '{}, you should probably set up permissions roles for your server _**{}**_'.format(server.owner.name, server.name))
-                return
-
-            if user.id == s_owner:
+            if channel.permissions_for(user).administrator:
                 permission_level = 50
                 return permission_level
 
-            if user.permissions_for(channel).administrator:
+            if s_owner == '':
+                await self.bot.safe_send_message(server.owner, '<@{}>, you should probably set up permissions roles for your server _**{}**_'.format(server.owner.id, server.name))
+                permission_level = 9
+                return permission_level
+
+            if user.id == s_owner:
                 permission_level = 50
                 return permission_level
 

@@ -134,18 +134,6 @@ class BotOperation(PBPlugin):
             user = user_mentions[0]
             return Response("<@{0}>'s ID is `{0}`".format(user.id), reply=False, delete_after=30)
 
-    async def cmd_perms(self, channel, server, mentioned_user, user_mentions):
-        """
-        Usage:
-            {command_prefix}perms
-
-        Get a mentioned user's permissions
-        """
-        user = user_mentions[0]
-        perms = await self.bot.permissions.check_permissions(user, channel, server)
-
-        return Response('User "{}" has permissions level {}'.format(user.mention, perms), reply=True, delete_after=30)
-
     async def cmd_say(self, channel, message, author, message_type, message_context, leftover_args):
         """
         Usage:
