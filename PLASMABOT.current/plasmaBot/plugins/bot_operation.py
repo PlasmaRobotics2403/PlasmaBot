@@ -266,11 +266,11 @@ class BotOperation(PBPlugin):
         if user_mentions:
             sudo_user = user_mentions[0]
             if leftover_args[0] == sudo_user.mention:
-                sudo_length = len(self.bot.config.prefix + 'sudo ' + user.mention)
+                sudo_string = self.bot.config.prefix + 'sudo '
+                sudo_string += sudo_user.mention
+                sudo_length = len(sudo_string)
                 sudo_message = message
                 sudo_message.content = message.content[sudo_length:].strip()
-                sudo_clean_length = len(self.bot.config.prefix + 'sudo ' + user.nick)
-                sudo_message.clean_content = message.clean_content[sudo_clean_length:].strip()
                 sudo_message.author = sudo_user
                 del sudo_message.mentions[0]
                 del sudo_message.raw_mentions[0]

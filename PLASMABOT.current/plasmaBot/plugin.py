@@ -105,7 +105,7 @@ class Response:
         self.content = content
         self.reply = reply
         self.delete_after = delete_after
-        self.send_help = raw_help
+        self.send_help = send_help
 
 class PluginContainer:
     def __init__(cls):
