@@ -42,7 +42,15 @@ class PBPluginManager:
                     command_usage = split_doc[2].strip().format(command_prefix = self.bot.config.prefix)
                     command_description = split_doc[4].strip()
 
-                    if plugin.help_exclude:
+                    if len(split_doc) >= 7:
+                        if 'help_exclude' in split_doc[6].strip():
+                            cmd_help_exclude = True
+                        else:
+                            cmd_help_exclude = False
+                    else:
+                        cmd_help_exclude = False
+
+                    if plugin.help_exclude or cmd_help_exclude:
                         self.bot.plugin_db.table('commands').insert(command_name, plugin.__name__, command_usage, command_description, "YES").into("COMMAND_KEY", "PLUGIN_NAME", "COMMAND_USAGE", "COMMAND_DESCRIPTION", "HELP_EXCLUDE")
                     else:
                         self.bot.plugin_db.table('commands').insert(command_name, plugin.__name__, command_usage, command_description).into("COMMAND_KEY", "PLUGIN_NAME", "COMMAND_USAGE", "COMMAND_DESCRIPTION")
@@ -93,10 +101,11 @@ class PBPluginManager:
         return plugins
 
 class Response:
-    def __init__(self, content, reply=False, delete_after=0):
+    def __init__(self, content=None, reply=False, delete_after=0, send_help=None):
         self.content = content
         self.reply = reply
         self.delete_after = delete_after
+        self.send_help = raw_help
 
 class PluginContainer:
     def __init__(cls):
@@ -158,6 +167,9 @@ class PBPlugin(object, metaclass=PBPluginMeta):
                     if params.pop('channel_mentions', None):
                         handler_kwargs['channel_mentions'] = list(map(message.server.get_channel, message.raw_channel_mentions))
 
+                    if params.pop('role_mentions', None):
+                        handler_kwargs['role_mentions'] = message.role_mentions
+
                     if params.pop('voice_channel', None):
                         handler_kwargs['voice_channel'] = message.server.me.voice_channel
 
@@ -216,6 +228,35 @@ class PBPlugin(object, metaclass=PBPluginMeta):
                     response = await handler(**handler_kwargs)
 
                     if response and isinstance(response, Response):
+                        if response.send_help:
+                            raw_commands_return = self.bot.plugin_db.table('commands').select("PLUGIN_NAME", "COMMAND_USAGE", "COMMAND_DESCRIPTION").where("COMMAND_KEY").equals(command).execute()
+
+                            cmd_plugin = ''
+                            cmd_usage = ''
+                            cmd_description = ''
+
+                            for command_data in raw_commands_return:
+                                cmd_plugin = command_data[0]
+                                cmd_usage = command_data[1]
+                                cmd_description = command_data[2]
+
+                            raw_plugin_return = self.bot.plugin_db.table('plugins').select("FANCY_NAME").where("PLUGIN_NAME").equals(cmd_plugin).execute()
+                            for item in raw_plugin_return:
+                                cmd_plugin = item[0]
+
+                            help_response = '```Usage for ' + self.bot.config.prefix + command
+                            help_response += ' (' + cmd_plugin + '):'
+                            help_response += '\n     '
+                            help_response += cmd_usage + '\n\n'
+                            help_response += cmd_description + '```'
+
+                            await self.bot.safe_send_message(
+                                message.channel,
+                                help_response,
+                                expire_in=60 if self.bot.config.delete_messages else 0
+                            )
+                            return
+
                         content = response.content
                         if response.reply:
                             content = '%s, %s' % (message.author.mention, content)

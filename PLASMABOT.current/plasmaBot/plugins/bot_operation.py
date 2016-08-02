@@ -81,6 +81,76 @@ class BotOperation(PBPlugin):
 
         return Response(help_response, reply=False, delete_after=60)
 
+    async def cmd_setperms(self, message, channel, server, author, role_mentions):
+        """
+        Usage:
+            {command_prefix}setperms (Administrator_Rank_Mention) (Moderator_Rank_Mention) (Helper_Rank_Mention) (Blacklisted_Rank_Mention)
+
+        Sets the Permissions Ranks for the Server.  Author must have the Manage Server Permission.
+
+        help_exclude
+        """
+
+        if channel.permissions_for(author).manage_server:
+            if role_mentions:
+                admin_role_id = role_mentions[0].id
+                mod_role_id = role_mentions[1].id
+                helper_role_id = role_mentions[2].id
+                black_role_id = role_mentions[2].id
+
+                self.bot.permissions.set_server_permissions(server, admin_role_id, mod_role_id, helper_role_id, black_role_id)
+
+                return Response("Permissions Updated :thumbsup: <@&{}>-<@&{}>-<@&{}>-<@&{}>".format(admin_role_id, mod_role_id, helper_role_id, black_role_id))
+            else:
+                message.content = '{}help perms'.format(self.bot.config.prefix)
+                await self.bot.on_message(message)
+        else:
+            return Response("You must have the Manage Server Permission in order to set Server Permissions", reply=True, delete_after=45)
+
+    async def cmd_perms(self, author, channel, server, mentioned_user, user_mentions):
+        """
+        Usage:
+            {command_prefix}perms (@Mentioned_User) [@AnotherMentionedUser] [@YetAnotherUser] ...
+
+        Get the permissions of a mentioned user or users.
+
+        help_exclude
+        """
+
+        for user in user_mentions:
+            perms = await self.bot.permissions.check_permissions(user, channel, server)
+
+            if perms == 100:
+                perms_message = '{} is my Owner'.format(user.mention)
+            elif perms == 50:
+                perms_message = '{} is a Server Administrator'.format(user.mention)
+            elif perms == 45:
+                perms_message = '{} holds this server\'s Administrator Role'.format(user.mention)
+            elif perms == 35 and user.id == self.bot.user.id:
+                perms_message = 'I am {}!'.format(self.bot.config.bot_name)
+            elif perms == 35:
+                perms_message = '{} holds this server\'s Moderator Role'.format(user.mention)
+            elif perms == 25:
+                perms_message = '{} holds this server\'s Helper Role'.format(user.mention)
+            elif perms == 10:
+                perms_message = '{} is a Standard User on this Server'.format(user.mention)
+            elif perms == 9:
+                perms_message = '{} is a Standard User on this Server.  However, Server Specific Permissions have not yet been set up on this Server'.format(user.mention)
+            elif perms == 5:
+                perms_message = '{} is a Standard User in this Direct Message'.format(user.mention)
+            elif perms == 0:
+                perms_message = '{} is a Blacklisted User on this Server'.format(user.mention)
+            else:
+                perms_message = '{} has permissions level {}'.format(user.mention, perms)
+
+            perms_message = author.mention + ', ' + perms_message
+
+            await self.bot.safe_send_message(
+                channel, perms_message,
+                expire_in=30 if self.bot.config.delete_messages else 0,
+                also_delete=message if self.bot.config.delete_invoking else None
+            )
+
     async def cmd_ping(self):
         """
         Usage:
@@ -183,3 +253,29 @@ class BotOperation(PBPlugin):
         await self.bot.safe_send_message(
             channel, message_to_send,
             expire_in=15 if not sticky else 0)
+
+    async def cmd_sudo(self, message, user_mentions, leftover_args):
+        """
+        Usage:
+            {command_prefix}sudo (user_mention) (command_sequence_to_be_ran)
+
+        Run a command as another user.  Requires Owner Permissions (100)
+
+        help_exclude
+        """
+        if user_mentions:
+            sudo_user = user_mentions[0]
+            if leftover_args[0] == sudo_user.mention:
+                sudo_length = len(self.bot.config.prefix + 'sudo ' + user.mention)
+                sudo_message = message
+                sudo_message.content = message.content[sudo_length:].strip()
+                sudo_clean_length = len(self.bot.config.prefix + 'sudo ' + user.nick)
+                sudo_message.clean_content = message.clean_content[sudo_clean_length:].strip()
+                sudo_message.author = sudo_user
+                del sudo_message.mentions[0]
+                del sudo_message.raw_mentions[0]
+
+                await self.bot.on_message(sudo_message)
+                return
+        else:
+            return Response(send_help=True)

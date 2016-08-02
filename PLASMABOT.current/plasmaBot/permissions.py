@@ -23,11 +23,20 @@ class Permissions:
 
         self.bot = plasmaBot
 
-    #def set_server_permissions(self, server, admin_role_id, mod_role_id, helper_role_id, black_role_id):
-    #    current_server_return = self.perm_db.table('servers').select("OWNER_ID", "ADMINISTRATOR_ROLE_ID", "MODERATOR_ROLE_ID", "HELPER_ROLE_ID").where("SERVER_ID").equals(server.id).execute()
-    #    if len(current_server_return.fetchall()) >= 1:
-    #        if current_server_return.fetchall()[0][0] == server.id:
-    #    else:
+    def set_server_permissions(self, server, admin_role_id, mod_role_id, helper_role_id, black_role_id):
+        current_server_return = self.perm_db.table('servers').select("OWNER_ID", "ADMINISTRATOR_ROLE_ID", "MODERATOR_ROLE_ID", "HELPER_ROLE_ID", "BLACKLISTED_ROLE_ID").where("SERVER_ID").equals(server.id).execute()
+        if len(current_server_return) == 0:
+            if self.bot.config.debug:
+                print('[PB][PERMISSIONS] Setting Permissions Data for Server {} [{}]'.format(server.name, server.id))
+            self.perm_db.table('servers').insert(server.id, server.owner.id, admin_role_id, mod_role_id, helper_role_id, black_role_id).into("SERVER_ID", "OWNER_ID", "ADMINISTRATOR_ROLE_ID", "MODERATOR_ROLE_ID", "HELPER_ROLE_ID", "BLACKLISTED_ROLE_ID")
+        else:
+            if self.bot.config.debug:
+                print('[PB][PERMISSIONS] Updating Permissions Data for Server {} [{}]'.format(server.name, server.id))
+            self.perm_db.table('servers').update("OWNER_ID").setTo(server.owner.id).where("SERVER_ID").equals(server.id).execute()
+            self.perm_db.table('servers').update("ADMINISTRATOR_ROLE_ID").setTo(admin_role_id).where("SERVER_ID").equals(server.id).execute()
+            self.perm_db.table('servers').update("MODERATOR_ROLE_ID").setTo(mod_role_id).where("SERVER_ID").equals(server.id).execute()
+            self.perm_db.table('servers').update("HELPER_ROLE_ID").setTo(helper_role_id).where("SERVER_ID").equals(server.id).execute()
+            self.perm_db.table('servers').update("BLACKLISTED_ROLE_ID").setTo(black_role_id).where("SERVER_ID").equals(server.id).execute()
 
     async def check_permissions(self, user, channel, server=None):
         # 0 = Blacklisted
@@ -56,7 +65,7 @@ class Permissions:
             return permission_level
 
         if server:
-            server_permissions_return = self.perm_db.table('servers').select("OWNER_ID", "ADMINISTRATOR_ROLE_ID", "MODERATOR_ROLE_ID", "HELPER_ROLE_ID").where("SERVER_ID").equals(server.id).execute()
+            server_permissions_return = self.perm_db.table('servers').select("OWNER_ID", "ADMINISTRATOR_ROLE_ID", "MODERATOR_ROLE_ID", "HELPER_ROLE_ID", "BLACKLISTED_ROLE_ID").where("SERVER_ID").equals(server.id).execute()
 
             s_owner = ''
             s_admin = ''

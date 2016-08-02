@@ -20,7 +20,6 @@ from plasmaBot.defaults.database_tables import dbt_plugins, dbt_commands, dbt_se
 
 from plasmaBot.plugins.bot_operation import BotOperation
 from plasmaBot.plugins.TBA import TBAPlugin
-from plasmaBot.plugins.permissionspl import PermissionsPl
 
 # Logging setup
 logger = logging.getLogger('discord')
@@ -29,7 +28,7 @@ class PlasmaBot(discord.Client):
     def __init__(self, shutdown_operator):
         super().__init__()
 
-        self.version = '0.0.1-BETA-0.3'
+        self.version = '3.0.2-BETA-1'
         self.shutdown_state = shutdown_operator
 
         print('--------------------------------------------------------\n')

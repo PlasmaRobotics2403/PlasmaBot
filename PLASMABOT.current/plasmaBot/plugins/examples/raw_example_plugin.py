@@ -20,6 +20,8 @@ class EXAMPLECOMMAND(PBPlugin):
             {command_prefix}command_key (required arguments have parenthesis) [optional_arguments have brackets]
 
         A string about how the plugin works
+
+        command_modifier_strings help_exclude _is_a_string_and_excludes_this_commmand_from_help remove_last_two_lines_if_no_modifiers
         """
 
         #command runs here

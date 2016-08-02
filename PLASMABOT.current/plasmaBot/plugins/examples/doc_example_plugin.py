@@ -20,7 +20,9 @@ class EXAMPLECOMMAND(PBPlugin):
             {command_prefix}command_key (required arguments have parenthesis) [optional_arguments have brackets]
 
         A string about how the plugin works
-        """ #This docstring must be here for the help command to work
+
+        help_exclude modifier_strings_modify_functionality help_exclude_excludes_command_from_help_list
+        """ #This docstring must be here for the help command to work.  Command Modifier Strings modify the command's effect in the rest of the bot.  Bot will not error out if they do not exist.
         #do stuff here
         return Response('message string or variable to send to the channel where the message was sent', reply=True, delete_after=15) #reply = True if you want the message to reply to the original message author, delete_after is the time until bot's message will be auto-deleted, 0 means never delete (although don't do this unless necesary as it is a config feature to delete messages or not)
 
