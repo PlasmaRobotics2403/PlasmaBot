@@ -31,10 +31,13 @@ class TBAPlugin(PBPlugin):
         """
         no_response = '```The Blue Alliance - '
         no_response += 'Pulls Data from The Blue Alliance API\n'
-        no_response += ' • ' + self.bot.config.prefix + 'tba team (team\\number)\n'
+        no_response += ' • ' + self.bot.config.prefix + 'tba team (team_number)\n'
         no_response += '   • pulls Team Information\n'
-        no_response += ' • ' + self.bot.config.prefix + 'tba event (event\\name)\n'
+        no_response += ' • ' + self.bot.config.prefix + 'tba event (year)(event_name)\n'
+        no_response += '   ' + self.bot.config.prefix + 'tba event (event_key)\n'
         no_response += '   • pulls Event Information\n'
+        no_response += ' • ' + self.bot.config.prefix + 'tba awards (team_number) [year]\n'
+        no_response += '   • pulls Team Awards [Year Optional]\n'
 
         try:
             cmd_type = leftover_args[0]
