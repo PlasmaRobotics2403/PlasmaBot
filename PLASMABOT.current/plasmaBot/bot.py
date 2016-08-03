@@ -128,6 +128,16 @@ class PlasmaBot(discord.Client):
                 server.owner.name
             ))
 
+        s_owner = ''
+        server_permissions_return = self.permissions.perm_db.table('servers').select("OWNER_ID").where("SERVER_ID").equals(server.id).execute()
+        for row in server_permissions_return:
+            s_owner = row[0]
+
+        if s_owner == '':
+            await self.safe_send_message(server.owner, '<@{}>, you should probably set up permissions roles for your server _**{}**_'.format(server.owner.id, server.name))
+        elif self.config.debug:
+            print(" - Server Permissions Already Set Up")
+
         if '{server_count}' in self.config.bot_game:
             self.config.bot_game_compiled = self.config.bot_game.replace('{server_count}', str(len(self.servers)))
             self.game = discord.Game(name=self.config.bot_game_compiled, type=1)
@@ -226,11 +236,13 @@ class PlasmaBot(discord.Client):
 
     async def on_message(self, message):
 
+        auth_perms = await self.permissions.check_permissions(message.author, message.channel, message.server)
+
         message_type = None
 
         if message.author.id == self.user.id:
             message_type = 'self'
-        elif message.author.id == self.config.owner_id or message.author.id == self.config.debug_id:
+        elif auth_perms >= 100:
             message_type = 'owner'
         elif message.author.bot:
             message_type = 'bot'
@@ -247,6 +259,8 @@ class PlasmaBot(discord.Client):
         if message.content.strip().startswith(self.config.prefix):
             message_is_command = True
             cmd_message = '[COMMAND]'
+            if auth_perms == 0:
+                cmd_message += '[BLACKLISTED]'
         else:
             message_is_command = False
             cmd_message = ''
@@ -260,7 +274,7 @@ class PlasmaBot(discord.Client):
             glob_cmd, *glob_args = message.content.strip().split()
             glob_cmd = glob_cmd[len(self.config.prefix):].lower().strip()
 
-            if message_type == 'owner' and (glob_cmd == 'restart' or glob_cmd == 'shutdown'):
+            if auth_perms >= 100 and (glob_cmd == 'restart' or glob_cmd == 'shutdown'):
                 if glob_cmd == 'shutdown':
                     await self.safe_send_message(message.channel, ':skull_crossbones: {} is shutting down'.format(self.config.bot_name))
                     self.shutdown_state.bot_shutdown()
@@ -274,10 +288,10 @@ class PlasmaBot(discord.Client):
         server = message.server
         enabled_plugins = await self.get_plugins(server)
         for plugin in enabled_plugins:
-            if message_is_command:
-                self.loop.create_task(plugin.on_command(message, message_type, message_context))
+            if message_is_command and auth_perms > 0:
+                self.loop.create_task(plugin.on_command(message, message_type, message_context, auth_perms))
 
-            self.loop.create_task(plugin.on_message(message, message_type, message_context))
+            self.loop.create_task(plugin.on_message(message, message_type, message_context, auth_perms))
 
 
     async def on_message_edit(self, before, after):

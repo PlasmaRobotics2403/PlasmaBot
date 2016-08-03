@@ -101,11 +101,13 @@ class PBPluginManager:
         return plugins
 
 class Response:
-    def __init__(self, content=None, reply=False, delete_after=0, send_help=None):
+    def __init__(self, content=None, reply=False, delete_after=0, send_help=None, help_message=None, permissions_error=None):
         self.content = content
         self.reply = reply
         self.delete_after = delete_after
         self.send_help = send_help
+        self.help_message = help_message
+        self.permissions_error = permissions_error
 
 class PluginContainer:
     def __init__(cls):
@@ -130,7 +132,7 @@ class PBPlugin(object, metaclass=PBPluginMeta):
     def __init__(self, plasmaBot):
         self.bot = plasmaBot
 
-    async def on_command(self, message, message_type, message_context): #check for blacklisted user tbd #check for server moderation role / perms, tbd #check for private channel, tbd
+    async def on_command(self, message, message_type, message_context, auth_perms): #check for blacklisted user tbd #check for server moderation role / perms, tbd #check for private channel, tbd
         message_content = message.content.strip()
 
         command, *args = message_content.split()
@@ -157,6 +159,9 @@ class PBPlugin(object, metaclass=PBPluginMeta):
 
                     if params.pop('author', None):
                         handler_kwargs['author'] = message.author
+
+                    if params.pop('auth_perms', None):
+                        handler_kwargs['auth_perms'] = auth_perms
 
                     if params.pop('server', None):
                         handler_kwargs['server'] = message.server
@@ -248,12 +253,25 @@ class PBPlugin(object, metaclass=PBPluginMeta):
                             help_response += ' (' + cmd_plugin + '):'
                             help_response += '\n     '
                             help_response += cmd_usage + '\n\n'
-                            help_response += cmd_description + '```'
+                            help_response += cmd_description
+
+                            if response.help_message:
+                                help_response += '\n\n' + response.help_message
+
+                            help_response +=  '```'
 
                             await self.bot.safe_send_message(
                                 message.channel,
                                 help_response,
                                 expire_in=60 if self.bot.config.delete_messages else 0
+                            )
+                            return
+
+                        if response.permissions_error:
+                            await self.bot.safe_send_message(
+                                message.channel, 'Invalid Permissions for this Command ({}{})'.format(self.bot.config.prefix, command),
+                                expire_in=30 if self.bot.config.delete_messages else 0,
+                                also_delete=message if self.bot.config.delete_invoking else None
                             )
                             return
 
@@ -292,7 +310,7 @@ class PBPlugin(object, metaclass=PBPluginMeta):
     async def on_ready(self):
         pass
 
-    async def on_message(self, message, message_type, message_context):
+    async def on_message(self, message, message_type, message_context, auth_perms):
         pass
 
     async def on_message_edit(self, before, after):

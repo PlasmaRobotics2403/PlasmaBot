@@ -24,8 +24,11 @@ class Permissions:
         self.bot = plasmaBot
 
     def set_server_permissions(self, server, admin_role_id, mod_role_id, helper_role_id, black_role_id):
-        current_server_return = self.perm_db.table('servers').select("OWNER_ID", "ADMINISTRATOR_ROLE_ID", "MODERATOR_ROLE_ID", "HELPER_ROLE_ID", "BLACKLISTED_ROLE_ID").where("SERVER_ID").equals(server.id).execute()
-        if len(current_server_return) == 0:
+        owner_id = ''
+        current_server_return = self.perm_db.table('servers').select("OWNER_ID").where("SERVER_ID").equals(server.id).execute()
+        for row in current_server_return:
+            owner_id = row[0]
+        if owner_id == '':
             if self.bot.config.debug:
                 print('[PB][PERMISSIONS] Setting Permissions Data for Server {} [{}]'.format(server.name, server.id))
             self.perm_db.table('servers').insert(server.id, server.owner.id, admin_role_id, mod_role_id, helper_role_id, black_role_id).into("SERVER_ID", "OWNER_ID", "ADMINISTRATOR_ROLE_ID", "MODERATOR_ROLE_ID", "HELPER_ROLE_ID", "BLACKLISTED_ROLE_ID")
@@ -44,7 +47,8 @@ class Permissions:
         # 9 = Server User on Server without configured permissions
         # 10 = Standard User
         # 25 = Server's Helper Role
-        # 35 = Server's Moderator Role or This Instance of the Bot
+        # 30 = This Instance of the Bot
+        # 35 = Server's Moderator Role
         # 45 = Server's Administrator Role
         # 50 = Server Owner & Adminstrator Permission Holders
         # 100 = Bot Owner
@@ -53,7 +57,7 @@ class Permissions:
         user_glob_permissions_return = self.perm_db.table('global').select('PERMISSIONS_LEVEL').where("USER_ID").equals(user.id).execute()
 
         if user.id == self.bot.user.id:
-            permission_level = 35
+            permission_level = 30
             return permission_level
 
         for row in user_glob_permissions_return:
@@ -85,7 +89,6 @@ class Permissions:
                 return permission_level
 
             if s_owner == '':
-                await self.bot.safe_send_message(server.owner, '<@{}>, you should probably set up permissions roles for your server _**{}**_'.format(server.owner.id, server.name))
                 permission_level = 9
                 return permission_level
 
@@ -93,21 +96,22 @@ class Permissions:
                 permission_level = 50
                 return permission_level
 
+            permission_level = 10
+
             for role in user.roles:
                 if role.id == s_admin:
-                    permission_level = 45
-                    return permission_level
+                    if 45 > permission_level:
+                        permission_level = 45
                 if role.id == s_moderator:
-                    permission_level = 35
-                    return permission_level
+                    if 35 > permission_level:
+                        permission_level = 35
                 if role.id == s_helper:
-                    permission_level = 25
-                    return permission_level
+                    if 25 > permission_level:
+                        permission_level = 25
                 if role.id == s_blacklist:
                     permission_level = 0
                     return permission_level
 
-            permission_level = 10
             return permission_level
 
         else:

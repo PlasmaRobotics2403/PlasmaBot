@@ -81,7 +81,7 @@ class BotOperation(PBPlugin):
 
         return Response(help_response, reply=False, delete_after=60)
 
-    async def cmd_setperms(self, message, channel, server, author, role_mentions):
+    async def cmd_setperms(self, message, channel, server, author, auth_perms, role_mentions):
         """
         Usage:
             {command_prefix}setperms (Administrator_Rank_Mention) (Moderator_Rank_Mention) (Helper_Rank_Mention) (Blacklisted_Rank_Mention)
@@ -91,23 +91,24 @@ class BotOperation(PBPlugin):
         help_exclude
         """
 
-        if channel.permissions_for(author).manage_server:
-            if role_mentions:
+        if channel.permissions_for(author).manage_server or auth_perms >= 100:
+            if len(role_mentions) == 4:
                 admin_role_id = role_mentions[0].id
                 mod_role_id = role_mentions[1].id
                 helper_role_id = role_mentions[2].id
-                black_role_id = role_mentions[2].id
+                black_role_id = role_mentions[3].id
 
                 self.bot.permissions.set_server_permissions(server, admin_role_id, mod_role_id, helper_role_id, black_role_id)
 
-                return Response("Permissions Updated :thumbsup: <@&{}>-<@&{}>-<@&{}>-<@&{}>".format(admin_role_id, mod_role_id, helper_role_id, black_role_id))
+                return Response("Server Permissions Ranks have been updated succesfully! :+1:\n\n_Administrator Role_: <@&{}>\n_Moderator Role_: <@&{}>\n_Helper Role_: <@&{}>\n_Blacklisted Role_: <@&{}>".format(admin_role_id, mod_role_id, helper_role_id, black_role_id))
             else:
-                message.content = '{}help perms'.format(self.bot.config.prefix)
-                await self.bot.on_message(message)
+                return Response(
+                    send_help=True,
+                    help_message='Invalid Number of Ranks Mentioned' if role_mentions else None)
         else:
             return Response("You must have the Manage Server Permission in order to set Server Permissions", reply=True, delete_after=45)
 
-    async def cmd_perms(self, author, channel, server, mentioned_user, user_mentions):
+    async def cmd_perms(self, author, channel, server, user_mentions):
         """
         Usage:
             {command_prefix}perms (@Mentioned_User) [@AnotherMentionedUser] [@YetAnotherUser] ...
@@ -116,40 +117,42 @@ class BotOperation(PBPlugin):
 
         help_exclude
         """
+        if user_mentions:
+            for user in user_mentions:
+                perms = await self.bot.permissions.check_permissions(user, channel, server)
 
-        for user in user_mentions:
-            perms = await self.bot.permissions.check_permissions(user, channel, server)
+                if perms == 100:
+                    perms_message = '{} is my Owner'.format(user.mention)
+                elif perms == 50:
+                    perms_message = '{} is a Server Administrator'.format(user.mention)
+                elif perms == 45:
+                    perms_message = '{} holds this server\'s Administrator Role'.format(user.mention)
+                elif perms == 30 and user.id == self.bot.user.id:
+                    perms_message = 'I am {}!'.format(self.bot.config.bot_name)
+                elif perms == 35:
+                    perms_message = '{} holds this server\'s Moderator Role'.format(user.mention)
+                elif perms == 25:
+                    perms_message = '{} holds this server\'s Helper Role'.format(user.mention)
+                elif perms == 10:
+                    perms_message = '{} is a Standard User on this Server'.format(user.mention)
+                elif perms == 9:
+                    perms_message = '{} is a Standard User on this Server.  However, Server Specific Permissions have not yet been set up on this Server'.format(user.mention)
+                elif perms == 5:
+                    perms_message = '{} is a Standard User in this Direct Message'.format(user.mention)
+                elif perms == 0:
+                    perms_message = '{} is a Blacklisted User on this Server'.format(user.mention)
+                else:
+                    perms_message = '{} has permissions level {}'.format(user.mention, perms)
 
-            if perms == 100:
-                perms_message = '{} is my Owner'.format(user.mention)
-            elif perms == 50:
-                perms_message = '{} is a Server Administrator'.format(user.mention)
-            elif perms == 45:
-                perms_message = '{} holds this server\'s Administrator Role'.format(user.mention)
-            elif perms == 35 and user.id == self.bot.user.id:
-                perms_message = 'I am {}!'.format(self.bot.config.bot_name)
-            elif perms == 35:
-                perms_message = '{} holds this server\'s Moderator Role'.format(user.mention)
-            elif perms == 25:
-                perms_message = '{} holds this server\'s Helper Role'.format(user.mention)
-            elif perms == 10:
-                perms_message = '{} is a Standard User on this Server'.format(user.mention)
-            elif perms == 9:
-                perms_message = '{} is a Standard User on this Server.  However, Server Specific Permissions have not yet been set up on this Server'.format(user.mention)
-            elif perms == 5:
-                perms_message = '{} is a Standard User in this Direct Message'.format(user.mention)
-            elif perms == 0:
-                perms_message = '{} is a Blacklisted User on this Server'.format(user.mention)
-            else:
-                perms_message = '{} has permissions level {}'.format(user.mention, perms)
+                perms_message = author.mention + ', ' + perms_message
 
-            perms_message = author.mention + ', ' + perms_message
-
-            await self.bot.safe_send_message(
-                channel, perms_message,
-                expire_in=30 if self.bot.config.delete_messages else 0,
-                also_delete=message if self.bot.config.delete_invoking else None
-            )
+                await self.bot.safe_send_message(
+                    channel, perms_message,
+                    expire_in=30 if self.bot.config.delete_messages else 0,
+                    also_delete=message if self.bot.config.delete_invoking else None
+                )
+        else:
+            return Response(send_help=True)
 
     async def cmd_ping(self):
         """
@@ -160,7 +163,7 @@ class BotOperation(PBPlugin):
         """
         return Response('pong!', reply=True, delete_after=10)
 
-    async def cmd_invite(self, message, message_type, server_link=None):
+    async def cmd_invite(self, message, auth_perms, server_link=None):
         """
         Usage:
             {command_prefix}invite [server_link if not bot]
@@ -168,7 +171,7 @@ class BotOperation(PBPlugin):
         Invite the bot or get it's Invite Link!
         """
 
-        if self.bot.config.allow_invites or message_type=='owner':
+        if self.bot.config.allow_invites or auth_perms >= 100:
             if self.bot.user.bot:
                 app_info = await self.bot.application_info()
                 join_url = discord.utils.oauth_url(app_info.id) + '&permissions=66321471'
@@ -204,7 +207,7 @@ class BotOperation(PBPlugin):
             user = user_mentions[0]
             return Response("<@{0}>'s ID is `{0}`".format(user.id), reply=False, delete_after=30)
 
-    async def cmd_say(self, channel, message, author, message_type, message_context, leftover_args):
+    async def cmd_say(self, channel, message, author, auth_perms, message_context, leftover_args):
         """
         Usage:
             {command_prefix}say (message)
@@ -215,7 +218,7 @@ class BotOperation(PBPlugin):
         sticky = False
         delete = False
 
-        if message_type == 'owner':
+        if auth_perms >= 100:
             if 'silent' in leftover_args or 'sticky' in leftover_args or 'delete' in leftover_args:
                 if message_context == 'direct':
                     srange = range(0,1)
@@ -254,7 +257,7 @@ class BotOperation(PBPlugin):
             channel, message_to_send,
             expire_in=15 if not sticky else 0)
 
-    async def cmd_sudo(self, message, user_mentions, leftover_args):
+    async def cmd_sudo(self, message, channel, server, auth_perms, user_mentions, leftover_args):
         """
         Usage:
             {command_prefix}sudo (user_mention) (command_sequence_to_be_ran)
@@ -263,19 +266,26 @@ class BotOperation(PBPlugin):
 
         help_exclude
         """
-        if user_mentions:
-            sudo_user = user_mentions[0]
-            if leftover_args[0] == sudo_user.mention:
-                sudo_string = self.bot.config.prefix + 'sudo '
-                sudo_string += sudo_user.mention
-                sudo_length = len(sudo_string)
-                sudo_message = message
-                sudo_message.content = message.content[sudo_length:].strip()
-                sudo_message.author = sudo_user
-                del sudo_message.mentions[0]
-                del sudo_message.raw_mentions[0]
+        if auth_perms >= 35:
+            if user_mentions:
+                sudo_user = user_mentions[0]
+                sudo_perms = await self.bot.permissions.check_permissions(sudo_user, channel, server)
+                if auth_perms > sudo_perms or auth_perms >= 100:
+                    if leftover_args[0] == sudo_user.mention:
+                        sudo_string = self.bot.config.prefix + 'sudo '
+                        sudo_string += sudo_user.mention
+                        sudo_length = len(sudo_string)
+                        sudo_message = message
+                        sudo_message.content = message.content[sudo_length:].strip()
+                        sudo_message.author = sudo_user
+                        del sudo_message.mentions[0]
+                        del sudo_message.raw_mentions[0]
 
-                await self.bot.on_message(sudo_message)
-                return
+                        await self.bot.on_message(sudo_message)
+                        return
+                else:
+                    return Response(permissions_error=True)
+            else:
+                return Response(send_help=True)
         else:
-            return Response(send_help=True)
+            return Response(permissions_error=True)
