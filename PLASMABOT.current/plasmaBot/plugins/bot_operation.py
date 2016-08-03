@@ -1,6 +1,8 @@
 from plasmaBot.plugin import PBPlugin, PBPluginMeta, Response
 import discord
 
+import copy
+
 from plasmaBot import exceptions
 
 import logging
@@ -275,7 +277,7 @@ class BotOperation(PBPlugin):
                         sudo_string = self.bot.config.prefix + 'sudo '
                         sudo_string += sudo_user.mention
                         sudo_length = len(sudo_string)
-                        sudo_message = message
+                        sudo_message = copy.copy(message)
                         sudo_message.content = message.content[sudo_length:].strip()
                         sudo_message.author = sudo_user
                         del sudo_message.mentions[0]

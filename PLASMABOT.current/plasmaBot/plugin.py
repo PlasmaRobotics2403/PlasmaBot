@@ -40,7 +40,7 @@ class PBPluginManager:
                     split_doc = doc.splitlines()
 
                     command_usage = split_doc[2].strip().format(command_prefix = self.bot.config.prefix)
-                    command_description = split_doc[4].strip()
+                    command_description = split_doc[4].strip().format(command_prefix = self.bot.config.prefix)
 
                     if len(split_doc) >= 7:
                         if 'help_exclude' in split_doc[6].strip():
@@ -269,7 +269,7 @@ class PBPlugin(object, metaclass=PBPluginMeta):
 
                         if response.permissions_error:
                             await self.bot.safe_send_message(
-                                message.channel, 'Invalid Permissions for this Command ({}{})'.format(self.bot.config.prefix, command),
+                                message.channel, '{}, Invalid Permissions for this Command ({}{})'.format(message.author.mention, self.bot.config.prefix, command),
                                 expire_in=30 if self.bot.config.delete_messages else 0,
                                 also_delete=message if self.bot.config.delete_invoking else None
                             )

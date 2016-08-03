@@ -18,25 +18,25 @@ class TBAPlugin(PBPlugin):
         super().__init__(plasmaBot)
         self.TBA = TBAParser(2403, "Discord Bot", "0.1.0")
 
-    async def cmd_tba(self, message, leftover_args):
+    async def cmd_tba(self, message, channel, leftover_args):
         """
         Usage:
             {command_prefix}TBA (Item to return) (Search Parameters)
 
-        Get Information from The Blue Alliance (TBA)
+        Pulls data from TBA.  For more info, do {command_prefix}tba
         """
+        no_response = '```The Blue Alliance - '
+        no_response += 'Pulls Data from The Blue Alliance API\n'
+        no_response += ' • ' + self.bot.config.prefix + 'tba team (team\\number)\n'
+        no_response += '   • pulls Team Information\n'
+        no_response += ' • ' + self.bot.config.prefix + 'tba event (event\\name)\n'
+        no_response += '   • pulls Event Information\n'
 
         try:
-            cmd_type= leftover_args[0]
+            cmd_type = leftover_args[0]
             del leftover_args[0]
         except:
-            no_response = '__**The Blue Alliance**__\n'
-            no_response += '_Pulls Data from The Blue Alliance API_\n'
-            no_response += ' • _' + self.bot.config.prefix + 'team (team\_number)_\n'
-            no_response += '   • pulls Team Information\n'
-            no_response += ' • _' + self.bot.config.prefix + 'event (event\_name)_\n'
-            no_response += '   • pulls Event Information\n'
-
+            no_response += '```'
             return Response(no_response, reply=False, delete_after=45)
 
         if cmd_type == 'team':
@@ -62,7 +62,7 @@ class TBAPlugin(PBPlugin):
                 team_data = team_data + '\nMotto: "' + team.motto + '"'
             return Response(team_data, reply=False, delete_after=60)
 
-        if cmd_type == 'event':
+        elif cmd_type == 'event':
             try:
                 year_str = leftover_args[0]
                 del leftover_args[0]
@@ -88,4 +88,58 @@ class TBAPlugin(PBPlugin):
             event_data = event.name + "\nYear: " + str(event.year) + "\nLocation: " + event.location + "\nDates: " + event.start_date + " to " + event.end_date + "\nEvent Type: " + event.event_type_string + "\nhttps://www.thebluealliance.com/event/" + event.key
             return Response(event_data, reply=False, delete_after=60)
 
-        return Response('Invalid secondary command. Must be either "team" or "event"', reply=False, delete_after=60)
+        elif cmd_type == 'awards':
+            if len(leftover_args) >= 1:
+                try:
+                    team_number = int(leftover_args[0])
+                except:
+                    no_response += '\n\nInvalid Team Number Supplied```'
+                    return Response(no_response, reply=False, delete_after=45)
+
+                team_key = 'frc' + str(team_number)
+
+                if len(leftover_args) >= 2:
+                    try:
+                        search_year = int(leftover_args[1])
+                    except:
+                        no_response += '\n\nSearch Year Provided but Invalid```'
+                        return Response(no_response, reply=False, delete_after=45)
+                else:
+                    search_year = None
+
+                try:
+                    team_awards = self.TBA.get_team_history_awards(team_key)
+                except:
+                    return Respose('Something went wrong in collecting Team Awards')
+
+                awards_msg_content = '**Team Awards for Team {}'.format(team_number)
+
+                if search_year:
+                    awards_msg_content += ' in {}**\n'.format(search_year)
+                else:
+                    awards_msg_content += '**\n'
+
+                for award in team_awards:
+                    if not search_year or search_year == award.year:
+                        award_string = '{}: {} ({})\n'.format(award.year, award.name, award.event_key)
+
+                        tentative_msg = awards_msg_content + award_string
+                        if len(tentative_msg) > 2000:
+                            await self.bot.safe_send_message(
+                                channel, awards_msg_content,
+                                expire_in=120 if self.bot.config.delete_messages else 0,
+                                also_delete=message if self.bot.config.delete_invoking else None
+                            )
+                            awards_msg_content = ''
+                        else:
+                            awards_msg_content = tentative_msg
+
+                return Response(awards_msg_content, reply=False, delete_after=120)
+
+            else:
+                no_response += '\n\nInvalid Team Number Supplied```'
+                return Response(no_response, reply=False, delete_after=45)
+
+        else:
+            no_response += '\n\nInvalid Secondary Command Supplied```'
+            return Response(no_response, reply=False, delete_after=45)
