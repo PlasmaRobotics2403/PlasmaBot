@@ -1,0 +1,1 @@
+This folder is where config files will be stored.  To generate a config file for this instance of the bot, use python3.5+ to start the bot using run.py

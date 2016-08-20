@@ -1,0 +1,5 @@
+discord.py[voice]
+sqlitehelper
+requests
+datetime
+numpy<1.11.0

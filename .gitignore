@@ -1,3 +1,5 @@
 *.pyc
 
 *.db
+
+config/options.ini
