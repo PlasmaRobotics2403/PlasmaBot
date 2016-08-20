@@ -236,7 +236,7 @@ class PlasmaBot(discord.Client):
 
     async def on_message(self, message):
 
-        auth_perms = await self.permissions.check_permissions(message.author, message.channel, message.server)
+        auth_perms = await self.permissions.check_permissions(message.author, message.channel, None)
 
         message_type = None
 

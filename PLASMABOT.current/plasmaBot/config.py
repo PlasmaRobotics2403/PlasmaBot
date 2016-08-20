@@ -17,7 +17,7 @@ class Config:
 
             try:
                 shutil.copy('plasmaBot/defaults/example_options.ini', self.config_file)
-                print('copied')
+                print(' - Config Copied!')
                 c = configparser.ConfigParser()
                 c.read(self.config_file, encoding='utf-8')
 
