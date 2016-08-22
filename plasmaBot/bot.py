@@ -20,6 +20,7 @@ from plasmaBot.defaults.database_tables import dbt_plugins, dbt_commands, dbt_se
 
 from plasmaBot.plugins.bot_operation import BotOperation
 from plasmaBot.plugins.TBA import TBAPlugin
+from plasmaBot.plugins.moderation import Moderation
 
 # Logging setup
 logger = logging.getLogger('discord')
@@ -108,14 +109,12 @@ class PlasmaBot(discord.Client):
         else:
             print("Currently on {} servers".format(len(self.servers)))
 
-        self.game = discord.Game(name=self.config.bot_game_compiled, type=1)
-
-        await self.change_status(self.game)
 
         if '{server_count}' in self.config.bot_game:
             self.config.bot_game_compiled = self.config.bot_game.replace('{server_count}', str(len(self.servers)))
-            self.game = discord.Game(name=self.config.bot_game_compiled, type=1)
-            await self.change_status(self.game)
+
+        self.game = discord.Game(name=self.config.bot_game_compiled, url='https://www.twitch.tv/discordapp', type=1)
+        await self.change_status(self.game)
 
         enabled_plugins = await self.get_plugins()
         for plugin in enabled_plugins:
@@ -134,13 +133,13 @@ class PlasmaBot(discord.Client):
             s_owner = row[0]
 
         if s_owner == '':
-            await self.safe_send_message(server.owner, '<@{}>, you should probably set up permissions roles for your server _**{}**_'.format(server.owner.id, server.name))
+            await self.safe_send_message(server.owner, '<@{}>, you should probably set up permissions roles for your server **{}**'.format(server.owner.id, server.name))
         elif self.config.debug:
             print(" - Server Permissions Already Set Up")
 
         if '{server_count}' in self.config.bot_game:
             self.config.bot_game_compiled = self.config.bot_game.replace('{server_count}', str(len(self.servers)))
-            self.game = discord.Game(name=self.config.bot_game_compiled, type=1)
+            self.game = discord.Game(name=self.config.bot_game_compiled, url='https://www.twitch.tv/discordapp', type=1)
             await self.change_status(self.game)
 
         enabled_plugins = await self.get_plugins(server)
@@ -156,7 +155,7 @@ class PlasmaBot(discord.Client):
 
         if '{server_count}' in self.config.bot_game:
             self.config.bot_game_compiled = self.config.bot_game.replace('{server_count}', str(len(self.servers)))
-            self.game = discord.Game(name=self.config.bot_game_compiled, type=1)
+            self.game = discord.Game(name=self.config.bot_game_compiled, url='https://www.twitch.tv/discordapp', type=1)
             await self.change_status(self.game)
 
         enabled_plugins = await self.get_plugins(server)
@@ -289,9 +288,9 @@ class PlasmaBot(discord.Client):
         enabled_plugins = await self.get_plugins(server)
         for plugin in enabled_plugins:
             if message_is_command and auth_perms > 0:
-                self.loop.create_task(plugin.on_command(message, message_type, message_context, auth_perms))
+                self.loop.create_task(plugin.on_command(message, message_type, message_context))
 
-            self.loop.create_task(plugin.on_message(message, message_type, message_context, auth_perms))
+            self.loop.create_task(plugin.on_message(message, message_type, message_context))
 
 
     async def on_message_edit(self, before, after):

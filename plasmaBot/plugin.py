@@ -101,13 +101,14 @@ class PBPluginManager:
         return plugins
 
 class Response:
-    def __init__(self, content=None, reply=False, delete_after=0, send_help=None, help_message=None, permissions_error=None):
+    def __init__(self, content=None, reply=False, delete_after=0, send_help=None, help_message=None, permissions_error=None, context_error=None):
         self.content = content
         self.reply = reply
         self.delete_after = delete_after
         self.send_help = send_help
         self.help_message = help_message
         self.permissions_error = permissions_error
+        self.context_error = context_error
 
 class PluginContainer:
     def __init__(cls):
@@ -132,7 +133,7 @@ class PBPlugin(object, metaclass=PBPluginMeta):
     def __init__(self, plasmaBot):
         self.bot = plasmaBot
 
-    async def on_command(self, message, message_type, message_context, auth_perms): #check for blacklisted user tbd #check for server moderation role / perms, tbd #check for private channel, tbd
+    async def on_command(self, message, message_type, message_context): #check for blacklisted user tbd #check for server moderation role / perms, tbd #check for private channel, tbd
         message_content = message.content.strip()
 
         command, *args = message_content.split()
@@ -161,21 +162,50 @@ class PBPlugin(object, metaclass=PBPluginMeta):
                         handler_kwargs['author'] = message.author
 
                     if params.pop('auth_perms', None):
+                        if message_context == 'server':
+                            auth_perms = await self.bot.permissions.check_permissions(message.author, message.channel, message.server)
+                        else:
+                            auth_perms = await self.bot.permissions.check_permissions(message.author, message.channel, None)
                         handler_kwargs['auth_perms'] = auth_perms
 
                     if params.pop('server', None):
+                        if message_context == 'direct':
+                            await self.bot.safe_send_message(
+                                message.channel, '{}, This command ({}{}) is not supported in direct messages'.format(message.author.mention, self.bot.config.prefix, command)
+                            )
+                            return
                         handler_kwargs['server'] = message.server
 
                     if params.pop('user_mentions', None):
+                        if message_context == 'direct':
+                            await self.bot.safe_send_message(
+                                message.channel, '{}, This command ({}{}) is not supported in direct messages'.format(message.author.mention, self.bot.config.prefix, command)
+                            )
+                            return
                         handler_kwargs['user_mentions'] = list(map(message.server.get_member, message.raw_mentions))
 
                     if params.pop('channel_mentions', None):
+                        if message_context == 'direct':
+                            await self.bot.safe_send_message(
+                                message.channel, '{}, This command ({}{}) is not supported in direct messages'.format(message.author.mention, self.bot.config.prefix, command)
+                            )
+                            return
                         handler_kwargs['channel_mentions'] = list(map(message.server.get_channel, message.raw_channel_mentions))
 
                     if params.pop('role_mentions', None):
+                        if message_context == 'direct':
+                            await self.bot.safe_send_message(
+                                message.channel, '{}, This command ({}{}) is not supported in direct messages'.format(message.author.mention, self.bot.config.prefix, command)
+                            )
+                            return
                         handler_kwargs['role_mentions'] = message.role_mentions
 
                     if params.pop('voice_channel', None):
+                        if message_context == 'direct':
+                            await self.bot.safe_send_message(
+                                message.channel, '{}, This command ({}{}) is not supported in direct messages'.format(message.author.mention, self.bot.config.prefix, command)
+                            )
+                            return
                         handler_kwargs['voice_channel'] = message.server.me.voice_channel
 
                     if params.pop('message_type', None):
@@ -275,6 +305,12 @@ class PBPlugin(object, metaclass=PBPluginMeta):
                             )
                             return
 
+                        if response.context_error:
+                            await self.bot.safe_send_message(
+                                message.channel, '{}, This command ({}{}) is not supported in direct messages'.format(message.author.mention, self.bot.config.prefix, command)
+                            )
+                            return
+
                         content = response.content
                         if response.reply:
                             content = '%s, %s' % (message.author.mention, content)
@@ -310,7 +346,7 @@ class PBPlugin(object, metaclass=PBPluginMeta):
     async def on_ready(self):
         pass
 
-    async def on_message(self, message, message_type, message_context, auth_perms):
+    async def on_message(self, message, message_type, message_context):
         pass
 
     async def on_message_edit(self, before, after):
