@@ -29,7 +29,7 @@ class PlasmaBot(discord.Client):
     def __init__(self, shutdown_operator):
         super().__init__()
 
-        self.version = '3.0.2-BETA-1'
+        self.version = '3.0.3-BETA-1'
         self.shutdown_state = shutdown_operator
 
         print('--------------------------------------------------------\n')
