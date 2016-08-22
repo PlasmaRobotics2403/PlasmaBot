@@ -157,19 +157,85 @@ class Moderation(PBPlugin):
         """
         if auth_perms >= 35:
             try:
-                ban_list = self.bot.get_bans(server)
+                ban_list = await self.bot.get_bans(server)
             except discord.Forbidden:
                 return Response(permissions_error=True)
 
-            ban_name_list = []
-
-            for user in ban_list:
-                ban_name_list = ban_name_list + [user.name]
+            not_unbanned_list = []
+            unbanned_list = []
 
             for user in user_mentions:
-                while user.mention in leftover_args: leftover_args.remove(user.mention) 
+                while user.mention in leftover_args: leftover_args.remove(user.mention)
 
+                if user in ban_list:
+                    try:
+                        await self.bot.unban(server, user)
+                        unbanned_list = unbanned_list + [user]
+                    except:
+                        not_unbanned_list = not_unbanned_list + [user]
+                else:
+                    not_unbanned_list = not_unbanned_list + [user]
 
+            for user in ban_list:
+                if user.name in leftover_args:
+                    leftover_args.remove(user.name)
+
+                    try:
+                        await self.bot.unban(server, user)
+                        unbanned_list = unbanned_list + [user]
+                    except:
+                        not_unbanned_list = not_unbanned_list + [user]
+                else:
+                    pass
+
+            response = ''
+            ubl_len = len(unbanned_list)
+            nbl_len = len(not_unbanned_list)
+            la_len = len(leftover_args)
+
+            if ubl_len == 0 and nbl_len == 0 and la_len == 0:
+                response = 'ERROR Handling Unbans'
+
+            if ubl_len >= 1:
+                response = 'Successfully Unbanned '
+
+                ubl_check = 0
+
+                for user in unbanned_list:
+                    ubl_check += 1
+
+                    if ubl_check != ubl_len:
+                        response += user.mention + ' & '
+                    else:
+                        response += user.mention
+
+                response += '. '
+
+            if nbl_len >= 1 or la_len >= 1:
+                response = 'Failed to Unban '
+
+                nbl_check = 0
+                la_check = 0
+
+                for user in not_unbanned_list:
+                    nbl_check += 1
+
+                    if nbl_check != nbl_len or la_len >= 1:
+                        response += user.mention + ' & '
+                    else:
+                        response += user.mention
+
+                for string in leftover_args:
+                    la_check += 1
+
+                    if la_check != la_len:
+                        response += string + ' & '
+                    else:
+                        response += string
+
+                response += '.'
+
+            return Response(response, reply=False, delete_after=10)
 
         else:
             return Response(permissions_error=True)
