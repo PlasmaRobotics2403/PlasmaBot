@@ -397,7 +397,7 @@ class PBPlugin(object, metaclass=PBPluginMeta):
     async def on_member_ban(self, member):
         pass
 
-    async def on_member_unban(self, member):
+    async def on_member_unban(self, server, user):
         pass
 
     async def on_typing(self, channel, user, when):

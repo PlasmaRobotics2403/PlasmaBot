@@ -265,7 +265,7 @@ class PlasmaBot(discord.Client):
             cmd_message = ''
 
         if self.config.terminal_log:
-            print('[PB][MESSAGE][' + message_context.upper() + '][' + message_type.upper() + ']' + cmd_message + ' "' + " \\n ".join(message.content.split("\n")).strip() + '" ~' + message.author.name + '(#' + message.author.discriminator + ')')
+            print('[PB][MESSAGE][' + message_context.upper() + '][' + message_type.upper() + ']' + cmd_message + ' "' + " \\n ".join(message.content.split("\n")).strip() + '" ~' + message.author.name + '(#' + message.author.discriminator + ') | ' + message.server.name)
 
         self.store_messages(message.channel.id, message)
 
@@ -410,11 +410,11 @@ class PlasmaBot(discord.Client):
         for plugin in enabled_plugins:
             self.loop.create_task(plugin.on_member_ban(member))
 
-    async def on_member_unban(self, member):
+    async def on_member_unban(self, server, user):
         server = member.server
         enabled_plugins = await self.get_plugins(server)
         for plugin in enabled_plugins:
-            self.loop.create_task(plugin.on_member_unban(member))
+            self.loop.create_task(plugin.on_member_unban(server, user))
 
     async def on_typing(self, channel, user, when):
         if channel.is_private:
