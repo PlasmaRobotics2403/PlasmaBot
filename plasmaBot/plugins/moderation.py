@@ -144,3 +144,32 @@ class Moderation(PBPlugin):
 
         else:
             return Response(permissions_error=True)
+
+
+    async def cmd_unban(self, message, server, auth_perms, user_mentions, leftover_args):
+        """
+        Usage:
+            {command_prefix}unban (UserMention | Username) [UserMention] [UserName]...
+
+        UnBan a User or Set of Users
+
+        help_exclude
+        """
+        if auth_perms >= 35:
+            try:
+                ban_list = self.bot.get_bans(server)
+            except discord.Forbidden:
+                return Response(permissions_error=True)
+
+            ban_name_list = []
+
+            for user in ban_list:
+                ban_name_list = ban_name_list + [user.name]
+
+            for user in user_mentions:
+                while user.mention in leftover_args: leftover_args.remove(user.mention) 
+
+
+
+        else:
+            return Response(permissions_error=True)
