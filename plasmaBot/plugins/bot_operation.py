@@ -83,7 +83,7 @@ class BotOperation(PBPlugin):
 
         return Response(help_response, reply=False, delete_after=60)
 
-    async def cmd_setperms(self, message, channel, server, author, auth_perms, role_mentions):
+    async def cmd_setperms(self, message, channel, server, author, auth_perms, raw_role_mentions):
         """
         Usage:
             {command_prefix}setperms (Administrator_Rank_Mention) (Moderator_Rank_Mention) (Helper_Rank_Mention) (Blacklisted_Rank_Mention)
@@ -94,11 +94,11 @@ class BotOperation(PBPlugin):
         """
 
         if channel.permissions_for(author).manage_server or auth_perms >= 100:
-            if len(role_mentions) == 4:
-                admin_role_id = role_mentions[0].id
-                mod_role_id = role_mentions[1].id
-                helper_role_id = role_mentions[2].id
-                black_role_id = role_mentions[3].id
+            if len(raw_role_mentions) == 4:
+                admin_role_id = raw_role_mentions[0]
+                mod_role_id = raw_role_mentions[1]
+                helper_role_id = raw_role_mentions[2]
+                black_role_id = raw_role_mentions[3]
 
                 self.bot.permissions.set_server_permissions(server, admin_role_id, mod_role_id, helper_role_id, black_role_id)
 

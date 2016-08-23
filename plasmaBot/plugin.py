@@ -200,6 +200,15 @@ class PBPlugin(object, metaclass=PBPluginMeta):
                             return
                         handler_kwargs['role_mentions'] = message.role_mentions
 
+
+                    if params.pop('raw_role_mentions', None):
+                        if message_context == 'direct':
+                            await self.bot.safe_send_message(
+                                message.channel, '{}, This command ({}{}) is not supported in direct messages'.format(message.author.mention, self.bot.config.prefix, command)
+                            )
+                            return
+                        handler_kwargs['raw_role_mentions'] = message.raw_role_mentions
+
                     if params.pop('voice_channel', None):
                         if message_context == 'direct':
                             await self.bot.safe_send_message(
