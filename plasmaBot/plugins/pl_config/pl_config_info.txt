@@ -1,0 +1,1 @@
+This folder is where plugin config files will be stored

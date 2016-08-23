@@ -1,10 +1,53 @@
 from plasmaBot.plugin import PBPlugin, PBPluginMeta, Response
 import discord
 
+import os
+import shutil
+import traceback
+import configparser
+
+from SQLiteHelper import SQLiteHelper as sq
+
 from plasmaBot import exceptions
 
 import logging
 log = logging.getLogger('discord')
+
+class ModerationConfig:
+    def __init__(self, plasmaBot, config_file):
+        self.bot = plasmaBot
+        self.config_file = self.bot.config.pl_config_directory + '/' + config_file
+
+        config = configparser.ConfigParser()
+        config_identifier = '2860'
+
+        # The config file to write to self.bot.config.pl_config_directory if it doesn't exist.  On one line because MultiLine Strings caused problems.
+        self.basic_config_file = "; Opening this file in Notepad (WINDOWS) will corrupt this file.  Don't do it.\n\n; THIS IS THE CONFIGURATION FILE FOR THE Moderation PLUGIN FOR PlasmaBot\n; Editing the configuration items within this file will change the functionality of the plugin.\n\n[Files]\n; The Location of Files\n\nModerationDB = data/moderation"
+
+        if not config.read(self.config_file, encoding='utf-8'):
+            print(' - [PLCONFIG] Config file not found, creating ' + self.config_file)
+
+            with open(self.config_file, "w") as text_file:
+                text_file.write(self.basic_config_file)
+
+        config = configparser.ConfigParser(interpolation=None)
+        config.read(self.config_file, encoding='utf-8')
+
+        confsections = {"Files"}.difference(config.sections())
+        if confsections:
+            raise HelpfulError(
+                "[PB][CONFIG] One or more required config sections are missing.",
+                "Fix your config.  Each [Section] should be on its own line with "
+                "nothing else on it.  The following sections are missing: {}".format(
+                    ', '.join(['[%s]' % s for s in confsections])
+                ),
+                preface="An error has occured parsing the config:\n"
+            )
+
+        self.moderation_db = config.get('Files', 'ModerationDB', fallback=ModerationDefaults.moderation_db)
+
+class ModerationDefaults: # DO NOT CHANGE SETTINGS HERE.  SETTINGS ARE CHANGED VIA THE BOT'S CONFIG FILE
+    moderation_db = 'data/moderation'
 
 class Moderation(PBPlugin):
     name = 'Moderation'
@@ -13,6 +56,10 @@ class Moderation(PBPlugin):
 
     def __init__(self, plasmaBot):
         super().__init__(plasmaBot)
+
+        self.pl_config = ModerationConfig(plasmaBot, 'moderation.ini')
+
+        self.moderation_db = sq.Connect(self.pl_config.moderation_db)
 
     async def cmd_kick(self, message, auth_perms, user_mentions):
         """

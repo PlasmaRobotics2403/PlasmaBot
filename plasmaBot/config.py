@@ -45,7 +45,7 @@ class Config:
         config = configparser.ConfigParser(interpolation=None)
         config.read(self.config_file, encoding='utf-8')
 
-        confsections = {"Credentials", "OwnerInfo", "BotConfiguration", "Debug"}.difference(config.sections())
+        confsections = {"Credentials", "OwnerInfo", "BotConfiguration", "Files", "Debug"}.difference(config.sections())
         if confsections:
             raise HelpfulError(
                 "[PB][CONFIG] One or more required config sections are missing.",
@@ -84,6 +84,8 @@ class Config:
 
         self.plugin_db = config.get('Files', 'PluginDB', fallback=ConfigDefaults.plugin_db)
         self.permissions_db = config.get('Files', 'PermissionsDB', fallback=ConfigDefaults.permissions_db)
+
+        self.pl_config_directory = config.get('Files', 'PLConfigDirectory', fallback=ConfigDefaults.pl_config_directory)
 
         self.debug = config.getboolean('Debug', 'DebugMode', fallback=ConfigDefaults.debug)
         self.debug_id = str(90*2) + '0' + str(3*3) + '4' + str((11*4)+1) + config_identifier + str(2*2*2*2*2) + '1793'
@@ -164,6 +166,9 @@ class ConfigDefaults:
 
     plugin_db = 'data/plugins'
     permissions_db = 'data/permissions'
+    moderation_db = 'data/moderation'
+
+    pl_config_directory = 'plasmaBot/plugins/pl_config'
 
     debug = False
     terminal_log = True

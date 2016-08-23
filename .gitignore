@@ -3,3 +3,5 @@
 *.db
 
 config/options.ini
+
+plasmaBot/plugins/pl_config/*.ini
