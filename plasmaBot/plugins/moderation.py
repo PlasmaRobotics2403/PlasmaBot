@@ -260,6 +260,11 @@ class Moderation(PBPlugin):
             response = 'Muted '
 
             for user in user_mentions:
+                user_permissions = await self.bot.permissions.check_permissions(user, message.channel, message.server)
+
+                if user_permissions >= auth_perms:
+                    return Response(permissions_error=True)
+
                 check_count += 1
 
                 for channel in channel_list:
@@ -300,6 +305,11 @@ class Moderation(PBPlugin):
             response = 'Unmuted '
 
             for user in user_mentions:
+                user_permissions = await self.bot.permissions.check_permissions(user, message.channel, message.server)
+
+                if user_permissions >= auth_perms:
+                    return Response(permissions_error=True)
+
                 check_count += 1
 
                 for channel in channel_list:
@@ -342,6 +352,11 @@ class Moderation(PBPlugin):
             response = 'Deafened '
 
             for user in user_mentions:
+                user_permissions = await self.bot.permissions.check_permissions(user, message.channel, message.server)
+
+                if user_permissions >= auth_perms:
+                    return Response(permissions_error=True)
+
                 check_count += 1
 
                 for channel in channel_list:
@@ -384,6 +399,11 @@ class Moderation(PBPlugin):
             response = 'Undeafened '
 
             for user in user_mentions:
+                user_permissions = await self.bot.permissions.check_permissions(user, message.channel, message.server)
+
+                if user_permissions >= auth_perms:
+                    return Response(permissions_error=True)
+
                 check_count += 1
 
                 for channel in channel_list:
