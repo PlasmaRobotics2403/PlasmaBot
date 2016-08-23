@@ -132,10 +132,24 @@ class PlasmaBot(discord.Client):
         for row in server_permissions_return:
             s_owner = row[0]
 
+        server_welcome_message = 'Hello {}!\n\n'.format(server.owner.mention)
+        server_welcome_message += 'I am {}, a Discord Moderation and Utility Bot!\n'.format(self.config.bot_name)
+        server_welcome_message += 'I work like most bots, although there are some things that you should probably know when setting me up on your server.  My command prefix is {}, and you can use `{}help` to get a list of publically available commands on your server.\n\n'.format(self.config.prefix, self.config.prefix)
+        server_welcome_message += 'There are also many commands that require advanced permissions on your server.'
+
         if s_owner == '':
-            await self.safe_send_message(server.owner, '<@{}>, you should probably set up permissions roles for your server **{}**'.format(server.owner.id, server.name))
+            server_welcome_message += ' These advanced permissions need to be set up on your server through the use of the `{}setperms` command, which can only be used by the server owner or a holder of the Administrator Permission.  To use the `{}setperms` command, four roles must be set up on your server.  Those include an \'Administrator\' Role, a \'Moderator\' Role, a \'Helper\' Role, and a \'Blacklisted\' Role.  These roles can be named anything you want, but must have \'@Mention\' turne on, as they will be activated via the `{}setperms` command via mentioning each role as seen below:\n'.format(self.config.prefix, self.config.prefix, self.config.prefix)
+            server_welcome_message += '    `{}setperms @AdministratorRole @ModeratorRole @HelperRole @BlacklistedRole`\n'.format(self.config.prefix)
+            server_welcome_message += ' This will give holders of these roles access to certain higher-level commands such as `{}kick`.'.format(self.config.prefix)
         elif self.config.debug:
-            print(" - Server Permissions Already Set Up")
+            server_welcome_message += 'These have already been set up on this server.  To change or modify the defined roles, use `{}help setperms` or check the original message!'.format(self.config.prefix)
+
+        server_welcome_message_part_2 = '_Higher Level Commands List:_\n```'
+        server_welcome_message_part_2 += 'Helper+:\n • {prefix}kick [list_of_user_mentions]\n • {prefix}mute [list_of_user_mentions]\n • {prefix}unmute [list_of_user_mentions]\nModerator+: • {prefix}ban [list_of_user_mentions]\n • {prefix}unban [list_of_user_names]\n • {prefix}deafen [list_of_user_mentions]\n • {prefix}undeafen [list_of_user_mentions]\n'.format(prefix=self.config.prefix)
+        server_welcome_message_part_2 += '```'
+
+        await self.safe_send_message(server.owner, server_welcome_message)
+        await self.safe_send_message(server.owner, server_welcome_message_part_2)
 
         if '{server_count}' in self.config.bot_game:
             self.config.bot_game_compiled = self.config.bot_game.replace('{server_count}', str(len(self.servers)))
