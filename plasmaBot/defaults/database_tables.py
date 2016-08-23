@@ -28,9 +28,3 @@ class dbt_server_perms(object):
         self.columns = ["SERVER_ID", "OWNER_ID", "ADMINISTRATOR_ROLE_ID", "MODERATOR_ROLE_ID", "HELPER_ROLE_ID", "BLACKLISTED_ROLE_ID"]
         self.datatypes = ["TEXT PRIMARY KEY NOT NULL", "TEXT", "TEXT", "TEXT", "TEXT", "TEXT"]
         self.seed = []
-
-class dbt_moderation_settings(object):
-    def __init__(self):
-        self.columns = ["SERVER_ID", "PRESERVE_OVERRIDES"]
-        self.datatypes = ["TEXT PRIMARY KEY NOT NULL", "TEXT"]
-        self.seed = []

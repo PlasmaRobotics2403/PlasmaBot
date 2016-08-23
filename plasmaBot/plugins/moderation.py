@@ -49,6 +49,12 @@ class ModerationConfig:
 class ModerationDefaults: # DO NOT CHANGE SETTINGS HERE.  SETTINGS ARE CHANGED VIA THE BOT'S CONFIG FILE
     moderation_db = 'data/moderation'
 
+class dbt_moderation_settings(object):
+    def __init__(self):
+        self.columns = ["SERVER_ID", "PRESERVE_OVERRIDES"]
+        self.datatypes = ["TEXT PRIMARY KEY NOT NULL", "TEXT"]
+        self.seed = []
+
 class Moderation(PBPlugin):
     name = 'Moderation'
     globality = 'all'
@@ -60,6 +66,10 @@ class Moderation(PBPlugin):
         self.pl_config = ModerationConfig(plasmaBot, 'moderation.ini')
 
         self.moderation_db = sq.Connect(self.pl_config.moderation_db)
+
+        if not self.moderation_db.table('s_preferences').tableExists():
+            initiation_glob = dbt_moderation_settings()
+            self.moderation_db.table('s_preferences').init(initiation_glob)
 
     async def cmd_kick(self, message, auth_perms, user_mentions):
         """
