@@ -263,11 +263,14 @@ class PlasmaBot(discord.Client):
             message_type = 'user'
 
         message_context = None
+        message_location = " | "
 
         if message.server:
             message_context = 'server'
+            message_location += message.server.name + " #" + message.channel.name
         else:
             message_context = 'direct'
+            message_location += "Direct Message"
 
         if message.content.strip().startswith(self.config.prefix):
             message_is_command = True
@@ -279,7 +282,7 @@ class PlasmaBot(discord.Client):
             cmd_message = ''
 
         if self.config.terminal_log:
-            print('[PB][MESSAGE][' + message_context.upper() + '][' + message_type.upper() + ']' + cmd_message + ' "' + " \\n ".join(message.content.split("\n")).strip() + '" ~' + message.author.name + '(#' + message.author.discriminator + ') | ' + message.server.name)
+            print('[PB][MESSAGE][' + message_context.upper() + '][' + message_type.upper() + ']' + cmd_message + ' "' + " \\n ".join(message.content.split("\n")).strip() + '" ~' + message.author.name + '(#' + message.author.discriminator + message_location)
 
         self.store_messages(message.channel.id, message)
 
