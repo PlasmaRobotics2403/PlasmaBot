@@ -239,3 +239,170 @@ class Moderation(PBPlugin):
 
         else:
             return Response(permissions_error=True)
+
+
+    async def cmd_mute(self, message, server, auth_perms, user_mentions):
+        """
+        Usage:
+            {command_prefix}mute (UserMention) [UserMention] [UserMention]...
+
+        Mute a user or set of users
+
+        help_exclude
+        """
+        if auth_perms >= 25:
+
+            channel_list = server.channels
+
+            user_count = len(user_mentions)
+            check_count = 0
+
+            response = 'Muted '
+
+            for user in user_mentions:
+                check_count += 1
+
+                for channel in channel_list:
+                    try:
+                        overwrite = channel.overwrites_for(user)
+                        overwrite.send_messages = False
+                        await self.bot.edit_channel_permissions(channel, user, overwrite)
+                    except:
+                        self.bot.safe_send_message(message.channel, 'Error muting {} in {}'.format(user.mention, channel.mention), expire_in=10)
+
+                if check_count != user_count:
+                    response += user.mention + ' & '
+                else:
+                    response += user.mention
+
+            response += '.'
+
+            return Response(response, reply=False, delete_after=10)
+
+        else:
+            return Response(permissions_error=True)
+
+    async def cmd_unmute(self, message, server, auth_perms, user_mentions):
+        """
+        Usage:
+            {command_prefix}unmute (UserMention) [UserMention] [UserMention]...
+
+        Unmute a user or set of users
+
+        help_exclude
+        """
+        if auth_perms >= 25:
+
+            channel_list = server.channels
+            user_count = len(user_mentions)
+            check_count = 0
+
+            response = 'Unmuted '
+
+            for user in user_mentions:
+                check_count += 1
+
+                for channel in channel_list:
+                    try:
+                        overwrite = channel.overwrites_for(user)
+                        overwrite.send_messages = None
+                        await self.bot.edit_channel_permissions(channel, user, overwrite)
+                    except:
+                        self.bot.safe_send_message(message.channel, 'Error unmuting {} in {}'.format(user.mention, channel.mention), expire_in=10)
+
+                if check_count != user_count:
+                    response += user.mention + ' & '
+                else:
+                    response += user.mention
+
+            response += '.'
+
+            return Response(response, reply=False, delete_after=10)
+
+        else:
+            return Response(permissions_error=True)
+
+
+    async def cmd_deafen(self, message, server, auth_perms, user_mentions):
+        """
+        Usage:
+            {command_prefix}deafen (UserMention) [UserMention] [UserMention]...
+
+        Deafen a user or set of users
+
+        help_exclude
+        """
+        if auth_perms >= 25:
+
+            channel_list = server.channels
+
+            user_count = len(user_mentions)
+            check_count = 0
+
+            response = 'Deafened '
+
+            for user in user_mentions:
+                check_count += 1
+
+                for channel in channel_list:
+                    try:
+                        overwrite = channel.overwrites_for(user)
+                        overwrite.send_messages = False
+                        overwrite.read_messages = False
+                        await self.bot.edit_channel_permissions(channel, user, overwrite)
+                    except:
+                        self.bot.safe_send_message(message.channel, 'Error deafening {} in {}'.format(user.mention, channel.mention), expire_in=10)
+
+                if check_count != user_count:
+                    response += user.mention + ' & '
+                else:
+                    response += user.mention
+
+            response += '.'
+
+            return Response(response, reply=False, delete_after=10)
+
+        else:
+            return Response(permissions_error=True)
+
+
+    async def cmd_undeafen(self, message, server, auth_perms, user_mentions):
+        """
+        Usage:
+            {command_prefix}undeafen (UserMention) [UserMention] [UserMention]...
+
+        Undeafen a user or set of users
+
+        help_exclude
+        """
+        if auth_perms >= 25:
+
+            channel_list = server.channels
+            user_count = len(user_mentions)
+            check_count = 0
+
+            response = 'Undeafened '
+
+            for user in user_mentions:
+                check_count += 1
+
+                for channel in channel_list:
+                    try:
+                        overwrite = channel.overwrites_for(user)
+                        overwrite.send_messages = None
+                        overwrite.read_messages = None
+                        await self.bot.edit_channel_permissions(channel, user, overwrite)
+                    except:
+                        self.bot.safe_send_message(message.channel, 'Error Undeafened {} in {}'.format(user.mention, channel.mention), expire_in=10)
+
+                if check_count != user_count:
+                    response += user.mention + ' & '
+                else:
+                    response += user.mention
+
+            response += '.'
+
+            return Response(response, reply=False, delete_after=10)
+
+        else:
+            return Response(permissions_error=True)
