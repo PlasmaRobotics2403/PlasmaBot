@@ -342,7 +342,7 @@ class Moderation(PBPlugin):
 
         help_exclude
         """
-        if auth_perms >= 25:
+        if auth_perms >= 35:
 
             channel_list = server.channels
 
@@ -390,7 +390,7 @@ class Moderation(PBPlugin):
 
         help_exclude
         """
-        if auth_perms >= 25:
+        if auth_perms >= 35:
 
             channel_list = server.channels
             user_count = len(user_mentions)
