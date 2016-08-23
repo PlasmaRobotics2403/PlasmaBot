@@ -145,7 +145,7 @@ class PlasmaBot(discord.Client):
             server_welcome_message += 'These have already been set up on this server.  To change or modify the defined roles, use `{}help setperms` or check the original message!'.format(self.config.prefix)
 
         server_welcome_message_part_2 = '_Higher Level Commands List:_\n```'
-        server_welcome_message_part_2 += 'Helper+:\n • {prefix}kick [list_of_user_mentions]\n • {prefix}mute [list_of_user_mentions]\n • {prefix}unmute [list_of_user_mentions]\nModerator+: • {prefix}ban [list_of_user_mentions]\n • {prefix}unban [list_of_user_names]\n • {prefix}deafen [list_of_user_mentions]\n • {prefix}undeafen [list_of_user_mentions]\n'.format(prefix=self.config.prefix)
+        server_welcome_message_part_2 += 'Helper+:\n • {prefix}kick [list_of_user_mentions]\n • {prefix}mute [list_of_user_mentions]\n • {prefix}unmute [list_of_user_mentions]\nModerator+:\n • {prefix}ban [list_of_user_mentions]\n • {prefix}unban [list_of_user_names]\n • {prefix}deafen [list_of_user_mentions]\n • {prefix}undeafen [list_of_user_mentions]\n'.format(prefix=self.config.prefix)
         server_welcome_message_part_2 += '```'
 
         await self.safe_send_message(server.owner, server_welcome_message)
