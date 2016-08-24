@@ -63,6 +63,8 @@ class Config:
 
         self.auth = None
 
+        self.self_bot = config.getboolean('Credentials', 'SelfBot', fallback=ConfigDefaults.self_bot)
+
         self.owner_id = config.get('OwnerInfo', 'OwnerID', fallback=ConfigDefaults.owner_id)
 
         self.bot_name = config.get('BotConfiguration', 'BotName', fallback=ConfigDefaults.bot_name)
@@ -154,6 +156,8 @@ class ConfigDefaults:
     email = None    #
     password = None # This is not where you put your login info.
     token = None    # Place your login info in 'config/options.ini'
+
+    self_bot = False
 
     owner_id = None
 
