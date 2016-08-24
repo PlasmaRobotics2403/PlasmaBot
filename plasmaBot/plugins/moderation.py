@@ -483,3 +483,16 @@ class Moderation(PBPlugin):
 
         else:
             return Response(permissions_error=True)
+
+    async def on_server_join(self, server):
+        moderation_settings = self.moderation_db.table('s_preferences').select("PRESERVE_OVERRIDES").where("SERVER_ID").equals(server.id).execute()
+
+        PRESERVE_OVERRIDES = ''
+
+        for server in moderation_settings:
+            PRESERVE_OVERRIDES = server[0]
+
+        if PRESERVE_OVERRIDES == 'true' or PRESERVE_OVERRIDES == 'false':
+            pass
+        else:
+            self.moderation_db.table('s_preferences').insert('true').into("PRESERVE_OVERRIDES")
