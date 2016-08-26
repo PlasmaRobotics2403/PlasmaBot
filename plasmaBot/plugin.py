@@ -75,6 +75,21 @@ class PBPluginManager:
 
         plugin_instance = plugin(self.bot)
         self.bot.plugins.append(plugin_instance)
+
+        if not plugin_instance.toggles == None:
+            for toggle_name in plugin_instance.toggles:
+                already_exists = self.bot.plugin_db.table('toggles').select("PLUGIN_NAME").where("TOGGLE_NAME").equals(toggle_name.lower()).execute()
+
+                test_key = ''
+
+                for toggle in already_exists:
+                    test_key = toggle[0]
+
+                if not test_key == '':
+                    self.bot.plugin_db.table('toggles').insert(toggle_name, plugin.__name__).into("TOGGLE_NAME", "PLUGIN_NAME")
+                elif self.bot.config.debug:
+                    print(' - Duplicate Toggle Key Detected')
+
         if self.bot.config.debug:
             if plugin_commands > 0:
                 print(" - {} commands registered".format(plugin_commands))
@@ -94,11 +109,24 @@ class PBPluginManager:
         plugins = []
         for plugin in self.bot.plugins:
             if server:
-                pl_globality = type(plugin).globality
                 plugins.append(plugin)
             else:
                 plugins.append(plugin)
         return plugins
+
+    async def get_plugin_by_name(self, name):
+        plugins = []
+        for plugin in self.bot.plugins:
+            if plugin.__name__ == name:
+                plugins.append(plugin)
+
+        if len(plugins) == 1:
+            return plugins[0]
+        else:
+            print('[PB] ERROR - Duplicate Plugins, using first.')
+            return plugins[0]
+
+
 
 class Response:
     def __init__(self, content=None, reply=False, delete_after=0, send_help=None, help_message=None, permissions_error=None, context_error=None):
@@ -132,6 +160,7 @@ class PBPlugin(object, metaclass=PBPluginMeta):
 
     def __init__(self, plasmaBot):
         self.bot = plasmaBot
+        self.toggles = None
 
     async def on_command(self, message, message_type, message_context): #check for blacklisted user tbd #check for server moderation role / perms, tbd #check for private channel, tbd
         message_content = message.content.strip()

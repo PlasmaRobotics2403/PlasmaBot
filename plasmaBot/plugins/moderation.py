@@ -71,6 +71,26 @@ class Moderation(PBPlugin):
             initiation_glob = dbt_moderation_settings()
             self.moderation_db.table('s_preferences').init(initiation_glob)
 
+    def toggle(self, key, server=None):
+        moderation_settings = self.moderation_db.table('s_preferences').select("PRESERVE_OVERRIDES").where("SERVER_ID").equals(server.id).execute()
+
+        if key == "preserve_overrides" and server:
+            for server in moderation_settings:
+                preserve_overrides = server[0]
+
+                if preserve_overrides == 'true':
+                    preserve_overrides = 'false'
+                elif preserve_overrides == 'false':
+                    preserve_overrides = 'true'
+                else:
+                    preserve_overrides = 'true'
+
+            self.moderation_db.table('s_preferences').update("PRESERVE_OVERRIDES").setTo(preserve_overrides).where("SERVER_ID").equals(server.id).execute()
+
+            return 'SUCCESS'
+        else:
+            return 'ERROR'
+
     async def cmd_kick(self, message, auth_perms, user_mentions):
         """
         Usage:

@@ -16,9 +16,10 @@ from plasmaBot.config import Config, ConfigDefaults
 from plasmaBot.permissions import Permissions
 from plasmaBot.plugin import PBPluginManager, Response, PBPluginMeta, PBPlugin
 
-from plasmaBot.defaults.database_tables import dbt_plugins, dbt_commands, dbt_server
+from plasmaBot.defaults.database_tables import dbt_plugins, dbt_commands, dbt_server, dbt_toggles
 
-from plasmaBot.plugins.bot_operation import BotOperation
+from plasmaBot.default_plugin import DefaultPlugin
+
 from plasmaBot.plugins.TBA import TBAPlugin
 from plasmaBot.plugins.moderation import Moderation
 
@@ -52,12 +53,15 @@ class PlasmaBot(discord.Client):
         # Kill old instances of Plugin and Command Tables, to repopulate based on currently enabled plugins
         self.plugin_db_cursor.execute('DROP TABLE IF EXISTS plugins')
         self.plugin_db_cursor.execute('DROP TABLE IF EXISTS commands')
+        self.plugin_db_cursor.execute('DROP TABLE IF EXISTS toggles')
 
         # Set Up Plugin and Command Databases
         table_raw_plugins = dbt_plugins()
         self.plugin_db.table('plugins').init(table_raw_plugins)
         table_raw_cmd = dbt_commands()
         self.plugin_db.table('commands').init(table_raw_cmd)
+        table_raw_toggles = dbt_toggles()
+        self.plugin_db.table('toggles').init(table_raw_toggles)
 
         if not self.plugin_db.table('servers').tableExists():
             table_raw_servers = dbt_server()

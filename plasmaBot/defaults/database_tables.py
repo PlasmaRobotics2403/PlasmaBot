@@ -11,6 +11,12 @@ class dbt_commands(object):
         self.seed = [["shutdown", "BASE", "{command_prefix}shutdown", "Shutdown Bot", "YES"],
                      ["restart", "BASE", "{command_prefix}restart", "Restart Bot", "YES"]]
 
+class dbt_toggles(object):
+    def __init__(self):
+        self.columns = ["TOGGLE_NAME", "PLUGIN_NAME"]
+        self.datatypes = ["TEXT PRIMARY KEY NOT NULL", "TEXT"]
+        self.seed = []
+
 class dbt_server(object):
     def __init__(self):
         self.columns = ["SERVER_ID"]

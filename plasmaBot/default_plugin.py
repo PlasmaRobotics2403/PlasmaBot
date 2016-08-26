@@ -8,8 +8,8 @@ from plasmaBot import exceptions
 import logging
 log = logging.getLogger('discord')
 
-class BotOperation(PBPlugin):
-    name = 'Standard Commands'
+class DefaultPlugin(PBPlugin):
+    name = 'Default Bot Operation'
     globality = 'all'
     help_exclude = False
 
