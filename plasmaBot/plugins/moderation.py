@@ -63,6 +63,8 @@ class Moderation(PBPlugin):
     def __init__(self, plasmaBot):
         super().__init__(plasmaBot)
 
+        self.toggles = ['preserve_overrides']
+
         self.pl_config = ModerationConfig(plasmaBot, 'moderation.ini')
 
         self.moderation_db = sq.Connect(self.pl_config.moderation_db)
@@ -71,12 +73,15 @@ class Moderation(PBPlugin):
             initiation_glob = dbt_moderation_settings()
             self.moderation_db.table('s_preferences').init(initiation_glob)
 
-    def toggle(self, key, server=None):
-        moderation_settings = self.moderation_db.table('s_preferences').select("PRESERVE_OVERRIDES").where("SERVER_ID").equals(server.id).execute()
+    async def toggle(self, server, key):
+        if key == "preserve_overrides":
 
-        if key == "preserve_overrides" and server:
-            for server in moderation_settings:
-                preserve_overrides = server[0]
+            data = self.moderation_db.table('s_preferences').select("PRESERVE_OVERRIDES").where("SERVER_ID").equals(server.id).execute()
+
+            preserve_overrides = 'null'
+
+            for server_item in data:
+                preserve_overrides = server_item[0]
 
                 if preserve_overrides == 'true':
                     preserve_overrides = 'false'
@@ -85,9 +90,38 @@ class Moderation(PBPlugin):
                 else:
                     preserve_overrides = 'true'
 
-            self.moderation_db.table('s_preferences').update("PRESERVE_OVERRIDES").setTo(preserve_overrides).where("SERVER_ID").equals(server.id).execute()
+            if preserve_overrides == 'null':
+                preserve_overrides = 'true'
+                self.moderation_db.table('s_preferences').insert('true', server.id).into("PRESERVE_OVERRIDES", "SERVER_ID")
+            else:
+                self.moderation_db.table('s_preferences').update("PRESERVE_OVERRIDES").setTo(preserve_overrides).where("SERVER_ID").equals(server.id).execute()
 
-            return 'SUCCESS'
+            return ['SUCCESS', preserve_overrides]
+        else:
+            return 'ERROR'
+
+    async def get_key(self, server, key):
+        if key == "preserve_overrides":
+
+            data = self.moderation_db.table('s_preferences').select("PRESERVE_OVERRIDES").where("SERVER_ID").equals(server.id).execute()
+
+            preserve_overrides = None
+
+            for server_item in data:
+                preserve_overrides = server_item[0]
+                if preserve_overrides == 'true':
+                    preserve_overrides = True
+                elif preserve_overrides == 'false':
+                    preserve_overrides = False
+                else:
+                    preserve_overrides = None
+
+            if preserve_overrides == None:
+                preserve_overrides = 'true'
+                self.moderation_db.table('s_preferences').insert('true', server.id).into("PRESERVE_OVERRIDES", "SERVER_ID")
+                return True
+
+            return preserve_overrides
         else:
             return 'ERROR'
 
@@ -329,6 +363,8 @@ class Moderation(PBPlugin):
         """
         if auth_perms >= 25:
 
+            server_preserve_overrides = await self.get_key(server, 'preserve_overrides')
+
             channel_list = server.channels
 
             user_count = len(user_mentions)
@@ -346,7 +382,11 @@ class Moderation(PBPlugin):
 
                 for channel in channel_list:
                     try:
-                        overwrite = channel.overwrites_for(user)
+                        if not server_preserve_overrides == True:
+                            overwrite = channel.overwrites_for(user)
+                        else:
+                            overwrite = discord.PermissionOverwrite()
+
                         overwrite.send_messages = False
                         await self.bot.edit_channel_permissions(channel, user, overwrite)
                     except:
@@ -375,6 +415,8 @@ class Moderation(PBPlugin):
         """
         if auth_perms >= 25:
 
+            server_preserve_overrides = await self.get_key(server, 'preserve_overrides')
+
             channel_list = server.channels
             user_count = len(user_mentions)
             check_count = 0
@@ -391,7 +433,11 @@ class Moderation(PBPlugin):
 
                 for channel in channel_list:
                     try:
-                        overwrite = channel.overwrites_for(user)
+                        if not server_preserve_overrides == True:
+                            overwrite = channel.overwrites_for(user)
+                        else:
+                            overwrite = discord.PermissionOverwrite()
+
                         overwrite.send_messages = None
                         await self.bot.edit_channel_permissions(channel, user, overwrite)
                     except:
@@ -421,6 +467,8 @@ class Moderation(PBPlugin):
         """
         if auth_perms >= 35:
 
+            server_preserve_overrides = await self.get_key(server, 'preserve_overrides')
+
             channel_list = server.channels
 
             user_count = len(user_mentions)
@@ -438,7 +486,11 @@ class Moderation(PBPlugin):
 
                 for channel in channel_list:
                     try:
-                        overwrite = channel.overwrites_for(user)
+                        if not server_preserve_overrides == True:
+                            overwrite = channel.overwrites_for(user)
+                        else:
+                            overwrite = discord.PermissionOverwrite()
+
                         overwrite.send_messages = False
                         overwrite.read_messages = False
                         await self.bot.edit_channel_permissions(channel, user, overwrite)
@@ -469,6 +521,8 @@ class Moderation(PBPlugin):
         """
         if auth_perms >= 35:
 
+            server_preserve_overrides = await self.get_key(server, 'preserve_overrides')
+
             channel_list = server.channels
             user_count = len(user_mentions)
             check_count = 0
@@ -485,7 +539,11 @@ class Moderation(PBPlugin):
 
                 for channel in channel_list:
                     try:
-                        overwrite = channel.overwrites_for(user)
+                        if not server_preserve_overrides == True:
+                            overwrite = channel.overwrites_for(user)
+                        else:
+                            overwrite = discord.PermissionOverwrite()
+
                         overwrite.send_messages = None
                         overwrite.read_messages = None
                         await self.bot.edit_channel_permissions(channel, user, overwrite)
@@ -504,6 +562,9 @@ class Moderation(PBPlugin):
         else:
             return Response(permissions_error=True)
 
+
+
+
     async def on_server_join(self, server):
         moderation_settings = self.moderation_db.table('s_preferences').select("PRESERVE_OVERRIDES").where("SERVER_ID").equals(server.id).execute()
 
@@ -515,4 +576,4 @@ class Moderation(PBPlugin):
         if PRESERVE_OVERRIDES == 'true' or PRESERVE_OVERRIDES == 'false':
             pass
         else:
-            self.moderation_db.table('s_preferences').insert('true').into("PRESERVE_OVERRIDES")
+            self.moderation_db.table('s_preferences').insert('true', server.id).into("PRESERVE_OVERRIDES", "SERVER_ID")

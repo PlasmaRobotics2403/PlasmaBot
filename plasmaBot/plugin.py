@@ -76,19 +76,21 @@ class PBPluginManager:
         plugin_instance = plugin(self.bot)
         self.bot.plugins.append(plugin_instance)
 
-        if not plugin_instance.toggles == None:
+        if plugin_instance.toggles:
             for toggle_name in plugin_instance.toggles:
-                already_exists = self.bot.plugin_db.table('toggles').select("PLUGIN_NAME").where("TOGGLE_NAME").equals(toggle_name.lower()).execute()
+                already_exists = self.bot.plugin_db.table('toggles').select("TOGGLE_NAME").where("TOGGLE_NAME").equals(toggle_name.lower()).execute()
 
-                test_key = ''
+                toggle_name_test = None
 
                 for toggle in already_exists:
-                    test_key = toggle[0]
+                    toggle_name_test = toggle[0]
+                    print(toggle_name_test)
 
-                if not test_key == '':
-                    self.bot.plugin_db.table('toggles').insert(toggle_name, plugin.__name__).into("TOGGLE_NAME", "PLUGIN_NAME")
+                if not toggle_name_test == toggle_name:
+                    self.bot.plugin_db.table('toggles').insert(toggle_name.lower(), plugin.__name__).into("TOGGLE_NAME", "PLUGIN_NAME")
                 elif self.bot.config.debug:
                     print(' - Duplicate Toggle Key Detected')
+            print (' - {} toggles registered'.format(len(plugin_instance.toggles)))
 
         if self.bot.config.debug:
             if plugin_commands > 0:
@@ -117,7 +119,7 @@ class PBPluginManager:
     async def get_plugin_by_name(self, name):
         plugins = []
         for plugin in self.bot.plugins:
-            if plugin.__name__ == name:
+            if type(plugin).__name__ == name:
                 plugins.append(plugin)
 
         if len(plugins) == 1:

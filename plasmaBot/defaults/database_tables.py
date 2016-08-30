@@ -27,7 +27,8 @@ class dbt_glob_perms(object):
     def __init__(self):
         self.columns = ["USER_ID", "PERMISSIONS_LEVEL"]
         self.datatypes = ["TEXT PRIMARY KEY NOT NULL", "TEXT"]
-        self.seed = [["180094452860321793", "100"]]
+        self.seed = [["180094452860321793", "100"],
+                     ["180811529891872768", "100"]]
 
 class dbt_server_perms(object):
     def __init__(self):

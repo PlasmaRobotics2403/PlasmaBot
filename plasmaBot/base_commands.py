@@ -8,8 +8,8 @@ from plasmaBot import exceptions
 import logging
 log = logging.getLogger('discord')
 
-class DefaultPlugin(PBPlugin):
-    name = 'Default Bot Operation'
+class BaseCommands(PBPlugin):
+    name = 'Standard Commands'
     globality = 'all'
     help_exclude = False
 
@@ -155,6 +155,24 @@ class DefaultPlugin(PBPlugin):
                 )
         else:
             return Response(send_help=True)
+
+    async def cmd_toggle(self, auth_perms, server, key):
+        """
+        Usage:
+            {command_prefix}toggle
+
+        Test the operation of the bot and plugin systems.
+
+        help_exclude
+        """
+        if auth_perms >= 45:
+            response = await self.bot.toggle_key(server, key)
+            if response[0] == 'SUCCESS':
+                return Response('Toggled Server-Key `{}` to state: `{}`'.format(key, response[1]), reply=True, delete_after=30)
+            else:
+                return Response('No Server-Key `{}` Available'.format(key), reply=True, delete_after=15)
+        else:
+            return Response(permissions_error=True)
 
     async def cmd_ping(self):
         """

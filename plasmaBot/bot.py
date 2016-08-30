@@ -18,7 +18,7 @@ from plasmaBot.plugin import PBPluginManager, Response, PBPluginMeta, PBPlugin
 
 from plasmaBot.defaults.database_tables import dbt_plugins, dbt_commands, dbt_server, dbt_toggles
 
-from plasmaBot.default_plugin import DefaultPlugin
+from plasmaBot.base_commands import BaseCommands
 
 from plasmaBot.plugins.TBA import TBAPlugin
 from plasmaBot.plugins.moderation import Moderation
@@ -103,12 +103,32 @@ class PlasmaBot(discord.Client):
         plugins = await self.plugin_manager.get_all(server)
         return plugins
 
+    async def toggle_key(self, server_id, key):
+        toggle_settings = self.plugin_db.table('toggles').select("PLUGIN_NAME").where("TOGGLE_NAME").equals(key.lower()).execute()
+
+        plugin_name = ''
+
+        for item in toggle_settings:
+            plugin_name = item[0]
+
+        if not plugin_name == '':
+            plugin = await self.plugin_manager.get_plugin_by_name(plugin_name)
+            response = await plugin.toggle(server_id, key)
+            if response[0] == 'SUCCESS':
+                return ['SUCCESS', response[1]]
+            else:
+                return ['FAILURE']
+        else:
+            if self.config.debug:
+                print(' - No Toggle Available')
+            return ['FAILURE']
+
     async def on_ready(self):
         print("\n\nConnected!\n")
 
         if len(self.servers) < 16:
             print("Current Servers:")
-            [print(" - " + server.name) for server in self.servers]
+            [print(" - " + server.name + " (" + server.id + ")") for server in self.servers]
             print()
         else:
             print("Currently on {} servers".format(len(self.servers)))
