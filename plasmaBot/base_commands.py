@@ -166,7 +166,7 @@ class BaseCommands(PBPlugin):
         help_exclude
         """
         if auth_perms >= 45:
-            response = await self.bot.toggle_key(server, key)
+            response = await self.bot.toggle_key(server, key.lower())
             if response[0] == 'SUCCESS':
                 return Response('Toggled Server-Key `{}` to state: `{}`'.format(key, response[1]), reply=True, delete_after=30)
             else:

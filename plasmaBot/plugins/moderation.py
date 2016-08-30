@@ -51,8 +51,8 @@ class ModerationDefaults: # DO NOT CHANGE SETTINGS HERE.  SETTINGS ARE CHANGED V
 
 class dbt_moderation_settings(object):
     def __init__(self):
-        self.columns = ["SERVER_ID", "PRESERVE_OVERRIDES"]
-        self.datatypes = ["TEXT PRIMARY KEY NOT NULL", "TEXT"]
+        self.columns = ["SERVER_ID", "PRESERVE_OVERRIDES", "SOFT_MUTE"]
+        self.datatypes = ["TEXT PRIMARY KEY NOT NULL", "TEXT", "TEXT"]
         self.seed = []
 
 class Moderation(PBPlugin):
@@ -63,7 +63,7 @@ class Moderation(PBPlugin):
     def __init__(self, plasmaBot):
         super().__init__(plasmaBot)
 
-        self.toggles = ['preserve_overrides']
+        self.toggles = ['preserve_overrides', 'soft_mute']
 
         self.pl_config = ModerationConfig(plasmaBot, 'moderation.ini')
 
@@ -73,55 +73,135 @@ class Moderation(PBPlugin):
             initiation_glob = dbt_moderation_settings()
             self.moderation_db.table('s_preferences').init(initiation_glob)
 
+
     async def toggle(self, server, key):
+
+        #Get Server Data
+
+        moderation_settings = self.moderation_db.table('s_preferences').select("SERVER_ID", "PRESERVE_OVERRIDES", "SOFT_MUTE").where("SERVER_ID").equals(server.id).execute()
+
+        SERVER_ID = None
+        PRESERVE_OVERRIDES = None
+        SOFT_MUTE = None
+
+        for server_instance in moderation_settings:
+            SERVER_ID = server_instance[0]
+            PRESERVE_OVERRIDES = server_instance[1]
+            SOFT_MUTE = server_instance[2]
+
+            print(SERVER_ID)
+            print(PRESERVE_OVERRIDES)
+            print(SOFT_MUTE)
+
+        try:
+            server_id = int(SERVER_ID)
+        except:
+            server_id = None
+
+        if isinstance( server_id, int ):
+            if not (PRESERVE_OVERRIDES == 'true' or PRESERVE_OVERRIDES == 'false'):
+                self.moderation_db.table('s_preferences').update("PRESERVE_OVERRIDES").setTo('true').where("SERVER_ID").equals(server.id).execute()
+
+            if not (SOFT_MUTE == 'true' or SOFT_MUTE == 'false'):
+                self.moderation_db.table('s_preferences').update("SOFT_MUTE").setTo('true').where("SERVER_ID").equals(server.id).execute()
+        else:
+            self.moderation_db.table('s_preferences').insert(server.id, "true", "true").into("SERVER_ID", "PRESERVE_OVERRIDES", "SOFT_MUTE")
+
+        #Handle Keys
+
         if key == "preserve_overrides":
 
-            data = self.moderation_db.table('s_preferences').select("PRESERVE_OVERRIDES").where("SERVER_ID").equals(server.id).execute()
+            #Invert values and save in db
 
-            preserve_overrides = 'null'
-
-            for server_item in data:
-                preserve_overrides = server_item[0]
-
-                if preserve_overrides == 'true':
-                    preserve_overrides = 'false'
-                elif preserve_overrides == 'false':
-                    preserve_overrides = 'true'
-                else:
-                    preserve_overrides = 'true'
-
-            if preserve_overrides == 'null':
-                preserve_overrides = 'true'
-                self.moderation_db.table('s_preferences').insert('true', server.id).into("PRESERVE_OVERRIDES", "SERVER_ID")
+            if PRESERVE_OVERRIDES == 'true':
+                PRESERVE_OVERRIDES = 'false'
+            elif PRESERVE_OVERRIDES == 'false':
+                PRESERVE_OVERRIDES = 'true'
             else:
-                self.moderation_db.table('s_preferences').update("PRESERVE_OVERRIDES").setTo(preserve_overrides).where("SERVER_ID").equals(server.id).execute()
+                PRESERVE_OVERRIDES = None
 
-            return ['SUCCESS', preserve_overrides]
+            if PRESERVE_OVERRIDES == None:
+                PRESERVE_OVERRIDES = 'true'
+            else:
+                self.moderation_db.table('s_preferences').update("PRESERVE_OVERRIDES").setTo(PRESERVE_OVERRIDES).where("SERVER_ID").equals(server.id).execute()
+
+            return ['SUCCESS', PRESERVE_OVERRIDES]
+
+        elif key == 'soft_mute':
+
+            #Invert values and sasve in db
+
+            if SOFT_MUTE == 'true':
+                SOFT_MUTE = 'false'
+            elif SOFT_MUTE == 'false':
+                SOFT_MUTE = 'true'
+            else:
+                SOFT_MUTE = None
+
+            if SOFT_MUTE == None:
+                SOFT_MUTE = 'true'
+            else:
+                self.moderation_db.table('s_preferences').update("SOFT_MUTE").setTo(SOFT_MUTE).where("SERVER_ID").equals(server.id).execute()
+
+            return ['SUCCESS', SOFT_MUTE]
+
         else:
             return 'ERROR'
 
     async def get_key(self, server, key):
+
+        #Get Server Data
+
+        moderation_settings = self.moderation_db.table('s_preferences').select("SERVER_ID", "PRESERVE_OVERRIDES", "SOFT_MUTE").where("SERVER_ID").equals(server.id).execute()
+
+        SERVER_ID = None
+        PRESERVE_OVERRIDES = None
+        SOFT_MUTE = None
+
+        for server_instance in moderation_settings:
+            SERVER_ID = server_instance[0]
+            PRESERVE_OVERRIDES = server_instance[1]
+            SOFT_MUTE = server_instance[2]
+
+        try:
+            server_id = int(SERVER_ID)
+        except:
+            server_id = None
+
+        if isinstance( server_id, int ):
+            if not (PRESERVE_OVERRIDES == 'true' or PRESERVE_OVERRIDES == 'false'):
+                self.moderation_db.table('s_preferences').update("PRESERVE_OVERRIDES").setTo('true').where("SERVER_ID").equals(server.id).execute()
+
+            if not (SOFT_MUTE == 'true' or SOFT_MUTE == 'false'):
+                self.moderation_db.table('s_preferences').update("SOFT_MUTE").setTo('true').where("SERVER_ID").equals(server.id).execute()
+        else:
+            self.moderation_db.table('s_preferences').insert(server.id, "true", "true").into("SERVER_ID", "PRESERVE_OVERRIDES", "SOFT_MUTE")
+
+        #Pull Key
+
         if key == "preserve_overrides":
 
-            data = self.moderation_db.table('s_preferences').select("PRESERVE_OVERRIDES").where("SERVER_ID").equals(server.id).execute()
+            if PRESERVE_OVERRIDES == 'true':
+                PRESERVE_OVERRIDES = True
+            elif PRESERVE_OVERRIDES == 'false':
+                PRESERVE_OVERRIDES = False
+            else:
+                PRESERVE_OVERRIDES = True
 
-            preserve_overrides = None
+            return PRESERVE_OVERRIDES
 
-            for server_item in data:
-                preserve_overrides = server_item[0]
-                if preserve_overrides == 'true':
-                    preserve_overrides = True
-                elif preserve_overrides == 'false':
-                    preserve_overrides = False
-                else:
-                    preserve_overrides = None
 
-            if preserve_overrides == None:
-                preserve_overrides = 'true'
-                self.moderation_db.table('s_preferences').insert('true', server.id).into("PRESERVE_OVERRIDES", "SERVER_ID")
-                return True
+        elif key == "soft_mute":
 
-            return preserve_overrides
+            if SOFT_MUTE == 'true':
+                SOFT_MUTE = True
+            elif SOFT_MUTE == 'false':
+                SOFT_MUTE = False
+            else:
+                SOFT_MUTE = True
+
+            return SOFT_MUTE
+
         else:
             return 'ERROR'
 
@@ -566,14 +646,27 @@ class Moderation(PBPlugin):
 
 
     async def on_server_join(self, server):
-        moderation_settings = self.moderation_db.table('s_preferences').select("PRESERVE_OVERRIDES").where("SERVER_ID").equals(server.id).execute()
+        moderation_settings = self.moderation_db.table('s_preferences').select("SERVER_ID", "PRESERVE_OVERRIDES", "SOFT_MUTE").where("SERVER_ID").equals(server.id).execute()
 
-        PRESERVE_OVERRIDES = ''
+        SERVER_ID = None
+        PRESERVE_OVERRIDES = None
+        SOFT_MUTE = None
 
-        for server in moderation_settings:
-            PRESERVE_OVERRIDES = server[0]
+        for server_instance in moderation_settings:
+            SERVER_ID = server_instance[0]
+            PRESERVE_OVERRIDES = server_instance[1]
+            SOFT_MUTE = server_instance[2]
 
-        if PRESERVE_OVERRIDES == 'true' or PRESERVE_OVERRIDES == 'false':
-            pass
+        try:
+            server_id = int(SERVER_ID)
+        except:
+            server_id = None
+
+        if isinstance( server_id, int ):
+            if not (PRESERVE_OVERRIDES == 'true' or PRESERVE_OVERRIDES == 'false'):
+                self.moderation_db.table('s_preferences').update("PRESERVE_OVERRIDES").setTo('true').where("SERVER_ID").equals(server.id).execute()
+
+            if not (SOFT_MUTE == 'true' or SOFT_MUTE == 'false'):
+                self.moderation_db.table('s_preferences').update("SOFT_MUTE").setTo('true').where("SERVER_ID").equals(server.id).execute()
         else:
-            self.moderation_db.table('s_preferences').insert('true', server.id).into("PRESERVE_OVERRIDES", "SERVER_ID")
+            self.moderation_db.table('s_preferences').insert(server.id, "true", "true").into("SERVER_ID", "PRESERVE_OVERRIDES", "SOFT_MUTE")
