@@ -40,6 +40,9 @@ class MemeGenerator(PBPlugin):
         meme_raw = message.content.replace(' : ', ":").strip()[len(self.bot.config.prefix + 'meme ' + meme_type + ' '):].strip()
         url_base = 'http://memegen.link/'
 
+        if meme_raw == '':
+            return Response('Message Required for Meme to be generated.  To create a meme, use `{}meme template first line:second line`'.format(self.bot.config.prefix), reply=True, delete_after=10)
+
         if ':' in meme_raw:
             meme_sections = meme_raw.split(":")
             url = url_base + meme_type + '/' + meme_sections[0].strip().replace(' ', '%20') + '/' + meme_sections[1].strip().replace(' ', '%20') + '.jpg'
