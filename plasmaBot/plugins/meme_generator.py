@@ -14,7 +14,7 @@ class MemeGenerator(PBPlugin):
     def __init__(self, plasmaBot):
         super().__init__(plasmaBot)
 
-    async def cmd_meme(self, message, leftover_args):
+    async def cmd_meme(self, message, leftover_args, user_mentions):
         """
         Usage:
             {command_prefix}meme template first line : second line
@@ -38,6 +38,10 @@ class MemeGenerator(PBPlugin):
 
         if not meme_type in template_list:
             return Response('Template `{}` not available.  Run `{}meme templates` for a list of templates'.format(meme_type, self.bot.config.prefix), reply=True, delete_after=30)
+
+        if user_mentions:
+            for user in user_mentions:
+                message.content.replace(user.mention, user.nick)
 
         meme_raw = message.content.replace(' : ', ":").strip()[len(self.bot.config.prefix + 'meme ' + meme_type + ' '):].strip()
         url_base = 'http://memegen.link/'
