@@ -17,10 +17,12 @@ class MemeGenerator(PBPlugin):
     async def cmd_meme(self, message, leftover_args):
         """
         Usage:
-            {command_prefix}meme meme_type first line : second line
+            {command_prefix}meme template first line : second line
 
-        Generate a Meme based on the provided template, first line and second line.  Lines are seperated by ':'
+        Generate a Meme based on the provided template, first line and second line.  Lines are seperated by ':'  Templates can be found by calling '{command_prefix}meme template'
         """
+        if not leftover_args:
+            return Response(send_help=True)
 
         template_list = ['tenguy', 'afraid', 'older', 'aag', 'tried', 'biw', 'blb', 'kermit', 'bd', 'ch', 'cbg', 'wonka', 'cb', 'keanu', 'dsm', 'live', 'ants', 'doge', 'alwaysonbeat', 'ermg', 'facepalm', 'fwp', 'fa', 'fbf', 'fmr', 'fry', 'ggg', 'hipster', 'icanhas', 'crazypills', 'mw', 'noidea', 'regret', 'boat', 'sohappy', 'captain', 'inigo', 'iw', 'ackbar', 'happening', 'joker', 'ive', 'll', 'morpheus', 'badchoice', 'mmm', 'jetpack', 'red', 'mordor', 'oprah', 'oag', 'remembers', 'philosoraptor', 'jw', 'sad-obama', 'sad-clinton', 'sadfrog', 'sad-bush', 'sad-biden', 'sad-boehner', 'sarcasticbear', 'dwight', 'sb', 'ss', 'sf', 'dodgson', 'money', 'sohot', 'awesome-awkward', 'awesome', 'awkward-awesome', 'awkward', 'fetch', 'success', 'ski', 'officespace', 'interesting', 'toohigh', 'bs', 'both', 'winter', 'xy', 'buzz', 'yodawg', 'yuno', 'yallgot', 'bad', 'elf', 'chosen']
 
