@@ -39,12 +39,19 @@ class MemeGenerator(PBPlugin):
         if not meme_type in template_list:
             return Response('Template `{}` not available.  Run `{}meme templates` for a list of templates'.format(meme_type, self.bot.config.prefix), reply=True, delete_after=30)
 
-        if user_mentions:
-            for user in user_mentions:
-                message.content.replace(user.mention, user.nick)
-
         meme_raw = message.content.replace(' : ', ":").strip()[len(self.bot.config.prefix + 'meme ' + meme_type + ' '):].strip()
         url_base = 'http://memegen.link/'
+
+        if user_mentions:
+            for user in user_mentions:
+                mention = user.mention
+
+                if user.nick:
+                    replacement_name = user.nick
+                else:
+                    replacement_name = user.name
+
+                meme_raw = meme_raw.replace(mention, replacement_name)
 
         if meme_raw == '':
             return Response('Message Required for Meme to be generated.  To create a meme, use `{}meme template first line:second line`'.format(self.bot.config.prefix), reply=True, delete_after=10)
