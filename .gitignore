@@ -2,6 +2,6 @@
 
 *.db
 
-config/options.ini
+config/*.ini
 
 plasmaBot/plugins/pl_config/*.ini
