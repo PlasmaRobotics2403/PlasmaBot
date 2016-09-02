@@ -22,6 +22,7 @@ from plasmaBot.base_commands import BaseCommands
 
 from plasmaBot.plugins.TBA import TBAPlugin
 from plasmaBot.plugins.moderation import Moderation
+from plasmaBot.plugins.conversions import UnitConversions
 
 # Logging setup
 logger = logging.getLogger('discord')
