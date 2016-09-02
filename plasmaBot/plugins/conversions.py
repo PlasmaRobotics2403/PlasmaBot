@@ -49,6 +49,28 @@ class UnitConversions(PBPlugin):
     def round_sig(self, x):
         return round(x, 6-int(floor(log10(x)))-1)
 
+    async def cmd_listunits(self, unit_type = 'None'):
+        """
+        Usage:
+            {command_prefix}listunits [unit_type]
+
+        A string about how the plugin works
+        """
+
+        if unit_type == 'None':
+            type_list = []
+            for key in self.unit_dict:
+                if self.unit_dict[key][1] not in type_list:
+                    type_list.append(self.unit_dict[key][1])
+            ret = 'The following unit types are supported by the converter:'
+            for unit in type_list:
+                ret = ret + '\n' + unit
+            ret = ret + '\n\nUse `' + self.bot.config.prefix + 'listunits [unit_type]` to list the supported units of each type'
+            return Response(ret, reply=False, delete_after=45)
+        else:
+            return Response('Default response', reply=False, delete_after=45)
+
+
     async def cmd_convert(self, value, from_unit, to_unit):
         """
         Usage:
@@ -85,7 +107,11 @@ class UnitConversions(PBPlugin):
             output = self.round_sig(output)
             return Response(str(value) + ' ' + self.unit_dict[from_unit][2] + ' converts to ' + str(output) + ' ' + self.unit_dict[to_unit][2], reply=False, delete_after=45)
         else:
-            return Response('Nic needs to code temperatures', reply=False, delete_after=45)
+            if to_unit == 'celcius':
+                output = (value - 32) * (5/9)
+            else:
+                output = (value * 1.8) + 32
+            return Response(str(value) + ' degrees ' + from_unit + ' converts to ' + str(output) + ' degrees ' + to_unit, reply=False, delete_after=45)
 
     async def on_message(message, message_type, message_context):
         pass #delete this event if you aren't going to use it.
