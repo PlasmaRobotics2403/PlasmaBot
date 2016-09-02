@@ -41,4 +41,6 @@ class PluginConfig:
                 preface="An error has occured parsing the config:\n"
             )
 
-        self.moderation_db = config.get('Files', 'ModerationDB', fallback=ModerationDefaults.moderation_db)
+        for key, item in key_dict.items():
+            for variable in item:
+                setattr(self, variable[0], config.get(key, variable[0], fallback=variable[2]))
