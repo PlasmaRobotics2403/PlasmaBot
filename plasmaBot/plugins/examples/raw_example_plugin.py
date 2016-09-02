@@ -28,5 +28,5 @@ class EXAMPLECOMMAND(PBPlugin):
 
         return Response('DEFAULT_EXAMPLE_MESSAGE.  PROGRAMMER FORGOT TO CHANGE DEFAULTS', reply=True, delete_after=45)
 
-    async def on_message(message, message_type, message_context):
+    async def on_message(self, message, message_type, message_context):
         pass #delete this event if you aren't going to use it.
