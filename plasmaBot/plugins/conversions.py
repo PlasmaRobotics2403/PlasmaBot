@@ -122,6 +122,3 @@ class UnitConversions(PBPlugin):
                 output = (value * 1.8) + 32
             output = self.round_sig(output)
             return Response(str(value) + ' degrees ' + from_unit + ' converts to ' + str(output) + ' degrees ' + to_unit, reply=False, delete_after=45)
-
-    async def on_message(message, message_type, message_context):
-        pass #delete this event if you aren't going to use it.
