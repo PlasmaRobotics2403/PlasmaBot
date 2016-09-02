@@ -13,6 +13,7 @@ from plasmaBot import exceptions
 import logging
 log = logging.getLogger('discord')
 
+
 class ModerationConfig:
     def __init__(self, plasmaBot, config_file):
         self.bot = plasmaBot
@@ -46,14 +47,24 @@ class ModerationConfig:
 
         self.moderation_db = config.get('Files', 'ModerationDB', fallback=ModerationDefaults.moderation_db)
 
+
 class ModerationDefaults: # DO NOT CHANGE SETTINGS HERE.  SETTINGS ARE CHANGED VIA THE BOT'S CONFIG FILE
     moderation_db = 'data/moderation'
+
 
 class dbt_moderation_settings(object):
     def __init__(self):
         self.columns = ["SERVER_ID", "PRESERVE_OVERRIDES", "SOFT_MUTE"]
         self.datatypes = ["TEXT PRIMARY KEY NOT NULL", "TEXT", "TEXT"]
         self.seed = []
+
+
+class dbt_moderation_roles(object):
+    def __init__(self):
+        self.columns = ["SERVER_ID", "ROLE_MUTE", "ROLE_DEAFEN"]
+        self.datatypes = ["TEXT PRIMARY KEY NOT NULL", "TEXT", "TEXT"]
+        self.seed = []
+
 
 class Moderation(PBPlugin):
     name = 'Moderation'
@@ -72,6 +83,10 @@ class Moderation(PBPlugin):
         if not self.moderation_db.table('s_preferences').tableExists():
             initiation_glob = dbt_moderation_settings()
             self.moderation_db.table('s_preferences').init(initiation_glob)
+
+        if not self.moderation_db.table('s_roles').tableExists():
+            initiation_glob = dbt_moderation_roles()
+            self.moderation_db.table('s_roles').init(initiation_glob)
 
 
     async def toggle(self, server, key):
@@ -148,6 +163,7 @@ class Moderation(PBPlugin):
         else:
             return 'ERROR'
 
+
     async def get_key(self, server, key):
 
         #Get Server Data
@@ -205,6 +221,26 @@ class Moderation(PBPlugin):
         else:
             return 'ERROR'
 
+
+    async def setup_roles(self, server, channel): #check if bot has permissions to manage roles
+        server_roles = server.roles
+
+        self_member = server.get_member(self.bot.user.id)
+        top_role = self_member.top_role
+        bot_position = top_role.position
+
+        permissions = channel.permissions_for(self_member)
+        manage_roles = permissions.manage_roles
+
+        if not manage_roles:
+            return ['Error']
+        else:
+            mute_role = None
+            defen_role = None
+
+            server_role_entry = self.moderation_db.table('s_roles').select("SERVER_ID", "ROLE_MUTE", "ROLE_DEAFEN").where("SERVER_ID").equals(server.id).execute()
+
+
     async def cmd_kick(self, message, auth_perms, user_mentions):
         """
         Usage:
@@ -215,6 +251,9 @@ class Moderation(PBPlugin):
         help_exclude
         """
         if auth_perms >= 25:
+
+            if not user_mentions:
+                return Response(send_help=True)
 
             users_to_kick = user_mentions
             response = ''
@@ -282,6 +321,9 @@ class Moderation(PBPlugin):
         """
         if auth_perms >= 35:
 
+            if not user_mentions:
+                return Response(send_help=True)
+
             users_to_ban = user_mentions
             response = ''
             num_users = len(users_to_ban)
@@ -347,6 +389,10 @@ class Moderation(PBPlugin):
         help_exclude
         """
         if auth_perms >= 35:
+
+            if not user_mentions or not leftover_args:
+                return Response(send_help=True)
+
             try:
                 ban_list = await self.bot.get_bans(server)
             except discord.Forbidden:
@@ -443,6 +489,9 @@ class Moderation(PBPlugin):
         """
         if auth_perms >= 25:
 
+            if not user_mentions:
+                return Response(send_help=True)
+
             server_preserve_overrides = await self.get_key(server, 'preserve_overrides')
 
             channel_list = server.channels
@@ -495,6 +544,9 @@ class Moderation(PBPlugin):
         """
         if auth_perms >= 25:
 
+            if not user_mentions:
+                return Response(send_help=True)
+
             server_preserve_overrides = await self.get_key(server, 'preserve_overrides')
 
             channel_list = server.channels
@@ -546,6 +598,9 @@ class Moderation(PBPlugin):
         help_exclude
         """
         if auth_perms >= 35:
+
+            if not user_mentions:
+                return Response(send_help=True)
 
             server_preserve_overrides = await self.get_key(server, 'preserve_overrides')
 
@@ -600,6 +655,9 @@ class Moderation(PBPlugin):
         help_exclude
         """
         if auth_perms >= 35:
+
+            if not user_mentions:
+                return Response(send_help=True)
 
             server_preserve_overrides = await self.get_key(server, 'preserve_overrides')
 

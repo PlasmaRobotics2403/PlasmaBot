@@ -23,6 +23,7 @@ from plasmaBot.base_commands import BaseCommands
 from plasmaBot.plugins.TBA import TBAPlugin
 from plasmaBot.plugins.moderation import Moderation
 from plasmaBot.plugins.conversions import UnitConversions
+from plasmaBot.plugins.meme_generator import MemeGenerator
 
 # Logging setup
 logger = logging.getLogger('discord')
@@ -104,7 +105,7 @@ class PlasmaBot(discord.Client):
         plugins = await self.plugin_manager.get_all(server)
         return plugins
 
-    async def toggle_key(self, server_id, key):
+    async def toggle_key(self, server, key):
         toggle_settings = self.plugin_db.table('toggles').select("PLUGIN_NAME").where("TOGGLE_NAME").equals(key.lower()).execute()
 
         plugin_name = ''
@@ -114,7 +115,7 @@ class PlasmaBot(discord.Client):
 
         if not plugin_name == '':
             plugin = await self.plugin_manager.get_plugin_by_name(plugin_name)
-            response = await plugin.toggle(server_id, key)
+            response = await plugin.toggle(server, key)
             if response[0] == 'SUCCESS':
                 return ['SUCCESS', response[1]]
             else:
