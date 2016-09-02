@@ -43,8 +43,8 @@ class UnitConversions(PBPlugin):
         self.unit_dict['pound'] = [.453592, 'mass', 'pounds']
         self.unit_dict['ounce'] = [.0283495, 'mass', 'ounces']
         #Temperature
-        self.unit_dict['fahrenheit'] = ['None', 'temperature']
-        self.unit_dict['celcius'] = ['None', 'temperature']
+        self.unit_dict['fahrenheit'] = ['None', 'temperature', 'f']
+        self.unit_dict['celcius'] = ['None', 'temperature', 'c']
 
     def round_sig(self, x):
         return round(x, 6-int(floor(log10(x)))-1)
@@ -64,11 +64,20 @@ class UnitConversions(PBPlugin):
                     type_list.append(self.unit_dict[key][1])
             ret = 'The following unit types are supported by the converter:'
             for unit in type_list:
-                ret = ret + '\n' + unit
+                ret = ret + '\n-' + unit
             ret = ret + '\n\nUse `' + self.bot.config.prefix + 'listunits [unit_type]` to list the supported units of each type'
             return Response(ret, reply=False, delete_after=45)
         else:
-            return Response('Default response', reply=False, delete_after=45)
+            unit_list = []
+            for key in self.unit_dict:
+                if self.unit_dict[key][1] == unit_type:
+                    unit_list.append(key)
+            if len(unit_list) < 1:
+                return Response('The unit type `' + unit_type + '` is not supported.', reply=False, delete_after=45)
+            ret = 'The following units of type `' + unit_type + '` are supported by the converter:'
+            for unit in unit_list:
+                ret = ret + '\n-' + unit
+            return Response(ret, reply=False, delete_after=45)
 
 
     async def cmd_convert(self, value, from_unit, to_unit):
@@ -89,7 +98,7 @@ class UnitConversions(PBPlugin):
                 pass
 
         try:
-            value = int(value)
+            value = float(value)
         except:
             return Response('First argument must be numerical.', reply=False, delete_after=45)
         if from_unit not in self.unit_dict:
@@ -111,6 +120,7 @@ class UnitConversions(PBPlugin):
                 output = (value - 32) * (5/9)
             else:
                 output = (value * 1.8) + 32
+            output = self.round_sig(output)
             return Response(str(value) + ' degrees ' + from_unit + ' converts to ' + str(output) + ' degrees ' + to_unit, reply=False, delete_after=45)
 
     async def on_message(message, message_type, message_context):
