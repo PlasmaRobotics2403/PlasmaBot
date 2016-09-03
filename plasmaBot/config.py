@@ -172,7 +172,7 @@ class ConfigDefaults:
     permissions_db = 'data/permissions'
     moderation_db = 'data/moderation'
 
-    pl_config_directory = 'plasmaBot/plugins/pl_config'
+    pl_config_directory = 'config'
 
     debug = False
     terminal_log = True
