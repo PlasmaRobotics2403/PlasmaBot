@@ -144,3 +144,20 @@ class Utilities(PBPlugin):
             return Response(response, reply=True, delete_after=60)
         else:
             return Response(send_help=True)
+
+
+    async def cmd_coinflip(self):
+        """
+        Usage:
+            {command_prefix}8ball (question)
+
+        Ask the Magic 8-Ball a question
+        """
+        flip = bool(random.getrandbits(1))
+
+        if flip:
+            response = 'Coin has flipped Heads.'
+        else:
+            response = 'Coin has flipped Tails.'
+
+        return Response(response, reply=True, delete_after=60)
