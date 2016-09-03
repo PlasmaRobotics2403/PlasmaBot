@@ -133,6 +133,8 @@ class PBPluginManager:
 
 class PBPluginConfig:
     def __init__(self, plasmaBot, config_file, plugin_name, key_dict):
+        # Example key_dict structure (variables are strings): {section_name: [[key_name, key_discription, key_default_value], [key_name, key_discription, key_default_value]]}
+
         self.bot = plasmaBot
         self.config_file = self.bot.config.pl_config_directory + '/' + config_file
         self.key_dict = key_dict

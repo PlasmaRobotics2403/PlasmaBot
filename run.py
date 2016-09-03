@@ -17,7 +17,6 @@ class ShutdownBus():
         self.shutdown = True
 
     def bot_restart(self):
-        print("RESTARThfladASD")
         self.restart = True
         self.shutdown = True
 
