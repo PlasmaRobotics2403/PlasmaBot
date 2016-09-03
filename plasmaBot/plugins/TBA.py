@@ -32,12 +32,12 @@ class TBAPlugin(PBPlugin):
         no_response = '```The Blue Alliance - '
         no_response += 'Pulls Data from The Blue Alliance API\n'
         no_response += ' • ' + self.bot.config.prefix + 'tba team (team_number)\n'
-        no_response += '   • pulls Team Information\n'
+        no_response += '   - pulls Team Information\n'
         no_response += ' • ' + self.bot.config.prefix + 'tba event (year)(event_name)\n'
         no_response += '   ' + self.bot.config.prefix + 'tba event (event_key)\n'
-        no_response += '   • pulls Event Information\n'
+        no_response += '   - pulls Event Information\n'
         no_response += ' • ' + self.bot.config.prefix + 'tba awards (team_number) [year]\n'
-        no_response += '   • pulls Team Awards [Year Optional]\n'
+        no_response += '   - pulls Team Awards [Year Optional]\n'
 
         try:
             cmd_type = leftover_args[0]
@@ -67,9 +67,11 @@ class TBAPlugin(PBPlugin):
                 return Response('Team does not exist.', reply=False, delete_after=30)
             team_data = "Team " + str(team.team_number) + ": " + team.nickname + "\nFrom: " + team.location
             if team.website != None:
-                team_data = team_data + "\nWebsite: " + team.website
+                team_data += "\nWebsite: " + team.website
             if team.motto != None:
-                team_data = team_data + '\nMotto: "' + team.motto + '"'
+                team_data += '\nMotto: "' + team.motto + '"'
+
+            team_data += '\nhttp://www.thebluealliance.com/team/' + team.team_number
             return Response(team_data, reply=False, delete_after=60)
 
         elif cmd_type == 'event':
