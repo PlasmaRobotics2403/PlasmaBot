@@ -22,7 +22,7 @@ from plasmaBot.base_commands import BaseCommands
 
 from plasmaBot.plugins.TBA import TBAPlugin
 from plasmaBot.plugins.moderation import Moderation
-from plasmaBot.plugins.conversions import UnitConversions
+from plasmaBot.plugins.utilities import Utilities
 from plasmaBot.plugins.meme_generator import MemeGenerator
 
 # Logging setup

@@ -1,5 +1,6 @@
 from plasmaBot.plugin import PBPlugin, PBPluginMeta, Response
 from math import log10, floor
+import random
 import discord
 
 from plasmaBot import exceptions
@@ -7,14 +8,17 @@ from plasmaBot import exceptions
 import logging
 log = logging.getLogger('discord')
 
-class UnitConversions(PBPlugin):
-    name = 'Unit Conversions'
+class Utilities(PBPlugin):
+    name = 'Utilities'
     globality = 'all'
     help_exclude = False
 
     def __init__(self, plasmaBot):
         super().__init__(plasmaBot)
         self.unit_dict = {}
+
+        #Unit Conversions Variables
+
         #Length
         self.unit_dict['meter'] = [1, 'length', 'meters']
         self.unit_dict['kilometer'] = [1000, 'length', 'kilometers']
@@ -46,6 +50,10 @@ class UnitConversions(PBPlugin):
         self.unit_dict['fahrenheit'] = ['None', 'temperature', 'f']
         self.unit_dict['celcius'] = ['None', 'temperature', 'c']
 
+
+        #8ball Information
+        self.ball_responses = ['It is certain', 'It is decidedly so', 'Without a doubt', 'Yes, definitely', 'You may rely on it', 'As I see it, yes', 'Most likely', 'Outlook good', 'Yes', 'Signs point to yes', 'Reply hazy try again', 'Ask again later', 'Better not tell you now', 'Cannot predict now', 'Concentrate and ask again', 'Don\'t count on it', 'My reply is no', 'My sources say no', 'Outlook not so good', 'Very doubtful']
+
     def round_sig(self, x):
         return round(x, 6-int(floor(log10(x)))-1)
 
@@ -54,7 +62,7 @@ class UnitConversions(PBPlugin):
         Usage:
             {command_prefix}listunits [unit_type]
 
-        A string about how the plugin works
+        List Units for {command_prefix}convert
         """
 
         if unit_type == 'None':
@@ -85,7 +93,7 @@ class UnitConversions(PBPlugin):
         Usage:
             {command_prefix}convert (value) (fromUnit) (toUnit)
 
-        A string about how the plugin works
+        Convert 'value' from 'fromUnit' to 'toUnit'
         """
 
         for key in self.unit_dict:
@@ -122,3 +130,17 @@ class UnitConversions(PBPlugin):
                 output = (value * 1.8) + 32
             output = self.round_sig(output)
             return Response(str(value) + ' degrees ' + from_unit + ' converts to ' + str(output) + ' degrees ' + to_unit, reply=False, delete_after=45)
+
+
+    async def cmd_8ball(self, leftover_args):
+        """
+        Usage:
+            {command_prefix}8ball (question)
+
+        Ask the Magic 8-Ball a question
+        """
+        if leftover_args:
+            response = random.choice(self.ball_responses)
+            return Response(response, reply=True, delete_after=60)
+        else:
+            return Response(send_help=True)
