@@ -170,7 +170,7 @@ class Utilities(PBPlugin):
 
         Roll a Dice!
         """
-        coin = random.choice(range(1,6))
+        coin = random.choice([1,2,3,4,5,6])
 
         response = 'Dice rolled a {}.'.format(coin)
 
