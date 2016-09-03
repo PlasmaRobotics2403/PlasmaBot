@@ -2,6 +2,9 @@ import inspect
 import logging
 import asyncio
 import traceback
+import os
+import shutil
+import configparser
 
 from types import FunctionType
 
@@ -128,7 +131,58 @@ class PBPluginManager:
             print('[PB] ERROR - Duplicate Plugins, using first.')
             return plugins[0]
 
+class PluginConfig:
+    def __init__(self, plasmaBot, config_file, plugin_name, key_dict):
+        self.bot = plasmaBot
+        self.config_file = self.bot.config.pl_config_directory + '/' + config_file
+        self.key_dict = key_dict
 
+        config = configparser.ConfigParser()
+        config_identifier = '2860'
+
+        # The config file to write to self.bot.config.pl_config_directory if it doesn't exist.  On one line because MultiLine Strings caused problems.
+        self.basic_config_file = "; Opening this file in Notepad (WINDOWS) will corrupt this file.  Don't do it.\n\n; THIS IS THE CONFIGURATION FILE FOR THE {} PLUGIN FOR PlasmaBot\n; Editing the configuration items within this file will change the functionality of the plugin.\n\n".format(plugin_name)
+
+        section_list = []
+
+        for section_name, section_items in key_dict.items():
+            section_list += [section_name]
+            self.basic_config_file += "[" + section_name + "]\n\n"
+            for config_item in section_items:
+                self.basic_config_file += '; ' + config_item[1] + '\n\n'
+                self.basic_config_file += config_item[0] + " = " + config_item[2] + "\n\n"
+
+        if not config.read(self.config_file, encoding='utf-8'):
+            print(' - [PLCONFIG] Config file not found, creating ' + self.config_file)
+
+            with open(self.config_file, "w") as text_file:
+                text_file.write(self.basic_config_file)
+
+        config = configparser.ConfigParser(interpolation=None)
+        config.read(self.config_file, encoding='utf-8')
+
+        confsections = False
+
+        for test_section in section_list:
+            if test_section in config.sections():
+                print('check')
+            else:
+                print('oops')
+                confsections = False
+
+        if confsections:
+            raise HelpfulError(
+                "[PB][CONFIG] One or more required config sections are missing.",
+                "Fix your config.  Each [Section] should be on its own line with "
+                "nothing else on it.  The following sections are missing: {}".format(
+                    ', '.join(['[%s]' % s for s in confsections])
+                ),
+                preface="An error has occured parsing the config:\n"
+            )
+
+        for key, item in key_dict.items():
+            for variable in item:
+                setattr(self, variable[0], config.get(key, variable[0], fallback=variable[2]))
 
 class Response:
     def __init__(self, content=None, reply=False, delete_after=0, send_help=None, help_message=None, permissions_error=None, context_error=None):
