@@ -149,9 +149,9 @@ class Utilities(PBPlugin):
     async def cmd_coinflip(self):
         """
         Usage:
-            {command_prefix}8ball (question)
+            {command_prefix}8ball
 
-        Ask the Magic 8-Ball a question
+        Flip a Coin!
         """
         flip = bool(random.getrandbits(1))
 
@@ -159,5 +159,19 @@ class Utilities(PBPlugin):
             response = 'Coin has flipped Heads.'
         else:
             response = 'Coin has flipped Tails.'
+
+        return Response(response, reply=True, delete_after=60)
+
+
+    async def cmd_diceroll(self):
+        """
+        Usage:
+            {command_prefix}diceroll (question)
+
+        Roll a Dice!
+        """
+        coin = random.choice(range(1,6))
+
+        response = 'Dice rolled a {}.'.format(coin)
 
         return Response(response, reply=True, delete_after=60)
