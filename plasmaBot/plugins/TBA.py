@@ -71,7 +71,7 @@ class TBAPlugin(PBPlugin):
             if team.motto != None:
                 team_data += '\nMotto: "' + team.motto + '"'
 
-            team_data += '\nhttp://www.thebluealliance.com/team/' + team.team_number
+            team_data += '\nhttp://www.thebluealliance.com/team/' + str(team.team_number)
             return Response(team_data, reply=False, delete_after=60)
 
         elif cmd_type == 'event':
