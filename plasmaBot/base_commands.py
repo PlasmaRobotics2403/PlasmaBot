@@ -67,6 +67,7 @@ class BaseCommands(PBPlugin):
                         plugins_commands_dict[plugin] = plugins_commands_dict[plugin] + [cmd_entry]
 
             help_response = "**{}'s Commands:**```\n".format(self.bot.config.bot_name)
+            secondary_response = ''
 
             for plugin, commands in plugins_commands_dict.items():
                 raw_plugin_return = self.bot.plugin_db.table('plugins').select("FANCY_NAME").where("PLUGIN_NAME").equals(plugin).execute()
@@ -74,12 +75,23 @@ class BaseCommands(PBPlugin):
                 for item in raw_plugin_return:
                     fancy_name = item[0]
 
-                help_response = help_response + fancy_name + '\n'
+                if plugin == 'BaseCommands':
+                    help_response += fancy_name + '\n'
 
-                for command in commands:
-                    help_response = help_response + ' • ' + self.bot.config.prefix + command + '\n'
+                    for command in commands:
+                        help_response += ' • ' + self.bot.config.prefix + command + '\n'
 
-            help_response = help_response + '```'
+                    help_response += '\n'
+                else:
+                    secondary_response += fancy_name + '\n'
+
+                    for command in commands:
+                        secondary_response += ' • ' + self.bot.config.prefix + command + '\n'
+
+                    secondary_response += '\n'
+
+            help_response += secondary_response
+            help_response += '```'
 
         return Response(help_response, reply=False, delete_after=60)
 
