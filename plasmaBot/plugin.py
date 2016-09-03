@@ -131,7 +131,7 @@ class PBPluginManager:
             print('[PB] ERROR - Duplicate Plugins, using first.')
             return plugins[0]
 
-class PluginConfig:
+class PBPluginConfig:
     def __init__(self, plasmaBot, config_file, plugin_name, key_dict):
         self.bot = plasmaBot
         self.config_file = self.bot.config.pl_config_directory + '/' + config_file
@@ -165,9 +165,8 @@ class PluginConfig:
 
         for test_section in section_list:
             if test_section in config.sections():
-                print('check')
+                pass
             else:
-                print('oops')
                 confsections = False
 
         if confsections:
