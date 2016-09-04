@@ -270,7 +270,7 @@ class PBPlugin(object, metaclass=PBPluginMeta):
                                 message.channel, '{}, This command ({}{}) is not supported in direct messages'.format(message.author.mention, self.bot.config.prefix, command)
                             )
                             return
-                        handler_kwargs['bot_member'] = server.me
+                        handler_kwargs['bot_member'] = message.server.me
 
                     if params.pop('user_mentions', None):
                         if message_context == 'direct':
