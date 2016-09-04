@@ -20,44 +20,53 @@ class Utilities(PBPlugin):
         #Unit Conversions Variables
 
         #Length
-        self.unit_dict['meter'] = [1, 'length', 'meters']
-        self.unit_dict['kilometer'] = [1000, 'length', 'kilometers']
-        self.unit_dict['millimeter'] = [.001, 'length', 'millimeters']
-        self.unit_dict['centimeter'] = [.01, 'length', 'centimeters']
-        self.unit_dict['mile'] = [1609.34, 'length', 'miles']
-        self.unit_dict['yard'] = [.9144, 'length', 'yards']
-        self.unit_dict['foot'] = [0.3048, 'length', 'feet']
-        self.unit_dict['inch'] = [0.0254, 'length', 'inches']
+        self.unit_dict['meter'] = [1, 'length', 'meters', 'm']
+        self.unit_dict['kilometer'] = [1000, 'length', 'kilometers', 'km']
+        self.unit_dict['millimeter'] = [.001, 'length', 'millimeters', 'mm']
+        self.unit_dict['centimeter'] = [.01, 'length', 'centimeters', 'cm']
+        self.unit_dict['mile'] = [1609.34, 'length', 'miles', 'mi']
+        self.unit_dict['yard'] = [.9144, 'length', 'yards', 'yd']
+        self.unit_dict['foot'] = [0.3048, 'length', 'feet', 'ft']
+        self.unit_dict['inch'] = [0.0254, 'length', 'inches', 'in']
+        self.unit_dict['light-second'] = [2.998e+8, 'length', 'light-seconds', 'ls']
+        self.unit_dict['light-minute'] = [1.799e+10, 'length', 'light-minute', 'lm']
+        self.unit_dict['light-hour'] = [1.079e+12, 'length', 'light-hour', 'lh']
+        self.unit_dict['light-year'] = [9.461e+15, 'length', 'light-years', 'ly']
+        #Speed
+        self.unit_dict['miles-per-hour'] = [1, 'speed', 'miles per hour', 'mph']
+        self.unit_dict['kilometers-per-hour'] = [1.60934, 'speed', 'kilometers per hour', 'kph']
+        self.unit_dict['meters-per-second'] = [0.44704, 'speed', 'meters per second', 'm/s']
         #Time
-        self.unit_dict['second'] = [1, 'time', 'seconds']
-        self.unit_dict['minute'] = [60, 'time', 'minutes']
-        self.unit_dict['hour'] = [3600, 'time', 'hours']
+        self.unit_dict['second'] = [1, 'time', 'seconds', 's']
+        self.unit_dict['minute'] = [60, 'time', 'minutes', 'min']
+        self.unit_dict['hour'] = [3600, 'time', 'hours', 'h']
         self.unit_dict['day'] = [86400, 'time', 'days']
         self.unit_dict['week'] = [604800, 'time', 'weeks']
         self.unit_dict['month'] = [2592000, 'time', 'months']
         self.unit_dict['year'] = [31536000, 'time', 'years']
         #Angle
-        self.unit_dict['radian'] = [1, 'angle', 'radians']
-        self.unit_dict['degree'] = [.0174533, 'angle', 'degrees']
+        self.unit_dict['radian'] = [1, 'angle', 'radians', 'rad']
+        self.unit_dict['degree'] = [.0174533, 'angle', 'degrees', 'deg']
         #Mass
-        self.unit_dict['kilogram'] = [1, 'mass', 'kilograms']
-        self.unit_dict['gram'] = [.001, 'mass', 'grams']
+        self.unit_dict['kilogram'] = [1, 'mass', 'kilograms', 'kg']
+        self.unit_dict['gram'] = [.001, 'mass', 'grams', 'g']
         self.unit_dict['metric_ton'] = [1000, 'mass', 'metric_tons']
         self.unit_dict['us_ton'] = [907.185, 'mass', 'us_tons']
-        self.unit_dict['pound'] = [.453592, 'mass', 'pounds']
-        self.unit_dict['ounce'] = [.0283495, 'mass', 'ounces']
+        self.unit_dict['pound'] = [.453592, 'mass', 'pounds', 'lbs']
+        self.unit_dict['ounce'] = [.0283495, 'mass', 'ounces', 'oz']
         #Temperature
-        self.unit_dict['fahrenheit'] = ['None', 'temperature', 'f']
-        self.unit_dict['celcius'] = ['None', 'temperature', 'c']
+        self.unit_dict['fahrenheit'] = ['None', 'temperature', 'fahrenheit', 'f']
+        self.unit_dict['celcius'] = ['None', 'temperature', 'celcius', 'c']
 
 
         #8ball Information
+
         self.ball_responses = ['It is certain', 'It is decidedly so', 'Without a doubt', 'Yes, definitely', 'You may rely on it', 'As I see it, yes', 'Most likely', 'Outlook good', 'Yes', 'Signs point to yes', 'Reply hazy try again', 'Ask again later', 'Better not tell you now', 'Cannot predict now', 'Concentrate and ask again', 'Don\'t count on it', 'My reply is no', 'My sources say no', 'Outlook not so good', 'Very doubtful']
 
     def round_sig(self, x):
         return round(x, 6-int(floor(log10(x)))-1)
 
-    async def cmd_listunits(self, unit_type = 'None'):
+    async def cmd_listunits(self, unit_type=None):
         """
         Usage:
             {command_prefix}listunits [unit_type]
@@ -65,7 +74,7 @@ class Utilities(PBPlugin):
         List Units for {command_prefix}convert
         """
 
-        if unit_type == 'None':
+        if not unit_type:
             type_list = []
             for key in self.unit_dict:
                 if self.unit_dict[key][1] not in type_list:
@@ -98,10 +107,16 @@ class Utilities(PBPlugin):
 
         for key in self.unit_dict:
             try:
-                if self.unit_dict[key][2] == from_unit:
-                    from_unit = key
-                if self.unit_dict[key][2] == to_unit:
-                    to_unit = key
+                if self.unit_dict[key][2]:
+                    if self.unit_dict[key][2] == from_unit:
+                        from_unit = key
+                    if self.unit_dict[key][2] == to_unit:
+                        to_unit = key
+                if self.unit_dict[key][3]:
+                    if self.unit_dict[key][3] == from_unit:
+                        from_unit = key
+                    if self.unit_dict[key][3] == to_unit:
+                        to_unit = key
             except:
                 pass
 
