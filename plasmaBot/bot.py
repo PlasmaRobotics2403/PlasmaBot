@@ -202,20 +202,6 @@ class PlasmaBot(discord.Client):
         for plugin in enabled_plugins:
             self.loop.create_task(plugin.on_server_remove(server))
 
-    def get_messages(self, channelID):
-        if not str(channelID) in self.message_list:
-            self.message_list[str(channelID)] = []
-        else:
-            return self.message_list[str(channelID)]
-
-    def store_messages(self, channelID, message):
-        if not  str(channelID) in self.message_list:
-            self.message_list[str(channelID)] = []
-
-        message_list = [message] + self.get_messages(channelID)
-
-        self.message_list[str(channelID)] = message_list
-
     async def _wait_delete_msg(self, message, delay):
         await asyncio.sleep(delay)
         await self.safe_delete_message(message)
@@ -309,8 +295,6 @@ class PlasmaBot(discord.Client):
 
         if self.config.terminal_log:
             print('[PB][MESSAGE][' + message_context.upper() + '][' + message_type.upper() + ']' + cmd_message + ' "' + " \\n ".join(message.content.split("\n")).strip() + '" ~' + message.author.name + '(#' + message.author.discriminator + message_location)
-
-        self.store_messages(message.channel.id, message)
 
         if message_is_command:
             glob_cmd, *glob_args = message.content.strip().split()

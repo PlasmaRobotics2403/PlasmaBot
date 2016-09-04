@@ -1,5 +1,6 @@
 from plasmaBot.plugin import PBPlugin, PBPluginMeta, Response, PBPluginConfig
 import discord
+import asyncio
 
 from SQLiteHelper import SQLiteHelper as sq
 
@@ -9,12 +10,12 @@ import logging
 log = logging.getLogger('discord')
 
 
+# Database Default Classes
 class dbt_moderation_settings(object):
     def __init__(self):
         self.columns = ["SERVER_ID", "PRESERVE_OVERRIDES", "SOFT_MUTE"]
         self.datatypes = ["TEXT PRIMARY KEY NOT NULL", "TEXT", "TEXT"]
         self.seed = []
-
 
 class dbt_moderation_roles(object):
     def __init__(self):
@@ -26,7 +27,7 @@ class dbt_moderation_roles(object):
 class Moderation(PBPlugin):
     name = 'Moderation'
     globality = 'all'
-    help_exclude = False
+    help_exclude = True
 
     def __init__(self, plasmaBot):
         super().__init__(plasmaBot)
@@ -179,24 +180,72 @@ class Moderation(PBPlugin):
             return 'ERROR'
 
 
-    async def setup_roles(self, server, channel): #check if bot has permissions to manage roles
+    async def get_roles(self, server):
         server_roles = server.roles
 
         self_member = server.get_member(self.bot.user.id)
         top_role = self_member.top_role
-        bot_position = top_role.position
+        role_position = top_role.position
 
-        permissions = channel.permissions_for(self_member)
+        permissions = server.get_channel(server.id).permissions_for(self_member)
         manage_roles = permissions.manage_roles
 
         if not manage_roles:
-            return ['Error']
+            return [None, None]
         else:
             mute_role = None
             defen_role = None
 
-            server_role_entry = self.moderation_db.table('s_roles').select("SERVER_ID", "ROLE_MUTE", "ROLE_DEAFEN").where("SERVER_ID").equals(server.id).execute()
+            server_role_entry = self.moderation_db.table('s_roles').select("ROLE_MUTE", "ROLE_DEAFEN").where("SERVER_ID").equals(server.id).execute()
 
+            role_mute = 'DNE'
+            role_deafen = 'DNE'
+            role_return = [None, None, manage_roles]
+
+            for server_entry in server_role_entry:
+                role_mute = server_entry[0]
+                role_deafen = server_entry[1]
+
+            if role_mute and role_deafen:
+                for role in server.roles:
+                    if role.id == role_mute:
+                        role_return[0] = role
+
+                    if role.id == role_deafen:
+                        role_return[1] = role
+
+
+            if role_return[0] and role_return[1]:
+                return role_return
+
+            if role_mute == 'DNE' and role_deafen == 'DNE':
+                assign_db = True
+            else:
+                assign_db = False
+
+            if role_return[0] == None:
+
+                role_return[0] = await self.bot.create_role(server, name='PB-Muted', mentionable=False)
+                await self.bot.move_role(server, role_return[0], role_position)
+
+                if not assign_db:
+                    self.moderation_db.table('s_roles').update("ROLE_MUTE").setTo(role_return[0].id).where("SERVER_ID").equals(server.id).execute()
+
+            if role_return[1] == None:
+
+                role_return[1] = await self.bot.create_role(server, name='PB-Deafened', mentionable=False)
+                await self.bot.move_role(server, role_return[1], role_position)
+
+                if not assign_db:
+                    self.moderation_db.table('s_roles').update("ROLE_DEAFEN").setTo(role_return[1].id).where("SERVER_ID").equals(server.id).execute()
+
+            if assign_db:
+                self.moderation_db.table('s_roles').insert(server.id, role_return[0].id, role_return[1].id).into("SERVER_ID", "ROLE_MUTE", "ROLE_DEAFEN")
+
+            return role_return
+
+
+    # Plugin Commands
 
     async def cmd_kick(self, message, auth_perms, user_mentions):
         """
@@ -450,13 +499,20 @@ class Moderation(PBPlugin):
                 return Response(send_help=True)
 
             server_preserve_overrides = await self.get_key(server, 'preserve_overrides')
-
-            channel_list = server.channels
+            server_soft_mute = await self.get_key(server, 'soft_mute')
 
             user_count = len(user_mentions)
             check_count = 0
 
             response = 'Muted '
+
+            if server_soft_mute:
+                server_roles = await self.get_roles(server)
+
+                if server_roles[0] == None and server_roles[1] == None:
+                    return Response(permissions_error=True)
+
+                mute_role = server_roles[0]
 
             for user in user_mentions:
                 user_permissions = await self.bot.permissions.check_permissions(user, message.channel, message.server)
@@ -466,17 +522,25 @@ class Moderation(PBPlugin):
 
                 check_count += 1
 
-                for channel in channel_list:
-                    try:
-                        if not server_preserve_overrides == True:
-                            overwrite = channel.overwrites_for(user)
-                        else:
-                            overwrite = discord.PermissionOverwrite()
+                if server_soft_mute:
 
-                        overwrite.send_messages = False
-                        await self.bot.edit_channel_permissions(channel, user, overwrite)
-                    except:
-                        self.bot.safe_send_message(message.channel, 'Error muting {} in {}'.format(user.mention, channel.mention), expire_in=10)
+                    if not server_roles[2]:
+                        return Response(permissions_error=True)
+
+                    await self.bot.add_roles(user, mute_role)
+
+                else:
+                    for channel in server.channels:
+                        try:
+                            if not server_preserve_overrides == True:
+                                overwrite = channel.overwrites_for(user)
+                            else:
+                                overwrite = discord.PermissionOverwrite()
+
+                            overwrite.send_messages = False
+                            await self.bot.edit_channel_permissions(channel, user, overwrite)
+                        except:
+                            self.bot.safe_send_message(message.channel, 'Error muting {} in {}'.format(user.mention, channel.mention), expire_in=10)
 
                 if check_count != user_count:
                     response += user.mention + ' & '
@@ -489,6 +553,7 @@ class Moderation(PBPlugin):
 
         else:
             return Response(permissions_error=True)
+
 
     async def cmd_unmute(self, message, server, auth_perms, user_mentions):
         """
@@ -505,12 +570,20 @@ class Moderation(PBPlugin):
                 return Response(send_help=True)
 
             server_preserve_overrides = await self.get_key(server, 'preserve_overrides')
+            server_soft_mute = await self.get_key(server, 'soft_mute')
 
-            channel_list = server.channels
             user_count = len(user_mentions)
             check_count = 0
 
             response = 'Unmuted '
+
+            if server_soft_mute:
+                server_roles = await self.get_roles(server)
+
+                if server_roles[0] == None and server_roles[1] == None:
+                    return Response(permissions_error=True)
+
+                mute_role = server_roles[0]
 
             for user in user_mentions:
                 user_permissions = await self.bot.permissions.check_permissions(user, message.channel, message.server)
@@ -520,17 +593,25 @@ class Moderation(PBPlugin):
 
                 check_count += 1
 
-                for channel in channel_list:
-                    try:
-                        if not server_preserve_overrides == True:
-                            overwrite = channel.overwrites_for(user)
-                        else:
-                            overwrite = discord.PermissionOverwrite()
+                if server_soft_mute:
 
-                        overwrite.send_messages = None
-                        await self.bot.edit_channel_permissions(channel, user, overwrite)
-                    except:
-                        self.bot.safe_send_message(message.channel, 'Error unmuting {} in {}'.format(user.mention, channel.mention), expire_in=10)
+                    if not server_roles[2]:
+                        return Response(permissions_error=True)
+
+                    await self.bot.remove_roles(user, mute_role)
+
+                else:
+                    for channel in server.channels:
+                        try:
+                            if not server_preserve_overrides == True:
+                                overwrite = channel.overwrites_for(user)
+                            else:
+                                overwrite = discord.PermissionOverwrite()
+
+                            overwrite.send_messages = None
+                            await self.bot.edit_channel_permissions(channel, user, overwrite)
+                        except:
+                            self.bot.safe_send_message(message.channel, 'Error unmuting {} in {}'.format(user.mention, channel.mention), expire_in=10)
 
                 if check_count != user_count:
                     response += user.mention + ' & '
@@ -560,13 +641,20 @@ class Moderation(PBPlugin):
                 return Response(send_help=True)
 
             server_preserve_overrides = await self.get_key(server, 'preserve_overrides')
-
-            channel_list = server.channels
+            server_soft_mute = await self.get_key(server, 'soft_mute')
 
             user_count = len(user_mentions)
             check_count = 0
 
             response = 'Deafened '
+
+            if server_soft_mute:
+                server_roles = await self.get_roles(server)
+
+                if server_roles[0] == None and server_roles[1] == None:
+                    return Response(permissions_error=True)
+
+                deafen_role = server_roles[1]
 
             for user in user_mentions:
                 user_permissions = await self.bot.permissions.check_permissions(user, message.channel, message.server)
@@ -576,18 +664,26 @@ class Moderation(PBPlugin):
 
                 check_count += 1
 
-                for channel in channel_list:
-                    try:
-                        if not server_preserve_overrides == True:
-                            overwrite = channel.overwrites_for(user)
-                        else:
-                            overwrite = discord.PermissionOverwrite()
+                if server_soft_mute:
 
-                        overwrite.send_messages = False
-                        overwrite.read_messages = False
-                        await self.bot.edit_channel_permissions(channel, user, overwrite)
-                    except:
-                        self.bot.safe_send_message(message.channel, 'Error deafening {} in {}'.format(user.mention, channel.mention), expire_in=10)
+                    if not server_roles[2]:
+                        return Response(permissions_error=True)
+
+                    await self.bot.add_roles(user, deafen_role)
+
+                else:
+                    for channel in server.channels:
+                        try:
+                            if not server_preserve_overrides == True:
+                                overwrite = channel.overwrites_for(user)
+                            else:
+                                overwrite = discord.PermissionOverwrite()
+
+                            overwrite.send_messages = False
+                            overwrite.read_messages = False
+                            await self.bot.edit_channel_permissions(channel, user, overwrite)
+                        except:
+                            self.bot.safe_send_message(message.channel, 'Error deafening {} in {}'.format(user.mention, channel.mention), expire_in=10)
 
                 if check_count != user_count:
                     response += user.mention + ' & '
@@ -617,12 +713,20 @@ class Moderation(PBPlugin):
                 return Response(send_help=True)
 
             server_preserve_overrides = await self.get_key(server, 'preserve_overrides')
+            server_soft_mute = await self.get_key(server, 'soft_mute')
 
-            channel_list = server.channels
             user_count = len(user_mentions)
             check_count = 0
 
             response = 'Undeafened '
+
+            if server_soft_mute:
+                server_roles = await self.get_roles(server)
+
+                if server_roles[0] == None and server_roles[1] == None:
+                    return Response(permissions_error=True)
+
+                deafen_role = server_roles[1]
 
             for user in user_mentions:
                 user_permissions = await self.bot.permissions.check_permissions(user, message.channel, message.server)
@@ -632,18 +736,26 @@ class Moderation(PBPlugin):
 
                 check_count += 1
 
-                for channel in channel_list:
-                    try:
-                        if not server_preserve_overrides == True:
-                            overwrite = channel.overwrites_for(user)
-                        else:
-                            overwrite = discord.PermissionOverwrite()
+                if server_soft_mute:
 
-                        overwrite.send_messages = None
-                        overwrite.read_messages = None
-                        await self.bot.edit_channel_permissions(channel, user, overwrite)
-                    except:
-                        self.bot.safe_send_message(message.channel, 'Error Undeafened {} in {}'.format(user.mention, channel.mention), expire_in=10)
+                    if not server_roles[2]:
+                        return Response(permissions_error=True)
+
+                    await self.bot.remove_roles(user, deafen_role)
+
+                else:
+                    for channel in server.channels:
+                        try:
+                            if not server_preserve_overrides == True:
+                                overwrite = channel.overwrites_for(user)
+                            else:
+                                overwrite = discord.PermissionOverwrite()
+
+                            overwrite.send_messages = None
+                            overwrite.read_messages = None
+                            await self.bot.edit_channel_permissions(channel, user, overwrite)
+                        except:
+                            self.bot.safe_send_message(message.channel, 'Error Undeafened {} in {}'.format(user.mention, channel.mention), expire_in=10)
 
                 if check_count != user_count:
                     response += user.mention + ' & '
@@ -657,6 +769,105 @@ class Moderation(PBPlugin):
         else:
             return Response(permissions_error=True)
 
+
+    async def cmd_prune(self, message, channel, server, bot_member, author, auth_perms, user_mentions, prune_number=50, prune_type=None):
+        """
+        Usage:
+            {command_prefix}prune (number) [Prune Type]
+
+        Prunes (number) Messages from the chat
+
+        help_exclude
+        """
+        if auth_perms >= 35:
+
+            # Check if prune_number is a number
+            try:
+                float(prune_number)
+                prune_number = min(int(prune_number) + 1, 1000) # Set prune_number to 1000 if greater than 1000.  Add 1 to the number to counteract the initiation message
+            except:
+                return Response("The number of messages to prune must be a number.", reply=True, delete_after=15)
+
+            delete_invokes = True
+            manage_messages = channel.permissions_for(bot_member).manage_messages
+
+            def is_bot_command(possible_command_fire):
+                if possible_command_fire.content.strip().startswith(self.bot.config.prefix):
+
+                    possible_command_handler, *args = possible_command_fire.content.strip().split()
+                    possible_command_handler = possible_command_handler[len(self.bot.config.prefix):].lower().strip()
+
+                    possible_command_info = self.bot.plugin_db.table('commands').select("PLUGIN_NAME").where("COMMAND_KEY").equals(possible_command_handler).execute()
+
+                    possible_plugin_name = None
+
+                    for possible_command in possible_command_info:
+                        possible_plugin_name = possible_command[0]
+
+                    if possible_plugin_name:
+                        return True
+                    else:
+                        return False
+                elif possible_command_fire.author == bot_member:
+                    return True
+                else:
+                    return False
+
+            def check(check_message): # Modify this function to provide more than just bot messages.
+                if prune_type == None or prune_type == 'all':
+                    if manage_messages:
+                        return True
+                    else:
+                        if prune_type == 'all':
+                            return Response(permissions_error=True)
+                        else:
+                            if not self.bot.user.bot:
+                                if check_message.author == self.bot.user:
+                                    return True
+                                else:
+                                    return False
+                            else:
+                                return Response(permissions_error=True)
+                elif prune_type == 'commands':
+                    return is_bot_command(check_message)
+                elif user_mentions:
+                    if check_message.author in user_mentions:
+                        return True
+                    else:
+                        return False
+                else:
+                    return False
+
+            if self.bot.user.bot:
+                if manage_messages:
+                    deleted = await self.bot.purge_from(channel, check=check, limit=prune_number)
+
+                    if len(deleted) <= 2:
+                        message_suffix = ''
+                    else:
+                        message_suffix = 's'
+
+                    return Response('Pruned {} message{}.'.format(len(deleted) - 1, message_suffix), delete_after=5)
+                else:
+                    return Response(permissions_error=True)
+
+            deleted = 0
+            async for entry in self.bot.logs_from(channel, prune_number, before=message):
+                should_delete = check(entry)
+
+                if should_delete:
+                    await self.bot.safe_delete_message(entry)
+                    deleted += 1
+                    await asyncio.sleep(0.21)
+
+            if deleted <= 2:
+                message_suffix = ''
+            else:
+                message_suffix = 's'
+
+            return Response('Purged {} message{}.'.format(deleted - 1, message_suffix), delete_after=55)
+        else:
+            return Response(permissions_error=True)
 
 
 
