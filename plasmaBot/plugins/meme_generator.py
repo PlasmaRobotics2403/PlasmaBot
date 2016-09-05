@@ -58,6 +58,10 @@ class MemeGenerator(PBPlugin):
 
         if ':' in meme_raw:
             meme_sections = meme_raw.split(":")
+            
+            if meme_sections[0].strip() == '':
+                meme_sections[0] = '%20'
+
             url = url_base + meme_type + '/' + meme_sections[0].strip().replace(' ', '%20') + '/' + meme_sections[1].strip().replace(' ', '%20') + '.jpg'
         else:
             url = url_base + meme_type + '/' + meme_raw.strip().replace(' ', '%20') + '.jpg'
