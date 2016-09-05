@@ -294,7 +294,7 @@ class PlasmaBot(discord.Client):
             cmd_message = ''
 
         if self.config.terminal_log:
-            print('[PB][MESSAGE][' + message_context.upper() + '][' + message_type.upper() + ']' + cmd_message + ' "' + " \\n ".join(message.content.split("\n")).strip() + '" ~' + message.author.name + '(#' + message.author.discriminator + message_location)
+            print('[PB][MESSAGE][' + message_context.upper() + '][' + message_type.upper() + ']' + cmd_message + ' "' + " \\n ".join(message.content.split("\n")).strip() + '" ~' + message.author.name + '(#' + message.author.discriminator + ')' + message_location)
 
         if message_is_command:
             glob_cmd, *glob_args = message.content.strip().split()
