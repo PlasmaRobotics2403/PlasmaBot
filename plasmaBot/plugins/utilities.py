@@ -189,7 +189,7 @@ class Utilities(PBPlugin):
         else:
             self.utilities_db.table('afk').insert(author.id, 'True', afk_message).into("USER_ID", "AFK_STATE", "AFK_MESSAGE")
 
-        return Response(':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} is AFK: {} :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(author.nick, afk_message), reply=False, delete_after=45)
+        return Response(':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} is AFK: {} :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(self.bot.get_display_name(author), afk_message), reply=False, delete_after=45)
 
 
     async def cmd_8ball(self, leftover_args):
@@ -250,7 +250,7 @@ class Utilities(PBPlugin):
             if author_afk == 'True':
                 if not message.content.startswith(self.bot.config.prefix + 'afk') and not message.content.startswith(self.bot.config.prefix + 'sudo'):
                     self.utilities_db.table('afk').update("AFK_STATE").setTo('False').where("USER_ID").equals(message.author.id).execute()
-                    await self.bot.safe_send_message(message.channel, ':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} is no longer AFK :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(message.author.nick), expire_in=60)
+                    await self.bot.safe_send_message(message.channel, ':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} is no longer AFK :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(self.bot.get_display_name(message.author)), expire_in=60)
 
             afk_users = []
 
@@ -272,13 +272,13 @@ class Utilities(PBPlugin):
                     afk_message = ''
                     for user_return in afk_message_info:
                         afk_message = user_return[0]
-                    response = ':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} is AFK: {} :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(afk_users[0].nick, afk_message)
+                    response = ':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} is AFK: {} :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(self.bot.get_display_name(afk_users[0]), afk_message)
                 else:
                     users_response = '{}'.format(afk_users[0].nick)
                     del afk_users[0]
 
                     for afk_user in afk_users:
-                        users_response += ' & ' + afk_user.nick
+                        users_response += ' & ' + self.bot.get_display_name(afk_user)
 
                     response = ':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} are AFK :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(users_response)
 

@@ -24,6 +24,7 @@ from plasmaBot.plugins.TBA import TBAPlugin
 from plasmaBot.plugins.moderation import Moderation
 from plasmaBot.plugins.utilities import Utilities
 from plasmaBot.plugins.meme_generator import MemeGenerator
+from plasmaBot.plugins.custom_commands import CustomCommands
 
 # Logging setup
 logger = logging.getLogger('discord')
@@ -32,7 +33,7 @@ class PlasmaBot(discord.Client):
     def __init__(self, shutdown_operator):
         super().__init__()
 
-        self.version = '3.0.3-BETA-1'
+        self.version = '3.0.4-BETA-1'
         self.shutdown_state = shutdown_operator
 
         print('--------------------------------------------------------\n')
@@ -101,6 +102,12 @@ class PlasmaBot(discord.Client):
         except: # Can be ignored
             pass
 
+    def get_display_name(self, user_object):
+        if user_object.nick:
+            return user_object.nick
+        else:
+            return user_object.name
+
     async def get_plugins(self, server=None):
         plugins = await self.plugin_manager.get_all(server)
         return plugins
@@ -128,7 +135,14 @@ class PlasmaBot(discord.Client):
     async def on_ready(self):
         print("\n\nConnected!\n")
 
-        if len(self.servers) < 16:
+        if len(self.servers) == 0:
+            if self.user.bot:
+                appinfo = await self.application_info()
+                join_url = discord.utils.oauth_url(app_info.id) + '&permissions=66321471'
+                print('{bot_name} is not in any servers!\nYou can add {bot_name} to a server at:\n{url}'.format(bot_name=self.config.bot_name, url=join_url))
+            else:
+                print('{bot_name} is not in any servers!\nJoin a server using the bot account in order to use {bot_name}'.format(bot_name=self.config.bot_name))
+        elif len(self.servers) < 16:
             print("Current Servers:")
             [print(" - " + server.name + " (" + server.id + ")") for server in self.servers]
             print()
@@ -237,7 +251,7 @@ class PlasmaBot(discord.Client):
 
         except discord.NotFound:
             if self.config.debug:
-                print('[PB][CHANNEL] Cannot send message to {0}, channel does not exist'.format(message.clean_content))
+                print('[PB][CHANNEL] Cannot delete message {0}, message does not exist'.format(message.clean_content))
 
     async def safe_edit_message(self, message, new, *, send_if_fail=False):
         try:
