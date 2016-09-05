@@ -238,7 +238,7 @@ class PlasmaBot(discord.Client):
 
         except discord.NotFound:
             if self.config.debug:
-                print('[PB][CHANNEL] Cannot send message to {0}, channel does not exist'.format(message.clean_content))
+                print('[PB][CHANNEL] Cannot delete message {0}, message does not exist'.format(message.clean_content))
 
     async def safe_edit_message(self, message, new, *, send_if_fail=False):
         try:
