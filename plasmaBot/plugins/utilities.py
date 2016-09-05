@@ -1,12 +1,22 @@
-from plasmaBot.plugin import PBPlugin, PBPluginMeta, Response
+from plasmaBot.plugin import PBPlugin, PBPluginMeta, PBPluginConfig, Response
 from math import log10, floor
 import random
 import discord
 
 from plasmaBot import exceptions
 
+from SQLiteHelper import SQLiteHelper as sq
+
 import logging
 log = logging.getLogger('discord')
+
+# Database Default Classes
+class dbt_afk(object):
+    def __init__(self):
+        self.columns = ["USER_ID", "AFK_STATE", "AFK_MESSAGE"]
+        self.datatypes = ["TEXT PRIMARY KEY NOT NULL", "TEXT", "TEXT"]
+        self.seed = []
+
 
 class Utilities(PBPlugin):
     name = 'Utilities'
@@ -16,6 +26,8 @@ class Utilities(PBPlugin):
     def __init__(self, plasmaBot):
         super().__init__(plasmaBot)
         self.unit_dict = {}
+
+        self.pl_config = PBPluginConfig(plasmaBot, 'utilities.ini', 'UTILITIES', {'Files':[['utilities_db_location', 'The location of the utilities database, used to store AFK data and other information', 'data/utilities']]})
 
         #Unit Conversions Variables
 
@@ -58,6 +70,13 @@ class Utilities(PBPlugin):
         self.unit_dict['fahrenheit'] = ['None', 'temperature', 'fahrenheit', 'f']
         self.unit_dict['celcius'] = ['None', 'temperature', 'celcius', 'c']
 
+        #Utilities Database for AFK
+
+        self.utilities_db = sq.Connect(self.pl_config.utilities_db_location)
+
+        if not self.utilities_db.table('afk').tableExists():
+            initiation_glob = dbt_afk()
+            self.utilities_db.table('afk').init(initiation_glob)
 
         #8ball Information
 
@@ -147,6 +166,32 @@ class Utilities(PBPlugin):
             return Response(str(value) + ' degrees ' + from_unit + ' converts to ' + str(output) + ' degrees ' + to_unit, reply=False, delete_after=45)
 
 
+    async def cmd_afk(self, message, author):
+        """
+        Usage:
+            {command_prefix}afk (message)
+
+        Set your global state as AFK with a message!
+        """
+        afk_message = message.content[len(self.bot.config.prefix + 'afk '):].strip()
+        afk_message = afk_message.replace('\n', ' ')
+
+        user_return = self.utilities_db.table('afk').select("AFK_STATE").where("USER_ID").equals(author.id).execute()
+
+        afk_state = None
+
+        for user in user_return:
+            afk_state = user[0]
+
+        if afk_state:
+            self.utilities_db.table('afk').update("AFK_STATE").setTo('True').where("USER_ID").equals(author.id).execute()
+            self.utilities_db.table('afk').update("AFK_MESSAGE").setTo(afk_message).where("USER_ID").equals(author.id).execute()
+        else:
+            self.utilities_db.table('afk').insert(author.id, 'True', afk_message).into("USER_ID", "AFK_STATE", "AFK_MESSAGE")
+
+        return Response(':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} is AFK: {} :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(author.nick, afk_message), reply=False, delete_after=45)
+
+
     async def cmd_8ball(self, leftover_args):
         """
         Usage:
@@ -190,3 +235,57 @@ class Utilities(PBPlugin):
         response = 'Dice rolled a {}.'.format(coin)
 
         return Response(response, reply=True, delete_after=60)
+
+
+    async def on_message(self, message, message_type, message_context):
+        if message.server:
+            user_mentions = list(map(message.server.get_member, message.raw_mentions))
+            author_afk_content = self.utilities_db.table('afk').select("AFK_STATE").where("USER_ID").equals(message.author.id).execute()
+
+            author_afk = None
+
+            for author in author_afk_content:
+                author_afk = author[0]
+
+            if author_afk == 'True':
+                if not message.content.startswith(self.bot.config.prefix + 'afk') and not message.content.startswith(self.bot.config.prefix + 'sudo'):
+                    self.utilities_db.table('afk').update("AFK_STATE").setTo('False').where("USER_ID").equals(message.author.id).execute()
+                    await self.bot.safe_send_message(message.channel, ':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} is no longer AFK :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(message.author.nick), expire_in=60)
+
+            afk_users = []
+
+            for user in user_mentions:
+                if not user.id == message.author.id:
+                    user_afk_content = self.utilities_db.table('afk').select("AFK_STATE").where("USER_ID").equals(user.id).execute()
+
+                    user_afk = None
+
+                    for user_info in user_afk_content:
+                        user_afk = user_info[0]
+
+                    if user_afk == 'True':
+                        afk_users += [user]
+
+            if len(afk_users) >= 1:
+                if len(afk_users) == 1:
+                    afk_message_info = self.utilities_db.table('afk').select("AFK_MESSAGE").where("USER_ID").equals(afk_users[0].id).execute()
+                    afk_message = ''
+                    for user_return in afk_message_info:
+                        afk_message = user_return[0]
+                    response = ':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} is AFK: {} :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(afk_users[0].nick, afk_message)
+                else:
+                    users_response = '{}'.format(afk_users[0].nick)
+                    del afk_users[0]
+
+                    for afk_user in afk_users:
+                        users_response += ' & ' + afk_user.nick
+
+                    response = ':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} are AFK :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(users_response)
+
+                await self.bot.safe_send_message(message.channel, response, expire_in=60)
+
+            else:
+                pass
+
+        else:
+            pass
