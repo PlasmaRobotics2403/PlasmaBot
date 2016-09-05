@@ -842,12 +842,17 @@ class Moderation(PBPlugin):
                 if manage_messages:
                     deleted = await self.bot.purge_from(channel, check=check, limit=prune_number)
 
-                    if len(deleted) <= 2:
+                    num_messages = len(deleted)
+
+                    if check(message):
+                        num_messages += -1
+
+                    if num_messages <= 1:
                         message_suffix = ''
                     else:
                         message_suffix = 's'
 
-                    return Response('Pruned {} message{}.'.format(len(deleted) - 1, message_suffix), delete_after=5)
+                    return Response('Pruned {} message{}.'.format(num_messages, message_suffix), delete_after=5)
                 else:
                     return Response(permissions_error=True)
 
@@ -860,12 +865,15 @@ class Moderation(PBPlugin):
                     deleted += 1
                     await asyncio.sleep(0.21)
 
-            if deleted <= 2:
-                message_suffix = ''
-            else:
-                message_suffix = 's'
+                if check(message):
+                    deleted += -1
 
-            return Response('Purged {} message{}.'.format(deleted - 1, message_suffix), delete_after=55)
+                if deleted <= 1:
+                    message_suffix = ''
+                else:
+                    message_suffix = 's'
+
+            return Response('Purged {} message{}.'.format(deleted, message_suffix), delete_after=55)
         else:
             return Response(permissions_error=True)
 
