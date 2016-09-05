@@ -34,9 +34,9 @@ class Moderation(PBPlugin):
 
         self.toggles = ['preserve_overrides', 'soft_mute']
 
-        self.pl_config = PBPluginConfig(plasmaBot, 'moderation.ini', 'MODERATION', {'Files':[['moderation_db', 'The location of the moderation database', 'data/moderation']]})
+        self.pl_config = PBPluginConfig(plasmaBot, 'moderation.ini', 'MODERATION', {'Files':[['moderation_db_location', 'The location of the moderation database', 'data/moderation']]})
 
-        self.moderation_db = sq.Connect(self.pl_config.moderation_db)
+        self.moderation_db = sq.Connect(self.pl_config.moderation_db_location)
 
         if not self.moderation_db.table('s_preferences').tableExists():
             initiation_glob = dbt_moderation_settings()
