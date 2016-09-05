@@ -128,35 +128,38 @@ class CustomCommands(PBPlugin):
                 return Response(permissions_error=True)
 
         elif modifier == 'remove':
-            possible_command_name = leftover_args[0].strip()
+            if auth_perms >= 35:
+                possible_command_name = leftover_args[0].strip()
 
-            if not self.commands_db.table('server_{}'.format(server.id)).tableExists():
-                return Response('{} does not have Custom Commands enabled.'.format(server.name), reply=True, delete_after=30)
+                if not self.commands_db.table('server_{}'.format(server.id)).tableExists():
+                    return Response('{} does not have Custom Commands enabled.'.format(server.name), reply=True, delete_after=30)
 
-            raw_custom_commands_return = self.commands_db.table('server_{}'.format(server.id)).select("RESPONSE").where("COMMAND_KEY").equals(possible_command_name).execute()
+                raw_custom_commands_return = self.commands_db.table('server_{}'.format(server.id)).select("RESPONSE").where("COMMAND_KEY").equals(possible_command_name).execute()
 
-            custom_does_exist = False
+                custom_does_exist = False
 
-            for custom_command in raw_custom_commands_return:
-                custom_does_exist = True
+                for custom_command in raw_custom_commands_return:
+                    custom_does_exist = True
 
-            if not custom_does_exist:
-                return Response('Custom Command `{prefix}{command}` does not exist.'.format(prefix=self.bot.config.prefix, command=possible_command_name), reply=True, delete_after=30)
+                if not custom_does_exist:
+                    return Response('Custom Command `{prefix}{command}` does not exist.'.format(prefix=self.bot.config.prefix, command=possible_command_name), reply=True, delete_after=30)
 
-            all_custom_commands_return = self.commands_db.table('server_{}'.format(server.id)).select("COMMAND_KEY").execute()
+                all_custom_commands_return = self.commands_db.table('server_{}'.format(server.id)).select("COMMAND_KEY").execute()
 
-            custom_commands_list = []
+                custom_commands_list = []
 
-            for custom_command_all in all_custom_commands_return:
-                custom_commands_list += [custom_command[0]]
+                for custom_command_all in all_custom_commands_return:
+                    custom_commands_list += [custom_command[0]]
 
-            if len(custom_commands_list) == 1:
-                self.commands_db_cursor.execute('DROP TABLE IF EXISTS server_{}'.format(server.id))
-                return Response('Custom Command `{prefix}{command}` has been removed and Custom Commands have been disabled.'.format(prefix=self.bot.config.prefix, command=possible_command_name), reply=True, delete_after=30)
+                if len(custom_commands_list) == 1:
+                    self.commands_db_cursor.execute('DROP TABLE IF EXISTS server_{}'.format(server.id))
+                    return Response('Custom Command `{prefix}{command}` has been removed and Custom Commands have been disabled.'.format(prefix=self.bot.config.prefix, command=possible_command_name), reply=True, delete_after=30)
 
-            else:
-                self.commands_db.table('server_{}'.format(server.id)).delete().where("COMMAND_KEY").equals(possible_command_name).execute()
+                else:
+                    self.commands_db.table('server_{}'.format(server.id)).delete().where("COMMAND_KEY").equals(possible_command_name).execute()
                 return Response('Custom Command `{prefix}{command}` has been removed.'.format(prefix=self.bot.config.prefix, command=possible_command_name), reply=True, delete_after=30)
+            else:
+                return Response(permissions_error=True)
 
         else:
             return Response(send_help=True, help_message='Unrecognized Modifier \'{}\''.format(modifier))
