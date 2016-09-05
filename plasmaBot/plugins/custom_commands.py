@@ -67,7 +67,7 @@ class CustomCommands(PBPlugin):
             if auth_perms >= 35:
                 possible_command_name = leftover_args[0].strip()
 
-                raw_commands_return = self.bot.plugin_db.table('commands').select("PLUGIN_NAME").where("COMMAND_KEY").equals(possible_command_name).execute()
+                raw_commands_return = self.bot.plugin_db.table('commands').select("PLUGIN_NAME").where("COMMAND_KEY").equals(possible_command_name.lower()).execute()
 
                 does_exist = False
 
@@ -75,7 +75,7 @@ class CustomCommands(PBPlugin):
                     does_exist = True
 
                 if does_exist:
-                    return Response('Bot Command `{prefix}{custom_command}` can not be overwriten by a Custom Command!'.format(prefix=self.bot.config.prefix, custom_command=possible_command_name), reply=True, delete_after=15)
+                    return Response('Bot Command `{prefix}{custom_command}` can not be overwriten by a Custom Command!'.format(prefix=self.bot.config.prefix, custom_command=possible_command_name.lower()), reply=True, delete_after=15)
 
                 possible_command_response = message.content[len(self.bot.config.prefix + 'custom add {} '.format(leftover_args[0])):].strip()
 
@@ -83,7 +83,7 @@ class CustomCommands(PBPlugin):
                     initiation_glob = dbt_custom_commands_server_instance()
                     self.commands_db.table('server_{}'.format(server.id)).init(initiation_glob)
 
-                raw_custom_commands_return = self.commands_db.table('server_{}'.format(server.id)).select("RESPONSE").where("COMMAND_KEY").equals(possible_command_name).execute()
+                raw_custom_commands_return = self.commands_db.table('server_{}'.format(server.id)).select("RESPONSE").where("COMMAND_KEY").equals(possible_command_name.lower()).execute()
 
                 custom_does_exist = False
 
@@ -93,9 +93,9 @@ class CustomCommands(PBPlugin):
                 if custom_does_exist:
                     return Response('Custom Command `{prefix}{custom_command}` already exists!  Use `{prefix}custom edit {custom_command} (New_Response)` to modify it.'.format(prefix=self.bot.config.prefix, custom_command=possible_command_name), reply=True, delete_after=30)
 
-                self.commands_db.table('server_{}'.format(server.id)).insert(possible_command_name, possible_command_response).into("COMMAND_KEY", "RESPONSE")
+                self.commands_db.table('server_{}'.format(server.id)).insert(possible_command_name.lower(), possible_command_response).into("COMMAND_KEY", "RESPONSE")
 
-                return Response('Custom Command `{prefix}{custom_command}` Successfully Created!'.format(prefix=self.bot.config.prefix, custom_command=possible_command_name), reply=True, delete_after=30)
+                return Response('Custom Command `{prefix}{custom_command}` Successfully Created!'.format(prefix=self.bot.config.prefix, custom_command=possible_command_name.lower()), reply=True, delete_after=30)
 
             else:
                 return Response(permissions_error=True)
@@ -106,9 +106,9 @@ class CustomCommands(PBPlugin):
                 possible_command_response = message.content[len(self.bot.config.prefix + 'custom edit {} '.format(leftover_args[0])):].strip()
 
                 if not self.commands_db.table('server_{}'.format(server.id)).tableExists():
-                    return Response('{} does not have Custom Commands enabled.  Use `{}custom add {} (content)` to create this command'.format(server.name, self.bot.config.prefix, possible_command_name), reply=True, delete_after=30)
+                    return Response('{} does not have Custom Commands enabled.  Use `{}custom add {} (content)` to create this command'.format(server.name, self.bot.config.prefix, possible_command_name.lower()), reply=True, delete_after=30)
 
-                raw_custom_commands_return = self.commands_db.table('server_{}'.format(server.id)).select("RESPONSE").where("COMMAND_KEY").equals(possible_command_name).execute()
+                raw_custom_commands_return = self.commands_db.table('server_{}'.format(server.id)).select("RESPONSE").where("COMMAND_KEY").equals(possible_command_name.lower()).execute()
 
                 custom_does_exist = False
 
@@ -118,12 +118,12 @@ class CustomCommands(PBPlugin):
                 if custom_does_exist:
 
                     if possible_command_response == '':
-                        return Response('Custom Command `{prefix}{command}` can not have an empty response.  Use `{prefix}custom edit {command} (content)` to edit this command'.format(prefix=self.bot.config.prefix, command=possible_command_name), reply=True, delete_after=30)
+                        return Response('Custom Command `{prefix}{command}` can not have an empty response.  Use `{prefix}custom edit {command} (content)` to edit this command'.format(prefix=self.bot.config.prefix, command=possible_command_name.lower()), reply=True, delete_after=30)
 
-                    self.commands_db.table('server_{}'.format(server.id)).update("RESPONSE").setTo(possible_command_response).where("COMMAND_KEY").equals(possible_command_name).execute()
-                    return Response('Response for `{prefix}{command}` updated!'.format(prefix=self.bot.config.prefix, command=possible_command_name), reply=True, delete_after=30)
+                    self.commands_db.table('server_{}'.format(server.id)).update("RESPONSE").setTo(possible_command_response).where("COMMAND_KEY").equals(possible_command_name.lower()).execute()
+                    return Response('Response for `{prefix}{command}` updated!'.format(prefix=self.bot.config.prefix, command=possible_command_name.lower()), reply=True, delete_after=30)
                 else:
-                    return Response('Custom Command `{prefix}{command}` does not exist.  Use `{prefix}custom add {command} (content)` to create this command'.format(prefix=self.bot.config.prefix, command=possible_command_name), reply=True, delete_after=30)
+                    return Response('Custom Command `{prefix}{command}` does not exist.  Use `{prefix}custom add {command} (content)` to create this command'.format(prefix=self.bot.config.prefix, command=possible_command_name.lower()), reply=True, delete_after=30)
             else:
                 return Response(permissions_error=True)
 
