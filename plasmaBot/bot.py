@@ -135,7 +135,14 @@ class PlasmaBot(discord.Client):
     async def on_ready(self):
         print("\n\nConnected!\n")
 
-        if len(self.servers) < 16:
+        if len(self.servers) == 0:
+            if self.user.bot:
+                appinfo = await self.application_info()
+                join_url = discord.utils.oauth_url(app_info.id) + '&permissions=66321471'
+                print('{bot_name} is not in any servers!\nYou can add {bot_name} to a server at:\n{url}'.format(bot_name=self.config.bot_name, url=join_url))
+            else:
+                print('{bot_name} is not in any servers!\nJoin a server using the bot account in order to use {bot_name}'.format(bot_name=self.config.bot_name))
+        elif len(self.servers) < 16:
             print("Current Servers:")
             [print(" - " + server.name + " (" + server.id + ")") for server in self.servers]
             print()
