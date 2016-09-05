@@ -102,6 +102,12 @@ class PlasmaBot(discord.Client):
         except: # Can be ignored
             pass
 
+    def get_display_name(self, user_object):
+        if user_object.nick:
+            return user_object.nick
+        else:
+            return user_object.name
+
     async def get_plugins(self, server=None):
         plugins = await self.plugin_manager.get_all(server)
         return plugins
