@@ -63,7 +63,7 @@ class CustomCommands(PBPlugin):
 
                 return Response(commands_response, reply=False, delete_after=60)
 
-        elif modifier == 'add' or modifer == 'create':
+        elif modifier == 'add' or modifier == 'create':
             if auth_perms >= 35:
                 possible_command_name = leftover_args[0].strip()
 
