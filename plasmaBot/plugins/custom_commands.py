@@ -63,7 +63,7 @@ class CustomCommands(PBPlugin):
 
                 return Response(commands_response, reply=False, delete_after=60)
 
-        elif modifier == 'add':
+        elif modifier == 'add' or modifer == 'create':
             if auth_perms >= 35:
                 possible_command_name = leftover_args[0].strip()
 
@@ -77,7 +77,7 @@ class CustomCommands(PBPlugin):
                 if does_exist:
                     return Response('Bot Command `{prefix}{custom_command}` can not be overwriten by a Custom Command!'.format(prefix=self.bot.config.prefix, custom_command=possible_command_name.lower()), reply=True, delete_after=15)
 
-                possible_command_response = message.content[len(self.bot.config.prefix + 'custom add {} '.format(leftover_args[0])):].strip()
+                possible_command_response = message.content[len(self.bot.config.prefix + 'custom {} {} '.format(modifier, leftover_args[0])):].strip()
 
                 if not self.commands_db.table('server_{}'.format(server.id)).tableExists():
                     initiation_glob = dbt_custom_commands_server_instance()
@@ -100,10 +100,10 @@ class CustomCommands(PBPlugin):
             else:
                 return Response(permissions_error=True)
 
-        elif modifier == 'edit':
+        elif modifier == 'edit' or modifier == 'update':
             if auth_perms >= 35:
                 possible_command_name = leftover_args[0].strip()
-                possible_command_response = message.content[len(self.bot.config.prefix + 'custom edit {} '.format(leftover_args[0])):].strip()
+                possible_command_response = message.content[len(self.bot.config.prefix + 'custom {} {} '.format(modifier, leftover_args[0])):].strip()
 
                 if not self.commands_db.table('server_{}'.format(server.id)).tableExists():
                     return Response('{} does not have Custom Commands enabled.  Use `{}custom add {} (content)` to create this command'.format(server.name, self.bot.config.prefix, possible_command_name.lower()), reply=True, delete_after=30)
@@ -127,7 +127,7 @@ class CustomCommands(PBPlugin):
             else:
                 return Response(permissions_error=True)
 
-        elif modifier == 'remove':
+        elif modifier == 'remove' or modifier == 'delete':
             if auth_perms >= 35:
                 possible_command_name = leftover_args[0].strip()
 
