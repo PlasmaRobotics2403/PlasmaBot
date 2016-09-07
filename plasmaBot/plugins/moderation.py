@@ -76,9 +76,9 @@ class Moderation(PBPlugin):
                 self.moderation_db.table('s_preferences').update("PRESERVE_OVERRIDES").setTo('true').where("SERVER_ID").equals(server.id).execute()
 
             if not (SOFT_MUTE == 'true' or SOFT_MUTE == 'false'):
-                self.moderation_db.table('s_preferences').update("SOFT_MUTE").setTo('true').where("SERVER_ID").equals(server.id).execute()
+                self.moderation_db.table('s_preferences').update("SOFT_MUTE").setTo('false').where("SERVER_ID").equals(server.id).execute()
         else:
-            self.moderation_db.table('s_preferences').insert(server.id, "true", "true").into("SERVER_ID", "PRESERVE_OVERRIDES", "SOFT_MUTE")
+            self.moderation_db.table('s_preferences').insert(server.id, "true", "false").into("SERVER_ID", "PRESERVE_OVERRIDES", "SOFT_MUTE")
 
         #Handle Keys
 
@@ -112,7 +112,7 @@ class Moderation(PBPlugin):
                 SOFT_MUTE = None
 
             if SOFT_MUTE == None:
-                SOFT_MUTE = 'true'
+                SOFT_MUTE = 'false'
             else:
                 self.moderation_db.table('s_preferences').update("SOFT_MUTE").setTo(SOFT_MUTE).where("SERVER_ID").equals(server.id).execute()
 
@@ -147,9 +147,9 @@ class Moderation(PBPlugin):
                 self.moderation_db.table('s_preferences').update("PRESERVE_OVERRIDES").setTo('true').where("SERVER_ID").equals(server.id).execute()
 
             if not (SOFT_MUTE == 'true' or SOFT_MUTE == 'false'):
-                self.moderation_db.table('s_preferences').update("SOFT_MUTE").setTo('true').where("SERVER_ID").equals(server.id).execute()
+                self.moderation_db.table('s_preferences').update("SOFT_MUTE").setTo('false').where("SERVER_ID").equals(server.id).execute()
         else:
-            self.moderation_db.table('s_preferences').insert(server.id, "true", "true").into("SERVER_ID", "PRESERVE_OVERRIDES", "SOFT_MUTE")
+            self.moderation_db.table('s_preferences').insert(server.id, "true", "false").into("SERVER_ID", "PRESERVE_OVERRIDES", "SOFT_MUTE")
 
         #Pull Key
 
@@ -172,7 +172,7 @@ class Moderation(PBPlugin):
             elif SOFT_MUTE == 'false':
                 SOFT_MUTE = False
             else:
-                SOFT_MUTE = True
+                SOFT_MUTE = False
 
             return SOFT_MUTE
 
@@ -190,6 +190,12 @@ class Moderation(PBPlugin):
         permissions = server.get_channel(server.id).permissions_for(self_member)
         manage_roles = permissions.manage_roles
 
+        m_overwrite = discord.PermissionOverwrite()
+        m_overwrite.send_messages = False
+        d_overwrite = discord.PermissionOverwrite()
+        d_overwrite.send_messages = False
+        d_overwrite.read_messages = False
+
         if not manage_roles:
             return [None, None]
         else:
@@ -198,6 +204,7 @@ class Moderation(PBPlugin):
 
             server_role_entry = self.moderation_db.table('s_roles').select("ROLE_MUTE", "ROLE_DEAFEN").where("SERVER_ID").equals(server.id).execute()
 
+            everyone_permissions = None
             role_mute = 'DNE'
             role_deafen = 'DNE'
             role_return = [None, None, manage_roles]
@@ -208,6 +215,9 @@ class Moderation(PBPlugin):
 
             if role_mute and role_deafen:
                 for role in server.roles:
+                    if role.position == 0:
+                        everyone_permissions = role.permissions
+
                     if role.id == role_mute:
                         role_return[0] = role
 
@@ -224,20 +234,31 @@ class Moderation(PBPlugin):
                 assign_db = False
 
             if role_return[0] == None:
+                mute_perms = everyone_permissions
+                mute_perms.send_messages = False
 
-                role_return[0] = await self.bot.create_role(server, name='PB-Muted', mentionable=False)
+                role_return[0] = await self.bot.create_role(server, name='PB-Muted', mentionable=False, permissions=mute_perms)
                 await self.bot.move_role(server, role_return[0], role_position)
 
                 if not assign_db:
                     self.moderation_db.table('s_roles').update("ROLE_MUTE").setTo(role_return[0].id).where("SERVER_ID").equals(server.id).execute()
 
-            if role_return[1] == None:
+                for channel in server.channels:
+                    await self.bot.edit_channel_permissions(channel, role_return[0], overwrite=m_overwrite)
 
-                role_return[1] = await self.bot.create_role(server, name='PB-Deafened', mentionable=False)
+            if role_return[1] == None:
+                deafen_perms = everyone_permissions
+                deafen_perms.send_messages = False
+                deafen_perms.read_messages = False
+
+                role_return[1] = await self.bot.create_role(server, name='PB-Deafened', mentionable=False, permissions=deafen_perms)
                 await self.bot.move_role(server, role_return[1], role_position)
 
                 if not assign_db:
                     self.moderation_db.table('s_roles').update("ROLE_DEAFEN").setTo(role_return[1].id).where("SERVER_ID").equals(server.id).execute()
+
+                for channel in server.channels:
+                    await self.bot.edit_channel_permissions(channel, role_return[1], overwrite=d_overwrite)
 
             if assign_db:
                 self.moderation_db.table('s_roles').insert(server.id, role_return[0].id, role_return[1].id).into("SERVER_ID", "ROLE_MUTE", "ROLE_DEAFEN")
