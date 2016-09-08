@@ -153,6 +153,7 @@ class CustomCommands(PBPlugin):
 
                 if len(custom_commands_list) == 1:
                     self.commands_db_cursor.execute('DROP TABLE IF EXISTS server_{}'.format(server.id))
+                    self.commands_db_connection.commit()
                     return Response('Custom Command `{prefix}{command}` has been removed and Custom Commands have been disabled.'.format(prefix=self.bot.config.prefix, command=possible_command_name), reply=True, delete_after=30)
 
                 else:
