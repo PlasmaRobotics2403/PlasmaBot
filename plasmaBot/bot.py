@@ -76,7 +76,11 @@ class PlasmaBot(discord.Client):
 
     def run(self):
         try:
-            self.loop.run_until_complete(self.start(*self.config.auth))
+
+            if self.config.auth_mode == 'user':
+                self.loop.run_until_complete(self.start(*self.config.auth))
+            elif self.config.auth_mode == 'bot':
+                self.loop.run_until_complete(self.start(*self.config.auth, bot=True))
         except discord.errors.LoginFailure:
 
             raise exceptions.HelpfulError(

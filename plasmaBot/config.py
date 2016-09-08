@@ -119,6 +119,8 @@ class Config:
 
             self.auth = [self.__email, self.__password]
 
+            self.auth_mode = 'user'
+
         elif not self.__token:
             raise HelpfulError(
                 "No login credentials were specified in the config.",
@@ -130,6 +132,8 @@ class Config:
 
         else:
             self.auth = [self.__token]
+
+            self.auth_mode = 'bot'
 
         if self.owner_id and self.owner_id.isdigit():
             if int(self.owner_id) < 10000:
