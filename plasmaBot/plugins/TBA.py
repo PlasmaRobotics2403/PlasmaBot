@@ -57,14 +57,14 @@ class TBAPlugin(PBPlugin):
                 try:
                     num = int(param)
                 except:
-                    return Response('Not a valid team number. `' + self.bot.config.prefix + 'tba team [Number]`', reply=False, delete_after=30)
+                    no_response += '\n\nInvalid Team Number Supplied```'
+                    return Response(no_response, reply=False, delete_after=45)
                 key = "frc" + str(num)
             try:
                 team = self.TBA.get_team(key)
             except:
-                return Response('Something went wrong when looking up the team.', reply=False, delete_after=30)
-            if team.nickname == None:
-                return Response('Team does not exist.', reply=False, delete_after=30)
+                no_response += '\n\nTeam doesn\'t exist or an error occured.```'
+                return Response(no_response, reply=False, delete_after=45)
             team_data = "Team " + str(team.team_number) + ": " + team.nickname + "\nFrom: " + team.location
             if team.website != None:
                 team_data += "\nWebsite: " + team.website
@@ -91,7 +91,8 @@ class TBAPlugin(PBPlugin):
                 try:
                     year = int(year_str)
                 except:
-                    return Response('Year must be an integer.', reply=False, delete_after=30)
+                    no_response += '\n\nYear must be an integer.```'
+                    return Response(no_response, reply=False, delete_after=45)
 
                 key = self.TBA.calc_event_key(year, param)
 
@@ -130,7 +131,7 @@ class TBAPlugin(PBPlugin):
                 try:
                     team_awards = self.TBA.get_team_history_awards(team_key)
                 except:
-                    return Respose('Something went wrong in collecting Team Awards')
+                    return Response('Something went wrong in collecting Team Awards')
 
                 awards_msg_content = '**Team Awards for Team {}'.format(team_number)
 
