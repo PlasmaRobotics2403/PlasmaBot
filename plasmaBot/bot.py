@@ -206,13 +206,19 @@ class PlasmaBot(discord.Client):
             self.game = discord.Game(name=self.config.bot_game_compiled, url='https://www.twitch.tv/discordapp', type=1)
             await self.change_status(self.game)
 
+        if self.config.raw_log_channel and not self.config.log_channel:
+            self.config.log_channel = self.get_channel(self.config.raw_log_channel)
+            if self.config.log_channel:
+                print('[PB][LOGGING] Found Connection to Log Channel {}'.format(self.config.raw_log_channel))
+                await self.safe_send_message(self.config.log_channel, "_{} has been initiated.  Starting Traceback Logging..._".format(self.config.bot_name))
+
         enabled_plugins = await self.get_plugins(server)
         for plugin in enabled_plugins:
             self.loop.create_task(plugin.on_server_join(server))
 
     async def on_server_remove(self, server):
         if self.config.debug:
-            print('[PB][SERVER] Left {} ({})'.format(
+            print('[PB][SERVER] Left {} (Owner: {})'.format(
                 server.name,
                 server.owner.name
             ))
@@ -221,6 +227,11 @@ class PlasmaBot(discord.Client):
             self.config.bot_game_compiled = self.config.bot_game.replace('{server_count}', str(len(self.servers)))
             self.game = discord.Game(name=self.config.bot_game_compiled, url='https://www.twitch.tv/discordapp', type=1)
             await self.change_status(self.game)
+
+        if self.config.log_channel:
+            self.config.log_channel = self.get_channel(self.config.raw_log_channel)
+            if not self.config.log_channel:
+                print('[PB][LOGGING] Connection to Log Channel {} has been destroyed.  Reconnect to Log Channel to resume Logging'.format(self.config.raw_log_channel))
 
         enabled_plugins = await self.get_plugins(server)
         for plugin in enabled_plugins:

@@ -6,6 +6,7 @@ import sys
 import time
 import traceback
 import subprocess
+import importlib
 
 class ShutdownBus():
     def __init__(self):
@@ -171,12 +172,14 @@ def main():
     loops = 0
     max_wait_time = 60
 
+    import plasmaBot
+
     while tryagain:
 
         try:
-            from plasmaBot import PlasmaBot
+            importlib.reload(plasmaBot)
 
-            m = PlasmaBot(sstate)
+            m = plasmaBot.PlasmaBot(sstate)
             print("[PB] Connecting to Discord...", end='', flush=True)
             m.run()
 
@@ -221,6 +224,9 @@ def main():
                         print("\n[PB] Restarting...\n\nThanks for using PlasmaBot!\n")
                         loops = -1
                         sstate.reset()
+
+                        if m:
+                            del m
                     else:
                         print("\n[PB] Shutting Down...\n\nThanks for using PlasmaBot!\n--------------------------------------------------------")
                         break
