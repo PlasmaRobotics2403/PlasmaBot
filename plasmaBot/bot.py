@@ -141,7 +141,7 @@ class PlasmaBot(discord.Client):
 
         if len(self.servers) == 0:
             if self.user.bot:
-                appinfo = await self.application_info()
+                app_info = await self.application_info()
                 join_url = discord.utils.oauth_url(app_info.id) + '&permissions=66321471'
                 print('{bot_name} is not in any servers!\nYou can add {bot_name} to a server at:\n{url}'.format(bot_name=self.config.bot_name, url=join_url))
             else:
@@ -455,11 +455,10 @@ class PlasmaBot(discord.Client):
         for plugin in enabled_plugins:
             self.loop.create_task(plugin.on_member_ban(member))
 
-    async def on_member_unban(self, server, user):
-        server = member.server
+    async def on_member_unban(self, server, member):
         enabled_plugins = await self.get_plugins(server)
         for plugin in enabled_plugins:
-            self.loop.create_task(plugin.on_member_unban(server, user))
+            self.loop.create_task(plugin.on_member_unban(server, member))
 
     async def on_typing(self, channel, user, when):
         if channel.is_private:
