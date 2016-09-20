@@ -107,7 +107,7 @@ class PlasmaBot(discord.Client):
             pass
 
     def get_display_name(self, user_object):
-        if user_object.nick:
+        if hasattr(user_object, "nick"):
             return user_object.nick
         else:
             return user_object.name
@@ -338,10 +338,20 @@ class PlasmaBot(discord.Client):
             if auth_perms >= 100 and (glob_cmd == 'restart' or glob_cmd == 'shutdown'):
                 if glob_cmd == 'shutdown':
                     await self.safe_send_message(message.channel, ':skull_crossbones: {} is shutting down'.format(self.config.bot_name))
+
+                    if self.config.log_channel:
+                        if message.channel != self.config.log_channel:
+                            await self.safe_send_message(self.config.log_channel, ':skull_crossbones: {} is shutting down (Request sent from {} by {})'.format(self.config.bot_name, message.server.name, message.author.name))
+
                     self.shutdown_state.bot_shutdown()
                     self.shutdown()
                 else:
                     await self.safe_send_message(message.channel, ':curly_loop: {} is restarting'.format(self.config.bot_name))
+
+                    if self.config.log_channel:
+                        if message.channel != self.config.log_channel:
+                            await self.safe_send_message(self.config.log_channel, ':curly_loop: {} is restarting (Request sent from {} by {})'.format(self.config.bot_name, message.server.name, message.author.name))
+
                     self.shutdown_state.bot_restart()
                     self.shutdown()
                 message_is_command = False
