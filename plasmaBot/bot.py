@@ -151,8 +151,14 @@ class PlasmaBot(discord.Client):
             [print(" - " + server.name + " (" + server.id + ")") for server in self.servers]
             print()
         else:
-            print("Currently on {} servers".format(len(self.servers)))
+            print("Currently on {} servers\n".format(len(self.servers)))
 
+        if self.config.raw_log_channel:
+            self.config.log_channel = self.get_channel(self.config.raw_log_channel)
+            if self.config.log_channel:
+                await self.safe_send_message(self.config.log_channel, "_{} has been initiated.  Starting Traceback Logging..._".format(self.config.bot_name))
+            else:
+                print('[PB][LOGGING] Log Channel {} does not exist or {} is not able to access it.'.format(self.config.raw_log_channel, self.config.bot_name))
 
         if '{server_count}' in self.config.bot_game:
             self.config.bot_game_compiled = self.config.bot_game.replace('{server_count}', str(len(self.servers)))
