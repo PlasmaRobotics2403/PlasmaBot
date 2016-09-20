@@ -72,6 +72,15 @@ class Config:
         self.prefix = config.get('BotConfiguration', 'CommandPrefix', fallback=ConfigDefaults.prefix)
         self.delete_messages = config.getboolean('BotConfiguration', 'DeleteMessages', fallback=ConfigDefaults.delete_messages)
         self.delete_invoking = config.getboolean('BotConfiguration', 'DeleteInvoking', fallback=ConfigDefaults.delete_invoking)
+        self.traceback_redirect = config.getboolean('BotConfiguration', 'TracebackRedirect', fallback=ConfigDefaults.traceback_redirect)
+
+        if self.traceback_redirect:
+            self.raw_log_channel = config.get('BotConfiguration', 'LogChannel', fallback=None)
+        else:
+            self.raw_log_channel = None
+
+        self.log_channel = None
+
         self.allow_invites = config.getboolean('BotConfiguration', 'AllowInvites', fallback=ConfigDefaults.allow_invites)
 
 
@@ -170,6 +179,7 @@ class ConfigDefaults:
     prefix = '>'
     delete_messages = True
     delete_invoking = False
+    traceback_redirect = False
     allow_invites = True
 
     plugin_db = 'data/plugins'
