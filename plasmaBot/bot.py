@@ -107,7 +107,7 @@ class PlasmaBot(discord.Client):
             pass
 
     def get_display_name(self, user_object):
-        if user_object.nick:
+        if hasattr(user_object, "nick"):
             return user_object.nick
         else:
             return user_object.name
@@ -151,8 +151,14 @@ class PlasmaBot(discord.Client):
             [print(" - " + server.name + " (" + server.id + ")") for server in self.servers]
             print()
         else:
-            print("Currently on {} servers".format(len(self.servers)))
+            print("Currently on {} servers\n".format(len(self.servers)))
 
+        if self.config.raw_log_channel:
+            self.config.log_channel = self.get_channel(self.config.raw_log_channel)
+            if self.config.log_channel:
+                await self.safe_send_message(self.config.log_channel, "_{} has been initiated.  Starting Traceback Logging..._".format(self.config.bot_name))
+            else:
+                print('[PB][LOGGING] Log Channel {} does not exist or {} is not able to access it.'.format(self.config.raw_log_channel, self.config.bot_name))
 
         if '{server_count}' in self.config.bot_game:
             self.config.bot_game_compiled = self.config.bot_game.replace('{server_count}', str(len(self.servers)))
@@ -200,13 +206,19 @@ class PlasmaBot(discord.Client):
             self.game = discord.Game(name=self.config.bot_game_compiled, url='https://www.twitch.tv/discordapp', type=1)
             await self.change_status(self.game)
 
+        if self.config.raw_log_channel and not self.config.log_channel:
+            self.config.log_channel = self.get_channel(self.config.raw_log_channel)
+            if self.config.log_channel:
+                print('[PB][LOGGING] Found Connection to Log Channel {}'.format(self.config.raw_log_channel))
+                await self.safe_send_message(self.config.log_channel, "_{} has been initiated.  Starting Traceback Logging..._".format(self.config.bot_name))
+
         enabled_plugins = await self.get_plugins(server)
         for plugin in enabled_plugins:
             self.loop.create_task(plugin.on_server_join(server))
 
     async def on_server_remove(self, server):
         if self.config.debug:
-            print('[PB][SERVER] Left {} ({})'.format(
+            print('[PB][SERVER] Left {} (Owner: {})'.format(
                 server.name,
                 server.owner.name
             ))
@@ -215,6 +227,11 @@ class PlasmaBot(discord.Client):
             self.config.bot_game_compiled = self.config.bot_game.replace('{server_count}', str(len(self.servers)))
             self.game = discord.Game(name=self.config.bot_game_compiled, url='https://www.twitch.tv/discordapp', type=1)
             await self.change_status(self.game)
+
+        if self.config.log_channel:
+            self.config.log_channel = self.get_channel(self.config.raw_log_channel)
+            if not self.config.log_channel:
+                print('[PB][LOGGING] Connection to Log Channel {} has been destroyed.  Reconnect to Log Channel to resume Logging'.format(self.config.raw_log_channel))
 
         enabled_plugins = await self.get_plugins(server)
         for plugin in enabled_plugins:
@@ -321,10 +338,20 @@ class PlasmaBot(discord.Client):
             if auth_perms >= 100 and (glob_cmd == 'restart' or glob_cmd == 'shutdown'):
                 if glob_cmd == 'shutdown':
                     await self.safe_send_message(message.channel, ':skull_crossbones: {} is shutting down'.format(self.config.bot_name))
+
+                    if self.config.log_channel:
+                        if message.channel != self.config.log_channel:
+                            await self.safe_send_message(self.config.log_channel, ':skull_crossbones: {} is shutting down (Request sent from {} by {})'.format(self.config.bot_name, message.server.name, message.author.name))
+
                     self.shutdown_state.bot_shutdown()
                     self.shutdown()
                 else:
                     await self.safe_send_message(message.channel, ':curly_loop: {} is restarting'.format(self.config.bot_name))
+
+                    if self.config.log_channel:
+                        if message.channel != self.config.log_channel:
+                            await self.safe_send_message(self.config.log_channel, ':curly_loop: {} is restarting (Request sent from {} by {})'.format(self.config.bot_name, message.server.name, message.author.name))
+
                     self.shutdown_state.bot_restart()
                     self.shutdown()
                 message_is_command = False

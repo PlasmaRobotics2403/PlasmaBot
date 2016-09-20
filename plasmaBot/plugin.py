@@ -432,6 +432,24 @@ class PBPlugin(object, metaclass=PBPluginMeta):
                     expirein = e.expire_in if self.bot.config.delete_messages else None
                     alsodelete = message if self.bot.config.delete_invoking else None
 
+                    if self.bot.config.log_channel:
+                        if self.bot.config.log_channel != message.channel:
+
+                            if hasattr(message.author, "nick"):
+                                author_string = message.author.name + " (" + message.author.nick + ")"
+                            else:
+                                author_string = message.author.name
+
+                            if message.server:
+                                server_string = message.server.name + "\n_Channel:_ " + message.channel.name
+                            else:
+                                server_string = 'Direct Message'
+
+                            await self.bot.safe_send_message(
+                                self.bot.config.log_channel,
+                                '**Traceback Report:**\n_User:_ {}\n_Server:_ {}\n_Message Content:_ `{}`\n_Traceback:_```\n{}\n```'.format(author_string, server_string, message.content, e.message),
+                            )
+
                     await self.bot.safe_send_message(
                         message.channel,
                         '```\n%s\n```' % e.message,
@@ -445,7 +463,29 @@ class PBPlugin(object, metaclass=PBPluginMeta):
                 except Exception:
                     traceback.print_exc()
                     if self.bot.config.debug:
-                        await self.bot.safe_send_message(message.channel, '```\n%s\n```' % traceback.format_exc())
+
+                        expirein = None
+
+                        if self.bot.config.log_channel:
+                            if self.bot.config.log_channel != message.channel:
+                                expirein = 30 if self.bot.config.delete_messages else None
+
+                                if hasattr(message.author, "nick"):
+                                    author_string = message.author.name + " (" + message.author.nick + ")"
+                                else:
+                                    author_string = message.author.name
+
+                                if message.server:
+                                    server_string = message.server.name + "\n_Channel:_ " + message.channel.name
+                                else:
+                                    server_string = 'Direct Message'
+
+                                await self.bot.safe_send_message(
+                                    self.bot.config.log_channel,
+                                    '**Traceback Report:**\n_User:_ {}\n_Server:_ {}\n_Message Content:_ `{}`\n_Traceback:_```\n{}\n```'.format(author_string, server_string, message.content, traceback.format_exc()),
+                                )
+
+                        await self.bot.safe_send_message(message.channel, '```\n%s\n```' % traceback.format_exc(), expire_in=expirein)
 
     async def on_ready(self):
         pass
