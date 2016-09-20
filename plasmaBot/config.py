@@ -91,6 +91,11 @@ class Config:
 
         self.bot_game_compiled = self.bot_game
 
+        self.bot_stream = config.get('BotConfiguration', 'BotStream', fallback=ConfigDefaults.bot_stream)
+
+        if self.bot_stream == "no":
+            self.bot_stream = None
+
         # negative values on boolean config options will override server-values.
 
         self.plugin_db = config.get('Files', 'PluginDB', fallback=ConfigDefaults.plugin_db)
@@ -176,6 +181,7 @@ class ConfigDefaults:
 
     bot_name = 'PlasmaBot'
     bot_game = '{prefix}help | {server_count} servers'
+    bot_stream = 'https://www.twitch.tv/discordapp'
     prefix = '>'
     delete_messages = True
     delete_invoking = False

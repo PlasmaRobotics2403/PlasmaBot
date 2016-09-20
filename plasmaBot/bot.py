@@ -163,7 +163,10 @@ class PlasmaBot(discord.Client):
         if '{server_count}' in self.config.bot_game:
             self.config.bot_game_compiled = self.config.bot_game.replace('{server_count}', str(len(self.servers)))
 
-        self.game = discord.Game(name=self.config.bot_game_compiled, url='https://www.twitch.tv/discordapp', type=1)
+        if self.config.bot_stream:
+            self.game = discord.Game(name=self.config.bot_game_compiled, url=self.config.bot_stream, type=1)
+        else:
+            self.game = discord.Game(name=self.config.bot_game_compiled)
         await self.change_status(self.game)
 
         enabled_plugins = await self.get_plugins()
@@ -203,7 +206,12 @@ class PlasmaBot(discord.Client):
 
         if '{server_count}' in self.config.bot_game:
             self.config.bot_game_compiled = self.config.bot_game.replace('{server_count}', str(len(self.servers)))
-            self.game = discord.Game(name=self.config.bot_game_compiled, url='https://www.twitch.tv/discordapp', type=1)
+
+            if self.config.bot_stream:
+                self.game = discord.Game(name=self.config.bot_game_compiled, url=self.config.bot_stream, type=1)
+            else:
+                self.game = discord.Game(name=self.config.bot_game_compiled)
+
             await self.change_status(self.game)
 
         if self.config.raw_log_channel and not self.config.log_channel:
@@ -225,7 +233,12 @@ class PlasmaBot(discord.Client):
 
         if '{server_count}' in self.config.bot_game:
             self.config.bot_game_compiled = self.config.bot_game.replace('{server_count}', str(len(self.servers)))
-            self.game = discord.Game(name=self.config.bot_game_compiled, url='https://www.twitch.tv/discordapp', type=1)
+
+            if self.config.bot_stream:
+                self.game = discord.Game(name=self.config.bot_game_compiled, url=self.config.bot_stream, type=1)
+            else:
+                self.game = discord.Game(name=self.config.bot_game_compiled)
+
             await self.change_status(self.game)
 
         if self.config.log_channel:
