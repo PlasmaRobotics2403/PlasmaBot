@@ -166,49 +166,52 @@ class CustomCommands(PBPlugin):
             return Response(send_help=True, help_message='Unrecognized Modifier \'{}\''.format(modifier))
 
     async def on_message(self, message, message_type, message_context):
-        if message.server and message.content.strip().startswith(self.bot.config.prefix):
-            command, *args = message.content.strip().split()
-            command = command[len(self.bot.config.prefix):].lower().strip()
+        if not message.author.bot:
+            if message.server and message.content.strip().startswith(self.bot.config.prefix):
+                command, *args = message.content.strip().split()
+                command = command[len(self.bot.config.prefix):].lower().strip()
 
-            if self.commands_db.table('server_{}'.format(message.server.id)).tableExists():
-                custom_commands_return = self.commands_db.table('server_{}'.format(message.server.id)).select("RESPONSE").where("COMMAND_KEY").equals(command).execute()
+                if self.commands_db.table('server_{}'.format(message.server.id)).tableExists():
+                    custom_commands_return = self.commands_db.table('server_{}'.format(message.server.id)).select("RESPONSE").where("COMMAND_KEY").equals(command).execute()
 
-                custom_does_exist = False
-                custom_message = ''
+                    custom_does_exist = False
+                    custom_message = ''
 
-                for custom_command in custom_commands_return:
-                    custom_does_exist = True
-                    custom_message = custom_command[0]
+                    for custom_command in custom_commands_return:
+                        custom_does_exist = True
+                        custom_message = custom_command[0]
 
-                if custom_does_exist:
-                    try:
-                        response = custom_message.format(args=args)
-                    except IndexError:
-                        if '{args[9]}' in custom_message:
-                            arg_num = '10'
-                        elif '{args[8]}' in custom_message:
-                            arg_num = '9'
-                        elif '{args[7]}' in custom_message:
-                            arg_num = '8'
-                        elif '{args[6]}' in custom_message:
-                            arg_num = '7'
-                        elif '{args[5]}' in custom_message:
-                            arg_num = '6'
-                        elif '{args[4]}' in custom_message:
-                            arg_num = '5'
-                        elif '{args[3]}' in custom_message:
-                            arg_num = '4'
-                        elif '{args[2]}' in custom_message:
-                            arg_num = '3'
-                        elif '{args[1]}' in custom_message:
-                            arg_num = '2'
-                        elif '{args[0]}' in custom_message:
-                            arg_num = '1'
-                        else:
-                            arg_num = '11+'
-                        response = '{} extra arguments required for Custom Command `{}{}`'.format(arg_num, self.bot.config.prefix, command)
-                    await self.bot.safe_send_message(message.channel, response, expire_in=30)
-                else:
-                    pass
+                    if custom_does_exist:
+                        try:
+                            response = custom_message.format(args=args)
+                        except IndexError:
+                            if '{args[9]}' in custom_message:
+                                arg_num = '10'
+                            elif '{args[8]}' in custom_message:
+                                arg_num = '9'
+                            elif '{args[7]}' in custom_message:
+                                arg_num = '8'
+                            elif '{args[6]}' in custom_message:
+                                arg_num = '7'
+                            elif '{args[5]}' in custom_message:
+                                arg_num = '6'
+                            elif '{args[4]}' in custom_message:
+                                arg_num = '5'
+                            elif '{args[3]}' in custom_message:
+                                arg_num = '4'
+                            elif '{args[2]}' in custom_message:
+                                arg_num = '3'
+                            elif '{args[1]}' in custom_message:
+                                arg_num = '2'
+                            elif '{args[0]}' in custom_message:
+                                arg_num = '1'
+                            else:
+                                arg_num = '11+'
+                            response = '{} extra arguments required for Custom Command `{}{}`'.format(arg_num, self.bot.config.prefix, command)
+                        await self.bot.safe_send_message(message.channel, response, expire_in=30)
+                    else:
+                        pass
+            else:
+                pass #Channel is a DM, where Custom Commands are not supported / Enabled.  Either that or the message just doesn't start with the command prefix
         else:
-            pass #Channel is a DM, where Custom Commands are not supported / Enabled.  Either that or the message just doesn't start with the command prefix
+            pass #Custom Commands will not respond to bot users because of potential for automated custom-command spam sequences.
