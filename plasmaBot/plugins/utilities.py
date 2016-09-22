@@ -173,6 +173,9 @@ class Utilities(PBPlugin):
 
         Set your global state as AFK with a message!
         """
+        if author == self.bot.user:
+            return
+            
         afk_message = message.content[len(self.bot.config.prefix + 'afk '):].strip()
         afk_message = afk_message.replace('\n', ' ')
 
@@ -248,41 +251,42 @@ class Utilities(PBPlugin):
                 author_afk = author[0]
 
             if author_afk == 'True':
-                if not message.content.startswith(self.bot.config.prefix + 'afk') and not message.content.startswith(self.bot.config.prefix + 'sudo'):
+                if not message.content.lower().startswith(self.bot.config.prefix + 'afk') and not message.content.lower().startswith(self.bot.config.prefix + 'sudo') and not message.content.lower().startswith(self.bot.config.prefix + 'say'):
                     self.utilities_db.table('afk').update("AFK_STATE").setTo('False').where("USER_ID").equals(message.author.id).execute()
                     await self.bot.safe_send_message(message.channel, ':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} is no longer AFK :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(self.bot.get_display_name(message.author)), expire_in=60)
 
-            afk_users = []
+            if not message.author.bot and not message.content.lower().startswith(self.bot.config.prefix + 'sudo') and not message.content.lower().startswith(self.bot.config.prefix + 'say') and not message.content.lower().startswith(self.bot.config.prefix + 'afk'):
+                afk_users = []
 
-            for user in user_mentions:
-                if not user.id == message.author.id:
-                    user_afk_content = self.utilities_db.table('afk').select("AFK_STATE").where("USER_ID").equals(user.id).execute()
+                for user in user_mentions:
+                    if not user.id == message.author.id:
+                        user_afk_content = self.utilities_db.table('afk').select("AFK_STATE").where("USER_ID").equals(user.id).execute()
 
-                    user_afk = None
+                        user_afk = None
 
-                    for user_info in user_afk_content:
-                        user_afk = user_info[0]
+                        for user_info in user_afk_content:
+                            user_afk = user_info[0]
 
-                    if user_afk == 'True':
-                        afk_users += [user]
+                        if user_afk == 'True':
+                            afk_users += [user]
 
-            if len(afk_users) >= 1:
-                if len(afk_users) == 1:
-                    afk_message_info = self.utilities_db.table('afk').select("AFK_MESSAGE").where("USER_ID").equals(afk_users[0].id).execute()
-                    afk_message = ''
-                    for user_return in afk_message_info:
-                        afk_message = user_return[0]
-                    response = ':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} is AFK: {} :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(self.bot.get_display_name(afk_users[0]), afk_message)
-                else:
-                    users_response = '{}'.format(afk_users[0].nick)
-                    del afk_users[0]
+                if len(afk_users) >= 1:
+                    if len(afk_users) == 1:
+                        afk_message_info = self.utilities_db.table('afk').select("AFK_MESSAGE").where("USER_ID").equals(afk_users[0].id).execute()
+                        afk_message = ''
+                        for user_return in afk_message_info:
+                            afk_message = user_return[0]
+                        response = ':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} is AFK: {} :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(self.bot.get_display_name(afk_users[0]), afk_message)
+                    else:
+                        users_response = '{}'.format(afk_users[0].nick)
+                        del afk_users[0]
 
-                    for afk_user in afk_users:
-                        users_response += ' & ' + self.bot.get_display_name(afk_user)
+                        for afk_user in afk_users:
+                            users_response += ' & ' + self.bot.get_display_name(afk_user)
 
-                    response = ':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} are AFK :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(users_response)
+                        response = ':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} are AFK :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(users_response)
 
-                await self.bot.safe_send_message(message.channel, response, expire_in=60)
+                    await self.bot.safe_send_message(message.channel, response, expire_in=60)
 
             else:
                 pass
