@@ -156,7 +156,7 @@ class PlasmaBot(discord.Client):
         if self.config.raw_log_channel:
             self.config.log_channel = self.get_channel(self.config.raw_log_channel)
             if self.config.log_channel:
-                await self.safe_send_message(self.config.log_channel, "_{} has been initiated.  Starting Traceback Logging..._".format(self.config.bot_name))
+                print('[PB][LOGGING] Connected to Log Channel {}'.format(self.config.raw_log_channel))
             else:
                 print('[PB][LOGGING] Log Channel {} does not exist or {} is not able to access it.'.format(self.config.raw_log_channel, self.config.bot_name))
 
