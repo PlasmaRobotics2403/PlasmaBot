@@ -62,10 +62,6 @@ class Moderation(PBPlugin):
             PRESERVE_OVERRIDES = server_instance[1]
             SOFT_MUTE = server_instance[2]
 
-            print(SERVER_ID)
-            print(PRESERVE_OVERRIDES)
-            print(SOFT_MUTE)
-
         try:
             server_id = int(SERVER_ID)
         except:
