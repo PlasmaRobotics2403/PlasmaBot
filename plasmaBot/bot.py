@@ -107,7 +107,7 @@ class PlasmaBot(discord.Client):
             pass
 
     def get_display_name(self, user_object):
-        if hasattr(user_object, "nick"):
+        if user_object.nick:
             return user_object.nick
         else:
             return user_object.name
