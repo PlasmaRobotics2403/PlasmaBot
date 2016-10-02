@@ -175,7 +175,7 @@ class Utilities(PBPlugin):
         """
         if author == self.bot.user:
             return
-            
+
         afk_message = message.content[len(self.bot.config.prefix + 'afk '):].strip()
         afk_message = afk_message.replace('\n', ' ')
 
@@ -192,7 +192,7 @@ class Utilities(PBPlugin):
         else:
             self.utilities_db.table('afk').insert(author.id, 'True', afk_message).into("USER_ID", "AFK_STATE", "AFK_MESSAGE")
 
-        return Response(':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} is AFK: {} :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(self.bot.get_display_name(author), afk_message), reply=False, delete_after=45)
+        return Response('🔹 🔶 🔹 {} is AFK: {} 🔹 🔶 🔹'.format(self.bot.get_display_name(author), afk_message), reply=False, delete_after=45)
 
 
     async def cmd_8ball(self, leftover_args):
@@ -253,7 +253,7 @@ class Utilities(PBPlugin):
             if author_afk == 'True':
                 if not message.content.lower().startswith(self.bot.config.prefix + 'afk') and not message.content.lower().startswith(self.bot.config.prefix + 'sudo') and not message.content.lower().startswith(self.bot.config.prefix + 'say'):
                     self.utilities_db.table('afk').update("AFK_STATE").setTo('False').where("USER_ID").equals(message.author.id).execute()
-                    await self.bot.safe_send_message(message.channel, ':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} is no longer AFK :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(self.bot.get_display_name(message.author)), expire_in=60)
+                    await self.bot.safe_send_message(message.channel, '🔹 🔶 🔹 {} is no longer AFK 🔹 🔶 🔹'.format(self.bot.get_display_name(message.author)), expire_in=60)
 
             if not message.author.bot and not message.content.lower().startswith(self.bot.config.prefix + 'sudo') and not message.content.lower().startswith(self.bot.config.prefix + 'say') and not message.content.lower().startswith(self.bot.config.prefix + 'afk'):
                 afk_users = []
@@ -276,7 +276,7 @@ class Utilities(PBPlugin):
                         afk_message = ''
                         for user_return in afk_message_info:
                             afk_message = user_return[0]
-                        response = ':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} is AFK: {} :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(self.bot.get_display_name(afk_users[0]), afk_message)
+                        response = '🔹 🔶 🔹 {} is AFK: {} 🔹 🔶 🔹'.format(self.bot.get_display_name(afk_users[0]), afk_message)
                     else:
                         users_response = '{}'.format(afk_users[0].nick)
                         del afk_users[0]
@@ -284,7 +284,7 @@ class Utilities(PBPlugin):
                         for afk_user in afk_users:
                             users_response += ' & ' + self.bot.get_display_name(afk_user)
 
-                        response = ':small_blue_diamond: :large_orange_diamond: :small_blue_diamond: {} are AFK :small_blue_diamond: :large_orange_diamond: :small_blue_diamond:'.format(users_response)
+                        response = '🔹 🔶 🔹 {} are AFK 🔹 🔶 🔹'.format(users_response)
 
                     await self.bot.safe_send_message(message.channel, response, expire_in=60)
 
