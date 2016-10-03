@@ -65,7 +65,7 @@ class TBAPlugin(PBPlugin):
             except:
                 no_response += '\n\nTeam doesn\'t exist or an error occured.```'
                 return Response(no_response, reply=False, delete_after=45)
-            team_data = "Team " + str(team.team_number) + ": " + team.nickname + "\nFrom: " + team.location
+            team_data = "Team " + str(team.team_number) + ": " + str(team.nickname)+ "\nFrom: " + str(team.location)
             if team.website != None:
                 team_data += "\nWebsite: " + team.website
             if team.motto != None:
@@ -102,7 +102,7 @@ class TBAPlugin(PBPlugin):
                     return Response('No events found. Please ensure spelling is correct.', reply=False, delete_after=30)
 
             event = self.TBA.get_event(key)
-            event_data = event.name + "\nYear: " + str(event.year) + "\nLocation: " + event.location + "\nDates: " + event.start_date + " to " + event.end_date + "\nEvent Type: " + event.event_type_string + "\nhttps://www.thebluealliance.com/event/" + event.key
+            event_data = event.name + "\nYear: " + str(event.year) + "\nLocation: " + str(event.location) + "\nDates: " + str(event.start_date) + " to " + str(event.end_date) + "\nEvent Type: " + str(event.event_type_string) + "\nhttps://www.thebluealliance.com/event/" + str(event.key)
             return Response(event_data, reply=False, delete_after=60)
 
         elif cmd_type == 'awards':
@@ -142,7 +142,7 @@ class TBAPlugin(PBPlugin):
 
                 for award in team_awards:
                     if not search_year or search_year == award.year:
-                        award_string = '{}: {} ({})\n'.format(award.year, award.name, award.event_key)
+                        award_string = '{}: {} ({})\n'.format(str(award.year), str(award.name), str(award.event_key))
 
                         tentative_msg = awards_msg_content + award_string
                         if len(tentative_msg) > 2000:
