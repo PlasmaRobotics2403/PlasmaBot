@@ -68,6 +68,12 @@ class Permissions:
             permission_level = 100
             return permission_level
 
+        if user.discriminator == '0000' or user.discriminator == 0000:
+            permission_level = 10
+            return permission_level
+        else:
+            print('nup' + user.discriminator)
+
         if server:
             server_permissions_return = self.perm_db.table('servers').select("OWNER_ID", "ADMINISTRATOR_ROLE_ID", "MODERATOR_ROLE_ID", "HELPER_ROLE_ID", "BLACKLISTED_ROLE_ID").where("SERVER_ID").equals(server.id).execute()
 
