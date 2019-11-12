@@ -1,0 +1,3 @@
+# PlasmaBot - A Multi-Use, Extendable Discord Bot
+
+After two years of forced separation from the development of PlasmaBot, the original developer is back to work on a new version of the bot!  Due to the many changes in both the Discord platform and the API Libraries used in previous versions of the bot, Development is restarting from a blank state and there is currently not much to see.  Check back later to see how development on this completely new version of PlasmaBot is coming along!
