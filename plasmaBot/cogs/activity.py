@@ -11,6 +11,28 @@ class Activity(PlasmaCog):
         self.bot = bot
         super().__init__(bot)
 
+    @chat_command(name='xp', description='View your XP')
+    async def xp(self, ctx):
+        """View your XP"""
+        XP = self.tables.XP
+        current_xp = XP.select().where(XP.user_id == str(ctx.author.id), XP.guild_id == str(ctx.guild.id)).first()
+
+        if current_xp is None:
+            await ctx.send('You have no XP')
+        else:
+            await ctx.send(f'You have {current_xp.current_xp} XP')
+
+    @chat_command(name='activity', description='View your activity')
+    async def activity(self, ctx):
+        """View your activity"""
+        AP = self.tables.AP
+        activity = AP.select().where(AP.user_id == str(ctx.author.id), AP.guild_id == str(ctx.guild.id))
+
+        if len(activity) == 0:
+            await ctx.send('You have no activity')
+        else:
+            await ctx.send(f'You have an activity score of {len(activity)}')
+
     @PlasmaCog.listener()
     async def on_message(self, message):
         """Update XP and Activity"""
