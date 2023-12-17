@@ -1,251 +1,240 @@
-from __future__ import print_function
-
 import os
 import gc
 import sys
 import time
-import traceback
+import signal
 import subprocess
+import traceback
 import importlib
 
-class ShutdownBus():
-    def __init__(self):
-        self.restart = False
-        self.shutdown = False
+from utils.state import BotState, get_state, update_state, FatalException
+from utils.tools import PIP, press_continue
 
-    def bot_shutdown(self):
-        self.restart = False
-        self.shutdown = True
-
-    def bot_restart(self):
-        self.restart = True
-        self.shutdown = True
-
-    def reset(self):
-        self.restart = False
-        self.shutdown = False
-
-class GIT(object):
-    @classmethod
-    def works(cls):
-        try:
-            return bool(subprocess.check_output('git --version', shell=True))
-        except:
-            return False
-
-
-class PIP(object):
-    @classmethod
-    def run(cls, command, check_output=False):
-        if not cls.works():
-            raise RuntimeError("Could not import pip.")
+# PlasmaBot Startup Sequence
+# Performs compatibility checks, initializes terminal interface
+def startup():
+    # Check for Python 3.8+
+    if not sys.version_info >= (3,12): # Not found, search for appropriate install
+        print('Unsupported Python Version!')
+        print('PlasmaBot requires Python 3.12+. Searching for a valid version...')
 
         try:
-            return PIP.run_python_m(*command.split(), check_output=check_output)
-        except subprocess.CalledProcessError as e:
-            return e.returncode
+            from packaging import version # Assists in version checking for 3.10+
         except:
-            traceback.print_exc()
-            print("Error using -m method")
-
-    @classmethod
-    def run_python_m(cls, *args, **kwargs):
-        check_output = kwargs.pop('check_output', False)
-        check = subprocess.check_output if check_output else subprocess.check_call
-        return check([sys.executable, '-m', 'pip'] + list(args))
-
-    @classmethod
-    def run_pip_main(cls, *args, **kwargs):
-        import pip
-
-        args = list(args)
-        check_output = kwargs.pop('check_output', False)
-
-        if check_output:
-            from io import StringIO
-
-            out = StringIO()
-            sys.stdout = out
-
+            PIP.run_install('packaging') # Attempt Install
+            time.sleep(5) # Wait for install
             try:
-                pip.main(args)
+                from packaging import version
             except:
-                traceback.print_exc()
-            finally:
-                sys.stdout = sys.__stdout__
+                print('\nNo Supported Version Located...')
+                print('Please restart PlasmaBot using Python3.12 or greater.')
 
-                out.seek(0)
-                pipdata = out.read()
-                out.close()
+        time.sleep(3) # Wait three seconds to give user time to read warning
 
-                print(pipdata)
-                return pipdata
-        else:
-            return pip.main(args)
-
-    @classmethod
-    def run_install(cls, cmd, quiet=False, check_output=False):
-        return cls.run("install %s%s" % ('-q ' if quiet else '', cmd), check_output)
-
-    @classmethod
-    def run_show(cls, cmd, check_output=False):
-        return cls.run("show %s" % cmd, check_output)
-
-    @classmethod
-    def works(cls):
-        try:
-            import pip
-            return True
-        except ImportError:
-            return False
-
-    @classmethod
-    def get_module_version(cls, mod):
-        try:
-            out = cls.run_show(mod, check_output=True)
-
-            if isinstance(out, bytes):
-                out = out.decode()
-
-            datas = out.replace('\r\n', '\n').split('\n')
-            expectedversion = datas[3]
-
-            if expectedversion.startswith('Version: '):
-                return expectedversion.split()[1]
-            else:
-                return [x.split()[1] for x in datas if x.startswith("Version: ")][0]
-        except:
-            pass
-
-
-def main():
-
-    sstate = ShutdownBus()
-
-    if not sys.version_info >= (3, 5):
-        print("[PB] Python 3.5+ is required. This version is %s" % sys.version.split()[0])
-        print("Attempting to locate python 3.5...")
-
-        pycom = None
-
-
+        # Search for appropriate Python Install
         if sys.platform.startswith('win'):
-            try:
-                subprocess.check_output('py -3.5 -c "exit()"', shell=True)
-                pycom = 'py -3.5'
-            except:
+            potential_operators = [
+                'python',
+                'python3.12', 'python312', 'py -3.12']
+            valid_operator = None
 
+            for operator in potential_operators: # Iterate over potential operators and check if valid
                 try:
-                    subprocess.check_output('python3 -c "exit()"', shell=True)
-                    pycom = 'python3'
+                    operator_version = version.parse(
+                        subprocess.check_output('{} --version'.format(operator), shell=True).strip().decode().split()[1]
+                    )
+                    
+                    if operator_version >= version.parse('3.12.0'):
+                        valid_operator = operator
+                        break
                 except:
                     pass
 
-            if pycom:
-                print("\nPython 3.5 found.  Re-starting PlasmaBot using: ")
-                print("  %s run.py\n" % pycom)
-                os.system('start cmd /k %s run.py' % pycom)
-                sys.exit(0)
+            if valid_operator: # Valid Install Found!
+                print('\nSupported Version Found!')
+                print('Please run PlasmaBot with:"{} run.py"\n\n'.format(valid_operator))
+                print('Press any key to restart PlasmaBot with this version...')
+                press_continue() # Wait for User Input
+                os.system('start cmd /k {0} run.py -m')
+                sys.exit(0) 
 
         else:
+            potential_operators = ['python', 'python3.12']
+
+            for operator in potential_operators: # Iterate over potential operators
+                try:
+                    # Find path of current operator in list
+                    valid_operator = subprocess.check_output('which {}'.format(operator), shell=True).strip().decode()
+
+                    # Check Python Version
+                    operator_version = version.parse(
+                        subprocess.check_output('{} --version'.format(valid_operator), shell=True).strip().decode().split()[1]
+                    )
+
+                    # Disqualify install if version requirements not mets
+                    if not (operator_version >= version.parse('3.8.0')):
+                        valid_operator=None
+
+                    # Valid Install Found!
+                    if valid_operator:
+                        print('\nSupported Version Found!')
+                        print('Please run PlasmaBot with:"{} run.py"\n\n'.format(valid_operator))
+                        print('Press any key to restart PlasmaBot with this version...')
+                        press_continue() # Wait for User Input
+                        os.execlp(valid_operator, valid_operator, 'run.py')
+                except:
+                    pass
+        
+        print('\nNo Supported Version Found...')
+        print('Please restart PlasmaBot using Python3.12 or greater.')
+        return
+
+    # Check for Requirements and load Interface
+    try:
+        from rich.live import Live
+    except ImportError:
+        attempt_install_requirements()
+        from rich.live import Live
+
+    from plasmaBot.interface import terminal, Popup
+
+    # Start Terminal Interface
+    with Live(
+        terminal.renderable, 
+        screen=True, 
+        refresh_per_second=10, 
+        redirect_stdout=True, 
+        redirect_stderr=True
+    ) as live:
+        terminal.store_live_instance(live) # Store live instance for future
+
+        # Import Client
+        import asyncio
+        import plasmaBot
+
+        client = None
+
+        attempt_restart = True
+        error_count = 0
+        max_restart_pause_period = 60
+        last_traceback_type = ''
+        last_traceback_content = ''
+
+        while attempt_restart:
             try:
-                pycom = subprocess.check_output(['which', 'python3.5']).strip().decode()
+                importlib.reload(plasmaBot) # Reload Bot
+                client = plasmaBot.Client() # Load Client
+                client.initiate()           # Start Client
+
+            except (KeyboardInterrupt, SystemExit):
+                if client:
+                    asyncio.create_task(client.shutdown) # Shutdown
+            
+            except (SyntaxError):
+                last_traceback_type = 'Syntax Error'
+                last_traceback_content = traceback.format_exc()
+
+            except ImportError as import_error:
+                terminal.update_renderable(
+                    Popup(
+                        'Please resolve the following missing dependency:\n[red]{}[/red]'.format(import_error)+
+                        '\n\n[italic]Press any key to continue...[/italic]',
+                        title='[red]Missing Dependency[/red]'
+                    )
+                )
+                press_continue() # Wait for user input
+                return
+                
+            except FatalException as err: # Fatal Error - display error and quit
+                terminal.update_renderable(Popup(err.message(), title='[red]{}[/red]'.format(err.title())))
+                press_continue() # Wait for user input
+                return
+            
+            except:
+                last_traceback_type = 'Uncaught Exception'
+                last_traceback_content = traceback.format_exc()
+
+                try:
+                    loop = asyncio.get_event_loop() 
+
+                    # Handle finishing asynchronous tasks and closing asyncio loop if running
+                    if loop.is_running():
+                        scheduled_tasks = []
+
+                        for task in asyncio.all_tasks():
+                            if task is not asyncio.current_task():
+                                scheduled_tasks.append(task)
+                                task.cancel()
+
+                        asyncio.gather(*scheduled_tasks)
+                        asyncio.get_event_loop().stop()
+                except:
+                    terminal.update_renderable(
+                        Popup(
+                            f'[red]{traceback.format_exc()}[/red]',
+                            title='[red]Fatal Error[/red]'
+                        )
+                    )
+                    press_continue() # Wait for user input
+                    return
+
+            # Remove Signal Handlers
+            try:
+                loop = asyncio.get_event_loop()
+                for s in (signal.SIGQUIT, signal.SIGTERM, signal.SIGINT):
+                    loop.remove_signal_handler(s)
             except:
                 pass
 
-            if pycom:
-                print("\nPython 3.5 found.  Re-starting PlasmaBot using: ")
-                print("  %s run.py\n" % pycom)
+            try: # Handle graceful shutdown during restart process
+                state = get_state() # Get current Power State
 
-                os.execlp(pycom, pycom, 'run.py')
+                # Handle Bot Relaunch Behavior based on Power State
+                if state == BotState.RESTART:
+                    os.execv(sys.executable, [__file__] + sys.argv) # Restart Process
+                elif state == BotState.SHUTDOWN:
+                    break # Shutdown
 
-        print("Please run the bot using Python3.5")
-        input("Press ENTER to continue . . .")
+                # Prepare Client for Automatic Relaunch
+                update_state(BotState.OFFLINE)
+                client = None
 
-        return
+                # Launch New Event Loop
+                asyncio.set_event_loop(asyncio.new_event_loop())
 
-    import asyncio
+                # Handle Restart Timer
+                error_count += 1
+                restart_period = min(error_count*2+3, max_restart_pause_period)
 
-    tried_requirementstxt = False
-    tryagain = True
+                if restart_period:
+                    while restart_period > 0:
+                        terminal.update_renderable(
+                            Popup(
+                                '[red]{}[/red]\n\n[italic]Automatically Restarting in {} seconds...[/italic]'.format(
+                                    last_traceback_content, restart_period
+                                ), title=last_traceback_type, justify='left'
+                            )
+                        )
+                        time.sleep(1)
+                        restart_period-=1
 
-    loops = 0
-    max_wait_time = 60
+                # Run Garbage Collector
+                gc.collect()
 
-    import plasmaBot
+            except KeyboardInterrupt: # If Exception in restart code, shutdown
+                return
+    
+def attempt_install_requirements():
+    """Attempt to install library dependencies with PIP"""
+    pip_error = PIP.install_requirements()
 
-    while tryagain:
+    if pip_error:
+        platform_method = ['use "sudo" to run this script', 'run this script as administrator'][sys.platform.startswith('win')]
+        print('Dependencies could not be installed. Please install them manually with "pip install -r requirements.txt" or {} to try again.'.format(platform_method))
+        sys.exit(0)
+    else:
+        print('Successfully installed dependencies!')
 
-        try:
-            importlib.reload(plasmaBot)
-
-            m = plasmaBot.PlasmaBot(sstate)
-            print("[PB] Connecting to Discord...", end='', flush=True)
-            m.run()
-
-        except (KeyboardInterrupt, SystemExit):
-            print("\n[PB] Shutting Down...\n\nThanks for using PlasmaBot!\n--------------------------------------------------------")
-            m.shutdown()
-            break
-
-        except SyntaxError:
-            traceback.print_exc()
-            break
-
-        except ImportError as e:
-            if not tried_requirementstxt:
-                tried_requirementstxt = True
-
-                # TODO: Better output
-                print(e)
-                print("[PB] Attempting to install PlasmaBot dependencies...")
-
-                err = PIP.run_install('--upgrade -r requirements.txt')
-
-                if err:
-                    print("\nYou should %s to install the PlasmaBot dependencies." %
-                          ['use sudo', 'run as admin'][sys.platform.startswith('win')])
-                    break
-                else:
-                    print("\nDependencies Installed\n")
-            else:
-                traceback.print_exc()
-                print("[PB] Unknown ImportError, closing.")
-                break
-
-        except Exception as e:
-            if hasattr(e, '__module__') and e.__module__ == 'plasmaBot.exceptions':
-                if e.__class__.__name__ == 'HelpfulError':
-                    print(e.message)
-                    break
-            else:
-                if (sstate.shutdown is True):
-                    if sstate.restart is True:
-                        print("\n[PB] Restarting...\n\nThanks for using PlasmaBot!\n")
-                        loops = -1
-                        sstate.reset()
-
-                        if m:
-                            del m
-                    else:
-                        print("\n[PB] Shutting Down...\n\nThanks for using PlasmaBot!\n--------------------------------------------------------")
-                        break
-                else:
-                    traceback.print_exc()
-
-        finally:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-            loops += 1
-
-        print("Cleaning up... ", end='')
-        gc.collect()
-        print("Done.")
-
-        sleeptime = min(loops * 2, max_wait_time)
-        if sleeptime:
-            print("Restarting in {} seconds...".format(loops*2))
-            time.sleep(sleeptime)
-
-
+# If `run.py` ran directly, run startup()
 if __name__ == '__main__':
-    main()
+    startup()

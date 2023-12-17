@@ -1,1 +1,0 @@
-This folder is where bot information will be stored (mostly in the form of sql databases)

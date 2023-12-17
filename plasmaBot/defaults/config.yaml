@@ -1,0 +1,23 @@
+# DO NOT OPEN THIS FILE IN NOTEPAD.  OPENING AND SAVING THIS FILE WITH NOTEPAD MAY CAUSE CORRUPTION.
+# PLEASE USE A MORE MODERN CODE-EDITOR.  VISUAL STUDIO CODE AND ATOM.IO ARE FREE, SIMPLE SOLUTIONS.
+
+connection: # Configuration Items that impact the Bot's Connection to Discord
+  token: 'place_token_here' # Bot Token
+  database: # MariaDB Connection Settings
+    host: localhost # Hostname of the MariaDB Server
+    port: 3306 # Port of the MariaDB Server
+    user: root # Username of the MariaDB Server
+    password: pass # Password of the MariaDB Server
+    database: plasmaBot # Database Name of the MariaDB Server
+
+presence: # Configuration Items impacting the look of the bot throughout Discord
+  prefix: '>' # The Global Command Prefix. Change this to prevent interference with other bots.
+
+permissions: # Configuration Items impacting the abilities of certain users
+  developers: # The IDs of Full-Permissioned Bot Owners as integer IDs
+  - 650243354793213981 # Bot Developer
+  - 180094452860321793 # Bot Developer
+
+terminal: # Configuration Items regarding the Client's command line interface
+  prefix: '/' # The prefix for commands sent through the terminal
+  channel: null # Channel ID to which the terminal interface is bound
