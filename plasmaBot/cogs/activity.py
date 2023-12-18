@@ -9,8 +9,7 @@ from discord.ext.tasks import loop
 
 from plasmaBot.cog import PlasmaCog, terminal_command, chat_command
 from plasmaBot.interface import terminal
-import discord
-from discord.ext.commands import guild_only
+from plasmaBot.pagination import Pagination
 
 
 class Activity(PlasmaCog):
@@ -46,7 +45,6 @@ class Activity(PlasmaCog):
 
         await ctx.send(embed=embed)
 
-
     @chat_command(name='activity', description='View your activity')
     @guild_only()
     async def activity(self, ctx, member:discord.Member=None):
@@ -73,6 +71,58 @@ class Activity(PlasmaCog):
             embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
 
         await ctx.send(embed=embed)
+
+    @chat_command(name='leaderboard', description='View the Activity Leaderboard')
+    @guild_only()
+    async def leaderboard_allTime(self, ctx):
+        """View the Activity Leaderboard"""
+        ActivityPoint = self.tables.ActivityPoint
+        ActivityStatus = self.tables.ActivityStatus
+
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+
+        if len(activity_points) == 0:
+            embed = discord.Embed(
+                title=f"All Time Rankings in {ctx.guild.name}", 
+                description="No Activity Rankings for this guild yet...", 
+                color=discord.Color.purple()
+            )
+            await ctx.send(embed=embed)
+        else:
+            def get_page(page):
+                lower = page * 15
+                upper = (page + 1) * 15
+                slice = activity_points[lower:upper]
+
+                embed_content = ''
+
+                for point in slice:
+                    activity_profile = ActivityStatus.select().where(ActivityStatus.user_id == point.user_id, ActivityStatus.guild_id == str(ctx.guild.id)).first()
+                    
+                    if activity_profile is None:
+                        member = ctx.guild.get_member(int(point.user_id))
+
+                        if member:
+                            user_nick = member.display_name
+                        else:
+                            user_nick = f'User {point.user_id}'
+                    else:
+                        user_nick = activity_profile.user_nick
+
+                    lower += 1
+                    embed_content += f'**#{lower}: {user_nick}** ({point.ct} AP)\n'
+
+                embed = discord.Embed(title=f"All Time Rankings in {ctx.guild.name}", description=embed_content, color=discord.Color.purple())
+                embed.set_footer(text=f'Page {page + 1} of {len(activity_points) // 15 + 1}')
+
+                return embed, len(activity_points) // 15 + 1
+        
+            pagination = Pagination(ctx.author, ctx.channel, get_page, timeout=60)
+            await pagination.navigate()
+
+                    
+
+
 
     @chat_command(name='afk', description='Set your AFK Status')
     @guild_only()

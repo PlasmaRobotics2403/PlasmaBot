@@ -3,6 +3,7 @@ from .cog import PlasmaCog, terminal_command, chat_command, chat_group
 from .commands import TerminalContext, TerminalCommand
 from .config import Config
 from .interface import Popup, startup, logging_in, restart, shutdown, TerminalMessage, Terminal
+from .pagination import Pagination
 
 __all__ = [
     'Client', 
@@ -19,5 +20,6 @@ __all__ = [
     'restart',
     'shutdown',
     'TerminalMessage',
-    'Terminal'
+    'Terminal',
+    'Pagination'
 ]
