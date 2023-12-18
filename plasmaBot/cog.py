@@ -13,12 +13,10 @@ class PlasmaCog(commands.Cog):
     def __init__(self, bot:Client):
         super().__init__()
         self.bot = bot
+        self.tables = DatabaseContainer()
 
     def register_tables(self, tables):
         """Registers tables with the bot"""
-        if not hasattr(self, 'tables'):
-            self.tables = DatabaseContainer()
-
         for table in tables:
             setattr(self.tables, table.__name__, table)
 
