@@ -117,7 +117,7 @@ class Activity(PlasmaCog):
 
                 return embed, len(activity_points) // 15 + 1
         
-            pagination = Pagination(ctx.author, ctx.channel, get_page, timeout=60)
+            pagination = Pagination(ctx.author, ctx, get_page, timeout=60)
             await pagination.navigate()
 
                     

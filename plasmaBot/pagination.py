@@ -1,12 +1,13 @@
 import discord
+from discord.ext.commands import Context
 from typing import Callable, Optional
 
 from discord.interactions import Interaction
 
 class Pagination(discord.ui.View):
-    def __init__(self, author:discord.Member, channel:discord.abc.Messageable, pages: Callable, *, timeout: int = 60):
+    def __init__(self, author:discord.Member, ctx:Context, pages: Callable, *, timeout: int = 60):
         self.author = author
-        self.channel = channel
+        self.ctx = ctx
         self.pages = pages
         self.total: Optional[int] = None
         self.index = 0
@@ -30,10 +31,10 @@ class Pagination(discord.ui.View):
         embed, self.total = pages
         
         if self.total == 1:
-            self.message = await self.channel.send(embed=embed)
+            self.message = await self.ctx.send(embed=embed)
         else:
             self.update_buttons()
-            self.message = await self.channel.send(embed=embed, view=self)
+            self.message = await self.ctx.send(embed=embed, view=self)
 
     async def edit_page(self, interaction: discord.Interaction):
         embed, self.total = self.pages(self.index)
