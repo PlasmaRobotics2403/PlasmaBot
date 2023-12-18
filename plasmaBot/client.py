@@ -22,6 +22,7 @@ class Client(commands.Bot):
         """Initialize Client"""
         intents = discord.Intents.default() # Default Intents
         intents.message_content = True # Enable Message Content
+        intents.members = True # Enable Members Events
 
         self.developers = [650243354793213981, 180094452860321793] # List of Developer IDs
         self.config = Config(self) # Load Config

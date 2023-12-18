@@ -1,12 +1,17 @@
 import peewee
 import datetime
 import random
+import asyncio
 
 import discord
 from discord.ext.commands import guild_only
+from discord.ext.tasks import loop
 
 from plasmaBot.cog import PlasmaCog, terminal_command, chat_command
 from plasmaBot.interface import terminal
+import discord
+from discord.ext.commands import guild_only
+
 
 class Activity(PlasmaCog):
     """Activity Tracking Cog"""
@@ -24,16 +29,23 @@ class Activity(PlasmaCog):
             activity_profile = ActivityStatus.select().where(ActivityStatus.user_id == str(ctx.author.id), ActivityStatus.guild_id == str(ctx.guild.id)).first()
 
             if activity_profile is None:
-                await ctx.send('You have no XP')
+                embed = discord.Embed(description="Current XP: 0 XP", color=discord.Color.purple())
             else:
-                await ctx.send(f'You have {activity_profile.current_xp} XP')
+                embed = discord.Embed(description=f"Current XP: {activity_profile.current_xp} XP", color=discord.Color.purple())
+
+            embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
         else:
             activity_profile = ActivityStatus.select().where(ActivityStatus.user_id == str(member.id), ActivityStatus.guild_id == str(ctx.guild.id)).first()
 
             if activity_profile is None:
-                await ctx.send(f'{member.display_name} has no XP')
+                embed = discord.Embed(description=f"Current XP: 0 XP", color=discord.Color.purple())
             else:
-                await ctx.send(f'{member.display_name} has {activity_profile.current_xp} XP')
+                embed = discord.Embed(description=f"Current XP: {activity_profile.current_xp} XP", color=discord.Color.purple())
+
+            embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+
+        await ctx.send(embed=embed)
+
 
     @chat_command(name='activity', description='View your activity')
     @guild_only()
@@ -45,16 +57,22 @@ class Activity(PlasmaCog):
             activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id))
 
             if len(activity_points) == 0:
-                await ctx.send('You have no activity')
+                embed = discord.Embed(description="Activity Points: 0 AP", color=discord.Color.purple())
             else:
-                await ctx.send(f'You have an activity score of {len(activity_points)}')
+                embed = discord.Embed(description=f"Activity Points: {len(activity_points)} AP", color=discord.Color.purple())
+
+            embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
         else:
             activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id), ActivityPoint.guild_id == str(ctx.guild.id))
 
             if len(activity_points) == 0:
-                await ctx.send(f'{member.display_name} has no activity')
+                embed = discord.Embed(description="Activity Points: 0 AP", color=discord.Color.purple())
             else:
-                await ctx.send(f'{member.display_name} has an activity score of {len(activity_points)}')
+                embed = discord.Embed(description=f"Activity Points: {len(activity_points)} AP", color=discord.Color.purple())
+
+            embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+
+        await ctx.send(embed=embed)
 
     @chat_command(name='afk', description='Set your AFK Status')
     @guild_only()
@@ -71,7 +89,7 @@ class Activity(PlasmaCog):
             activity_profile.afk_message = message
             activity_profile.save()
 
-        await ctx.send(f':sparkles: {ctx.author.display_name} is now AFK {': ' + message if message else ''} :sparkles:')
+        await ctx.send(f':sparkles: **{ctx.author.display_name}** is now AFK {': ' + message if message else ''} :sparkles:')
 
     @PlasmaCog.listener()
     async def on_member_update(self, before, after):
@@ -126,17 +144,44 @@ class Activity(PlasmaCog):
                 activity_profile.afk_message = ''
                 activity_profile.save()
 
-                await message.channel.send(f':sparkles: {message.author.display_name} is no longer AFK :sparkles:')    
+                not_afk_message = await message.channel.send(f':sparkles: **{message.author.display_name}** is no longer AFK :sparkles:')    
+
+                async def delete_not_afk_message():
+                    await asyncio.sleep(5)  # Delay for 5 seconds
+                    await not_afk_message.delete()
+
+                asyncio.create_task(delete_not_afk_message())
 
         # Check for mention AFK status
+        afk_members = []
+
         if message.mentions:
             for mention in message.mentions:
+
                 mention_profile = ActivityStatus.select().where(ActivityStatus.user_id == str(mention.id), ActivityStatus.guild_id == str(message.guild.id)).first()
 
                 if mention_profile is not None:
                     if mention_profile.afk:
-                        await message.channel.send(f':sparkles: {mention.display_name} is AFK{': ' + mention_profile.afk_message if mention_profile.afk_message else ''} :sparkles:')
-                
+                        afk_members.append([mention, mention_profile])
+
+        if afk_members:
+            if len(afk_members) == 1:
+                afk_message = await message.channel.send(f':sparkles: **{afk_members[0][0].display_name}** is AFK{': ' + afk_members[0][1].afk_message if afk_members[0][1].afk_message else ''} :sparkles:')
+            else:
+                afk = f':sparkles: '
+
+                for member in afk_members[:-1]:
+                    afk += f'**{member[0].display_name}**, '   
+
+                afk += f'and **{afk_members[-1][0].display_name}** are AFK :sparkles:'  
+
+                afk_message = await message.channel.send(afk)
+
+            async def delete_afk_message():
+                await asyncio.sleep(5)
+                await afk_message.delete()
+
+            asyncio.create_task(delete_afk_message())
 
 
 async def setup(bot):
