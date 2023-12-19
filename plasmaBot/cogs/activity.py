@@ -45,32 +45,65 @@ class Activity(PlasmaCog):
 
         await ctx.send(embed=embed)
 
-    @chat_command(name='activity', description='View your activity')
+    @chat_group(name='activity', description='View your activity')
     @guild_only()
     async def activity(self, ctx, member:discord.Member=None):
         """View your activity"""
+        try:
+            ActivityPoint = self.tables.ActivityPoint
+            activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30))
+            embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Monthly')
+            await ctx.send(embed=embed)
+        except Exception as e:
+            await ctx.send(f'Error: {e}')
+
+    @activity.command(name='yearly', description='View your Yearly activity', aliases=['year'])
+    async def activity_yearly(self, ctx, member:discord.Member=None):
+        """View your activity"""
         ActivityPoint = self.tables.ActivityPoint
-
-        if member is None:
-            activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id))
-
-            if len(activity_points) == 0:
-                embed = discord.Embed(description="Activity Points: 0 AP", color=discord.Color.purple())
-            else:
-                embed = discord.Embed(description=f"Activity Points: {len(activity_points)} AP", color=discord.Color.purple())
-
-            embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
-        else:
-            activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id), ActivityPoint.guild_id == str(ctx.guild.id))
-
-            if len(activity_points) == 0:
-                embed = discord.Embed(description="Activity Points: 0 AP", color=discord.Color.purple())
-            else:
-                embed = discord.Embed(description=f"Activity Points: {len(activity_points)} AP", color=discord.Color.purple())
-
-            embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
-
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365))
+        embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Yearly')
         await ctx.send(embed=embed)
+
+    @activity.command(name='monthly', description='View your Monthly activity', aliases=['month'])
+    async def activity_monthly(self, ctx, member:discord.Member=None):
+        """View your activity"""
+        ActivityPoint = self.tables.ActivityPoint
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30))
+        embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Monthly')
+        await ctx.send(embed=embed)
+
+    @activity.command(name='daily', description='View your Daily activity', aliases=['day'])
+    async def activity_daily(self, ctx, member:discord.Member=None):
+        """View your activity"""
+        ActivityPoint = self.tables.ActivityPoint
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1))
+        embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Daily')
+        await ctx.send(embed=embed)
+
+    @activity.command(name='hourly', description='View your Hourly activity', aliases=['hour'])
+    async def activity_hourly(self, ctx, member:discord.Member=None):
+        """View your activity"""
+        ActivityPoint = self.tables.ActivityPoint
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1))
+        embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Hourly')
+        await ctx.send(embed=embed)
+
+    @activity.command(name='all', description='View your All-Time activity', aliases=['all-time', 'alltime'])
+    async def activity_alltime(self, ctx, member:discord.Member=None):
+        """View your activity"""
+        ActivityPoint = self.tables.ActivityPoint
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id))
+        embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'All-Time')
+        await ctx.send(embed=embed)
+
+    async def generate_activity_embed(self, ctx, activity_points, member:discord.Member, period:str):
+        """Generate Activity Embed"""
+        terminal.add_message(f'Generating Activity Embed for {member.display_name} in {ctx.guild.name}: {len(activity_points)} Activity Points')
+        embed = discord.Embed(description=f"Activity Points: {len(activity_points)} AP", color=discord.Color.purple())
+        embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+        embed.set_footer(text=f'{period} Activity')
+        return embed
 
     @chat_group(name='leaderboard', description='View the Activity Leaderboard')
     @guild_only()
