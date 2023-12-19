@@ -241,19 +241,22 @@ class Default(PlasmaCog):
     async def on_message(self, message):
         """Event fired when a message is sent"""
         if message.channel == terminal.channel:
-            terminal.add_message(f'[{message.id}] {message.author.display_name}{f' (REPLY to {message.reference.id})' if message.reference else ''}: {message.content}')
+            if message.reference:
+                terminal.add_message(f'[{message.id}→{message.reference.message_id}] {message.author.display_name.replace('[', '\[')}: {message.content.replace('[', '\[')}')
+            else:
+                terminal.add_message(f'[{message.id}] {message.author.display_name.replace('[', '\[')}: {message.content.replace('[', '\[')}')
 
     @PlasmaCog.listener('on_message_edit')
     async def on_message_edit(self, before, after):
         """Event fired when a message is edited"""
         if after.channel == terminal.channel:
-            terminal.add_message(f'[{after.id}] {after.author.display_name} [purple](EDIT)[/purple]: [red]{before.content}[/red] -> [green]{after.content}[/green]')
+            terminal.add_message(f'[{after.id}] {after.author.display_name.replace('[', '\[')} [purple](EDIT)[/purple]: [red]{before.content.replace('[', '\[')}[/red] -> [green]{after.content.replace('[', '\[')}[/green]')
 
     @PlasmaCog.listener('on_message_delete')
     async def on_message_delete(self, message):
         """Event fired when a message is deleted"""
         if message.channel == terminal.channel:
-            terminal.add_message(f'[{message.id}] {message.author.display_name} [purple](DELETE)[/purple]: [red]{message.content}[/red]')
+            terminal.add_message(f'[{message.id}] {message.author.display_name.replace('[', '\[')} [purple](DELETE)[/purple]: [red]{message.content.replace('[', '\[')}[/red]')
 
 
 async def setup(bot):
