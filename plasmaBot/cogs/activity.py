@@ -105,6 +105,78 @@ class Activity(PlasmaCog):
         embed.set_footer(text=f'{period} Activity')
         return embed
 
+    @chat_group(name='rank', description='View your rank')
+    @guild_only()
+    async def rank(self, ctx, member:discord.Member=None):
+        """View your Monthly Rank"""
+        ActivityPoint = self.tables.ActivityPoint
+
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        
+        await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'Monthly'))
+
+    @rank.command(name='daily', description='View your Daily Rank', aliases=['day'])
+    async def rank_daily(self, ctx, member:discord.Member=None):
+        """View your Daily Rank"""
+        ActivityPoint = self.tables.ActivityPoint
+
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        
+        await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'Daily'))
+
+    @rank.command(name='hourly', description='View your Hourly Rank', aliases=['hour'])
+    async def rank_hourly(self, ctx, member:discord.Member=None):
+        """View your Hourly Rank"""
+        ActivityPoint = self.tables.ActivityPoint
+
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        
+        await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'Hourly'))
+    
+    @rank.command(name='monthly', description='View your Monthly Rank', aliases=['month'])
+    async def rank_monthly(self, ctx, member:discord.Member=None):
+        """View your Monthly Rank"""
+        ActivityPoint = self.tables.ActivityPoint
+
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        
+        await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'Monthly'))
+
+    @rank.command(name='yearly', description='View your Yearly Rank', aliases=['year'])
+    async def rank_yearly(self, ctx, member:discord.Member=None):
+        """View your Yearly Rank"""
+        ActivityPoint = self.tables.ActivityPoint
+
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        
+        await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'Yearly'))
+
+    @rank.command(name='all', description='View your All-Time Rank', aliases=['all-time', 'alltime'])
+    async def rank_alltime(self, ctx, member:discord.Member=None):
+        """View your All-Time Rank"""
+        ActivityPoint = self.tables.ActivityPoint
+
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        
+        await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'All-Time'))
+
+    async def get_rank(self, activity_points, member:discord.Member, period:str):
+        index = 1
+        pointObj = None
+
+        for point in activity_points:
+            if point.user_id == str(member.id):
+                pointObj = point
+                break
+            else:
+                index += 1
+
+        embed = discord.Embed(description=f"Rank #{index} of {len(activity_points)} in this server ({pointObj.ct} AP)", color=discord.Color.purple())
+        embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+        embed.set_footer(text=f'{period} Rank')
+
+        return embed
+
     @chat_group(name='leaderboard', description='View the Activity Leaderboard')
     @guild_only()
     async def leaderboard(self, ctx):
@@ -117,7 +189,7 @@ class Activity(PlasmaCog):
 
     @leaderboard.command(name='daily', description='View the Daily Leaderboard', aliases=['day'])
     async def leaderboard_daily(self, ctx):
-        """View the Activity Leaderboard"""
+        """View the Daily Leaderboard"""
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
@@ -126,7 +198,7 @@ class Activity(PlasmaCog):
 
     @leaderboard.command(name='hourly', description='View the Hourly Leaderboard', aliases=['hour'])
     async def leaderboard_hourly(self, ctx):
-        """View the Activity Leaderboard"""
+        """View the Hourly Leaderboard"""
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
@@ -135,7 +207,7 @@ class Activity(PlasmaCog):
 
     @leaderboard.command(name='monthly', description='View the Monthly Leaderboard', aliases=['month'])
     async def leaderboard_monthly(self, ctx):
-        """View the Activity Leaderboard"""
+        """View the Monthly Leaderboard"""
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
@@ -144,7 +216,7 @@ class Activity(PlasmaCog):
 
     @leaderboard.command(name='yearly', description='View the Yearly Leaderboard', aliases=['year'])
     async def leaderboard_yearly(self, ctx):
-        """View the Activity Leaderboard"""
+        """View the Yearly Leaderboard"""
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
@@ -153,7 +225,7 @@ class Activity(PlasmaCog):
 
     @leaderboard.command(name='all', description='View the All-Time Leaderboard', aliases=['all-time', 'alltime'])
     async def leaderboard_allTime(self, ctx):
-        """View the Activity Leaderboard"""
+        """View the All-Time Leaderboard"""
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
