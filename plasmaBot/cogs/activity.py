@@ -78,7 +78,7 @@ class Activity(PlasmaCog):
         """View the Activity Leaderboard"""
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
 
         await self.generate_leaderboard(ctx, activity_points, 'Monthly')
 
@@ -87,7 +87,7 @@ class Activity(PlasmaCog):
         """View the Activity Leaderboard"""
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now() + datetime.timedelta(days=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
 
         await self.generate_leaderboard(ctx, activity_points, 'Daily')
 
@@ -96,7 +96,7 @@ class Activity(PlasmaCog):
         """View the Activity Leaderboard"""
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now() + datetime.timedelta(hours=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
 
         await self.generate_leaderboard(ctx, activity_points, 'Hourly')
 
@@ -105,7 +105,7 @@ class Activity(PlasmaCog):
         """View the Activity Leaderboard"""
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
 
         await self.generate_leaderboard(ctx, activity_points, 'Monthly')
 
@@ -114,7 +114,7 @@ class Activity(PlasmaCog):
         """View the Activity Leaderboard"""
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now() + datetime.timedelta(days=-365)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
 
         await self.generate_leaderboard(ctx, activity_points, 'Yearly')
 
@@ -169,10 +169,6 @@ class Activity(PlasmaCog):
             pagination = Pagination(ctx.author, ctx, get_page, timeout=60)
             await pagination.navigate()
 
-                    
-
-
-
     @chat_command(name='afk', description='Set your AFK Status')
     @guild_only()
     async def afk(self, ctx, *, message:str=''):
@@ -181,7 +177,7 @@ class Activity(PlasmaCog):
         activity_profile = ActivityStatus.select().where(ActivityStatus.user_id == str(ctx.author.id), ActivityStatus.guild_id == str(ctx.guild.id)).first()
 
         if activity_profile is None:
-            activity_profile = ActivityStatus(user_id=str(ctx.author.id), user_nick=ctx.author.display_name, guild_id=str(ctx.guild.id), current_xp=0, total_xp = 0, last_activity=datetime.datetime.now(), afk=True, afk_message=message)
+            activity_profile = ActivityStatus(user_id=str(ctx.author.id), user_nick=ctx.author.display_name, guild_id=str(ctx.guild.id), current_xp=0, total_xp = 0, last_activity=datetime.datetime.utcnow(), afk=True, afk_message=message)
             activity_profile.save()
         else:
             activity_profile.afk = True
@@ -295,7 +291,7 @@ async def setup(bot):
         guild_id = peewee.TextField()
         current_xp = peewee.BigIntegerField(default=0)
         total_xp = peewee.BigIntegerField(default=0)
-        last_activity = peewee.DateTimeField(datetime.datetime.now)
+        last_activity = peewee.DateTimeField(datetime.datetime.utcnow)
         afk = peewee.BooleanField(default=False)
         afk_message = peewee.TextField(default='')
 
@@ -303,6 +299,6 @@ async def setup(bot):
         db_id = peewee.AutoField(primary_key=True)
         user_id = peewee.TextField()
         guild_id = peewee.TextField()
-        timestamp = peewee.DateTimeField(datetime.datetime.now)
+        timestamp = peewee.DateTimeField(datetime.datetime.utcnow)
 
     new_cog.register_tables([ActivityStatus, ActivityPoint])
