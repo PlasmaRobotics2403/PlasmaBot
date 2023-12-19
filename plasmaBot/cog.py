@@ -56,3 +56,9 @@ def terminal_command(name=None, usage=None, description=None, aliases=None):
         func.terminal_aliases = aliases
         return func
     return decorator
+
+def is_developer(func):
+    """Decorator for checking if a user is a developer"""
+    def predicate(ctx):
+        return ctx.author.id in ctx.bot.config['developers']
+    return commands.check(predicate)

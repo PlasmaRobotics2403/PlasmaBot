@@ -67,6 +67,12 @@ class Default(PlasmaCog):
                     except Exception as err:
                         terminal.add_message(f'[red]Failed to Reload Extension: [bold]{cog_name}[/bold]\n{err}[/red]')
 
+    @terminal_command(name='sync', description='Sync Command Tree')
+    async def sync(self, bot):
+        """Sync Command Tree"""
+        await bot.tree.sync()
+        terminal.add_message('[purple]Synced Command Tree[/purple]')
+
     @terminal_command(name='guilds', description='List Servers', aliases=['servers'])
     async def servers(self, bot, terminal):
         """List Servers"""

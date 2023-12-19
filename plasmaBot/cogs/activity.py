@@ -171,7 +171,7 @@ class Activity(PlasmaCog):
             else:
                 index += 1
 
-        embed = discord.Embed(description=f"Rank #{index} of {len(activity_points)} in this server ({pointObj.ct} AP)", color=discord.Color.purple())
+        embed = discord.Embed(description=f"#{index} of {len(activity_points)} in this server ({pointObj.ct} AP)", color=discord.Color.purple())
         embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         embed.set_footer(text=f'{period} Rank')
 
@@ -289,7 +289,7 @@ class Activity(PlasmaCog):
             activity_profile.afk_message = message
             activity_profile.save()
 
-        await ctx.send(f':sparkles: **{ctx.author.display_name}** is now AFK {': ' + message if message else ''} :sparkles:')
+        await ctx.send(f':sparkles: **{ctx.author.display_name}** is now AFK{': ' + message if message else ''} :sparkles:')
 
     @PlasmaCog.listener()
     async def on_member_update(self, before, after):
@@ -311,6 +311,10 @@ class Activity(PlasmaCog):
         
         # Ignore DMs
         if not message.guild:
+            return
+        
+        # Ignore commands
+        if message.content.strip().startswith(self.bot.config['presence']['prefix']):
             return
         
         # Get the user's XP
