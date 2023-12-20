@@ -1,6 +1,4 @@
-import sys
 import asyncio
-from typing import Any
 import readchar
 import datetime
 
@@ -9,7 +7,6 @@ from rich.layout import Layout
 from rich.align import Align
 from rich.panel import Panel
 from rich.text import Text
-from rich.table import Table
 from rich.padding import Padding
 
 from utils.info import version
