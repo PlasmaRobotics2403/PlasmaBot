@@ -28,3 +28,6 @@ class GameGuesses(PlasmaCog):
             await message.author.add_roles(message.guild.get_role(1186891025751494656))
 
         
+async def setup(bot):
+    """Setup cog"""
+    await bot.add_cog(GameGuesses(bot))
