@@ -18,7 +18,7 @@ class GameGuesses(PlasmaCog):
     async def guess(self, ctx):
         """Get Added to the 2024 Game Guesses Channel"""
         await ctx.author.add_roles(ctx.guild.get_role(925972348413288529))
-        await ctx.author.send('You have been added to the 2024 Game Guesses Channel!', ephemeral=True)
+        await ctx.send('You have been added to the 2024 Game Guesses Channel!', ephemeral=True)
 
     @PlasmaCog.listener()
     async def on_message(message):
