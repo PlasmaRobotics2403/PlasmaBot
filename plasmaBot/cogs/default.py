@@ -12,10 +12,6 @@ class Default(PlasmaCog):
         """Get Bot Latency"""
         await ctx.send(f'🏓 Pong! ({round(self.bot.latency * 1000)}ms)')
 
-    @chat_command(name='help', description='Display Help Message')
-    async def help(self, ctx, command_query=None):
-        await ctx.send('test')
-
     @terminal_command(name='help', description='Display Help Message')
     async def help(self, bot, terminal, command_query=None):
         """Display Help Message"""
@@ -85,7 +81,7 @@ class Default(PlasmaCog):
         """List Channels"""
         try:
             int(guild_id)
-        except:
+        except Exception:
             filter_string = guild_id
             guild_id = None
         
@@ -135,7 +131,7 @@ class Default(PlasmaCog):
         try:
             int(channel_id)
             query_type = 'id'
-        except:
+        except Exception:
             query_type = 'name'
 
         if query_type == 'id':
