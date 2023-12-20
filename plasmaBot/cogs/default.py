@@ -7,6 +7,8 @@ from plasmaBot.cog import PlasmaCog, terminal_command, chat_command
 from plasmaBot.interface import terminal
 
 class Default(PlasmaCog):
+    """Default Command Cog"""
+
     @chat_command(name='ping', description='Get Bot Latency')
     async def ping(self, ctx):
         """Get Bot Latency"""

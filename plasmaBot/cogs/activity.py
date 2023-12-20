@@ -13,6 +13,7 @@ from plasmaBot.pagination import Pagination
 
 class Activity(PlasmaCog):
     """Activity Tracking Cog"""
+    
     def __init__(self, bot):
         self.guild_settings = {}
         super().__init__(bot)
