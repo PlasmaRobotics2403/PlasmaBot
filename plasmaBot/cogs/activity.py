@@ -17,10 +17,34 @@ class Activity(PlasmaCog):
         self.guild_settings = {}
         super().__init__(bot)
 
+    async def get_guild_settings(self, guild):
+        """Get Guild Settings"""
+        if str(guild.id) in self.guild_settings:
+            guild_settings = self.guild_settings[str(guild.id)]
+        else:
+            ActivitySettings = self.tables.ActivitySettings
+            guild_settings = ActivitySettings.select().where(ActivitySettings.guild_id == str(guild.id)).first()
+
+            if guild_settings is None:
+                guild_settings = ActivitySettings(guild_id=str(guild.id))
+                guild_settings.save()
+
+            self.guild_settings[str(guild.id)] = guild_settings
+
+        return guild_settings
+
     @chat_command(name='xp', description='View your XP')
     @guild_only()
     async def xp(self, ctx, member:discord.Member=None):
         """View your XP"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityStatus = self.tables.ActivityStatus
 
         if member is None:
@@ -48,6 +72,14 @@ class Activity(PlasmaCog):
     @guild_only()
     async def activity(self, ctx, member:discord.Member=None):
         """View your activity"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
         activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30))
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Monthly')
@@ -56,6 +88,14 @@ class Activity(PlasmaCog):
     @activity.command(name='yearly', description='View your Yearly activity', aliases=['year'])
     async def activity_yearly(self, ctx, member:discord.Member=None):
         """View your activity"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
         activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365))
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Yearly')
@@ -64,6 +104,14 @@ class Activity(PlasmaCog):
     @activity.command(name='monthly', description='View your Monthly activity', aliases=['month'])
     async def activity_monthly(self, ctx, member:discord.Member=None):
         """View your activity"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
         activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30))
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Monthly')
@@ -72,6 +120,14 @@ class Activity(PlasmaCog):
     @activity.command(name='daily', description='View your Daily activity', aliases=['day'])
     async def activity_daily(self, ctx, member:discord.Member=None):
         """View your activity"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
         activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1))
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Daily')
@@ -80,6 +136,14 @@ class Activity(PlasmaCog):
     @activity.command(name='hourly', description='View your Hourly activity', aliases=['hour'])
     async def activity_hourly(self, ctx, member:discord.Member=None):
         """View your activity"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
         activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1))
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Hourly')
@@ -88,6 +152,14 @@ class Activity(PlasmaCog):
     @activity.command(name='all', description='View your All-Time activity', aliases=['all-time', 'alltime'])
     async def activity_alltime(self, ctx, member:discord.Member=None):
         """View your activity"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
         activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id))
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'All-Time')
@@ -95,7 +167,6 @@ class Activity(PlasmaCog):
 
     async def generate_activity_embed(self, ctx, activity_points, member:discord.Member, period:str):
         """Generate Activity Embed"""
-        terminal.add_message(f'Generating Activity Embed for {member.display_name} in {ctx.guild.name}: {len(activity_points)} Activity Points')
         embed = discord.Embed(description=f"Activity Points: {len(activity_points)} AP", color=discord.Color.purple())
         embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         embed.set_footer(text=f'{period} Activity')
@@ -105,6 +176,14 @@ class Activity(PlasmaCog):
     @guild_only()
     async def rank(self, ctx, member:discord.Member=None):
         """View your Monthly Rank"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
@@ -114,6 +193,14 @@ class Activity(PlasmaCog):
     @rank.command(name='daily', description='View your Daily Rank', aliases=['day'])
     async def rank_daily(self, ctx, member:discord.Member=None):
         """View your Daily Rank"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
@@ -123,6 +210,14 @@ class Activity(PlasmaCog):
     @rank.command(name='hourly', description='View your Hourly Rank', aliases=['hour'], ephemeral=True)
     async def rank_hourly(self, ctx, member:discord.Member=None):
         """View your Hourly Rank"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
@@ -132,6 +227,14 @@ class Activity(PlasmaCog):
     @rank.command(name='monthly', description='View your Monthly Rank', aliases=['month'], ephemeral=True)
     async def rank_monthly(self, ctx, member:discord.Member=None):
         """View your Monthly Rank"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
@@ -141,6 +244,14 @@ class Activity(PlasmaCog):
     @rank.command(name='yearly', description='View your Yearly Rank', aliases=['year'], ephemeral=True)
     async def rank_yearly(self, ctx, member:discord.Member=None):
         """View your Yearly Rank"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
@@ -150,6 +261,14 @@ class Activity(PlasmaCog):
     @rank.command(name='all', description='View your All-Time Rank', aliases=['all-time', 'alltime'])
     async def rank_alltime(self, ctx, member:discord.Member=None):
         """View your All-Time Rank"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
@@ -177,6 +296,14 @@ class Activity(PlasmaCog):
     @guild_only()
     async def leaderboard(self, ctx):
         """View the Activity Leaderboard"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
@@ -186,6 +313,14 @@ class Activity(PlasmaCog):
     @leaderboard.command(name='daily', description='View the Daily Leaderboard', aliases=['day'])
     async def leaderboard_daily(self, ctx):
         """View the Daily Leaderboard"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
@@ -195,6 +330,14 @@ class Activity(PlasmaCog):
     @leaderboard.command(name='hourly', description='View the Hourly Leaderboard', aliases=['hour'])
     async def leaderboard_hourly(self, ctx):
         """View the Hourly Leaderboard"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
@@ -204,6 +347,14 @@ class Activity(PlasmaCog):
     @leaderboard.command(name='monthly', description='View the Monthly Leaderboard', aliases=['month'])
     async def leaderboard_monthly(self, ctx):
         """View the Monthly Leaderboard"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
@@ -213,6 +364,14 @@ class Activity(PlasmaCog):
     @leaderboard.command(name='yearly', description='View the Yearly Leaderboard', aliases=['year'])
     async def leaderboard_yearly(self, ctx):
         """View the Yearly Leaderboard"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
@@ -222,6 +381,14 @@ class Activity(PlasmaCog):
     @leaderboard.command(name='all', description='View the All-Time Leaderboard', aliases=['all-time', 'alltime'])
     async def leaderboard_allTime(self, ctx):
         """View the All-Time Leaderboard"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
         ActivityPoint = self.tables.ActivityPoint
 
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
@@ -279,7 +446,7 @@ class Activity(PlasmaCog):
     @config_activity.command(name='disable_channel', description='Disable XP in a channel')
     async def config_activity_disable_channel(self, ctx, channel:discord.TextChannel=None):
         """Mark a channel as XP/AP Disabled"""
-        if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.config['developers']):
+        if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
             return
 
@@ -309,7 +476,8 @@ class Activity(PlasmaCog):
     @config_activity.command(name='enable_channel', description='Re-enable XP in a channel')
     async def config_activity_enable_channel(self, ctx, channel:discord.TextChannel=None):
         """Re-enable XP/AP in a channel"""
-        if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.config['developers']):
+
+        if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
             return
         
@@ -339,7 +507,7 @@ class Activity(PlasmaCog):
     @check(has_permissions(manage_guild=True))
     async def config_activity_set_xp_settings(self, ctx, mean:float, std:float):
         """Set XP Settings"""
-        if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.config['developers']):
+        if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
             return
         
@@ -356,6 +524,9 @@ class Activity(PlasmaCog):
             guild_settings.xp_mean = mean
             guild_settings.xp_std = std
             guild_settings.save()
+
+        # Update guild settings cache
+        self.guild_settings[str(ctx.guild)] = guild_settings
 
         await ctx.send(f'XP configured to use a Mean of {mean} and a Standard Deviation of {std}', ephemeral=True)
 
@@ -379,7 +550,7 @@ class Activity(PlasmaCog):
         for channel in disabled_channels:
             disabled_channel_list += f' - <#{channel.channel_id}>\n'        
 
-        embed = discord.Embed(description=f'**XP Settings:**\n- **Mean:** {guild_settings.xp_mean} XP\n- **Standard Deviation:** {guild_settings.xp_std} XP\n\n**Disabled Channels:**\n{disabled_channel_list}', 
+        embed = discord.Embed(description=f'**Activity Tracking is {'Enabled' if guild_settings.enabled else 'Disabled'}**\n\n**XP Settings:**\n- **Mean:** {guild_settings.xp_mean} XP\n- **Standard Deviation:** {guild_settings.xp_std} XP\n\n**Disabled Channels:**\n{disabled_channel_list}', 
                               color=discord.Color.purple()
                               )
         embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
@@ -476,17 +647,12 @@ class Activity(PlasmaCog):
         if channel_disabled:
             return
 
-        if str(message.guild) in self.guild_settings:
-            guild_settings = self.guild_settings[str(message.guild)]
-        else:
-            ActivitySettings = self.tables.ActivitySettings
-            guild_settings = ActivitySettings.select().where(ActivitySettings.guild_id == str(message.guild.id)).first()
+        # Get Guild Settings
+        guild_settings = await self.get_guild_settings(message.guild)
 
-            if guild_settings is None:
-                guild_settings = self.tables.ActivitySettings(guild_id=str(message.guild.id))
-                guild_settings.save()
-
-            self.guild_settings[str(message.guild)] = guild_settings
+        # Do not increment XP or AP if guild is disabled
+        if not guild_settings.enabled:
+            return
 
         # Update XP
         random_xp = random.gauss(guild_settings.xp_mean, guild_settings.xp_std)
@@ -513,7 +679,6 @@ class Activity(PlasmaCog):
 async def setup(bot):
     """Setup cog"""
     new_cog = Activity(bot)
-    await bot.add_cog(new_cog)
 
     class ActivityDisabledChannel(bot.database.base_model):
         """Represents a channel with XP Disabled"""
@@ -525,6 +690,7 @@ async def setup(bot):
         """Represents a Guild's Activity Settings"""
         db_id = peewee.AutoField(primary_key=True)
         guild_id = peewee.TextField()
+        enabled = peewee.BooleanField(default=True)
         xp_mean = peewee.FloatField(default=10)
         xp_std = peewee.FloatField(default=1.5)
 
@@ -555,3 +721,5 @@ async def setup(bot):
             ActivityPoint
         ]
     )
+
+    await bot.add_cog(new_cog)

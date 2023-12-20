@@ -11,7 +11,7 @@ class Pagination(discord.ui.View):
         self.pages = pages
         self.total: Optional[int] = None
         self.index = 0
-        self.message: Optional[discord.Message] = None;
+        self.message: Optional[discord.Message] = None
         super().__init__(timeout=timeout)
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
