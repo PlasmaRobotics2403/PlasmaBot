@@ -103,6 +103,8 @@ class Client(commands.Bot):
         timestamp = int(datetime.datetime.utcnow().timestamp())
         terminal.set_startup_timestamp(timestamp)
         asyncio.ensure_future(terminal.terminal_loop(self.loop, timestamp))
+
+        await self.change_presence(status=discord.Status.invisible if self.config['presence']['invisible'] else discord.Status.online)
     
     def terminal_command(self, *args, **kwargs):
         """Decorator for terminal commands"""
@@ -114,13 +116,13 @@ class Client(commands.Bot):
     
     def add_terminal_command(self, command):
         """Add a terminal command to the bot"""
-        if not command.get_name() in self.terminal_commands:
+        if command.get_name() not in self.terminal_commands:
             self.terminal_commands[command.get_name()] = [command]
         else:
             self.terminal_commands[command.get_name()] += [command]
     
         for alias in command.get_aliases():
-            if not alias in self.terminal_commands:
+            if alias not in self.terminal_commands:
                 self.terminal_commands[alias] = [command]
             else:
                 self.terminal_commands[alias] += [command]

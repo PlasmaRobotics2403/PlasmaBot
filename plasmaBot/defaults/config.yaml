@@ -12,6 +12,7 @@ connection: # Configuration Items that impact the Bot's Connection to Discord
 
 presence: # Configuration Items impacting the look of the bot throughout Discord
   prefix: '>' # The Global Command Prefix. Change this to prevent interference with other bots.
+  invisible: false # Whether or not the bot should appear offline
 
 permissions: # Configuration Items impacting the abilities of certain users
   developers: # The IDs of Full-Permissioned Bot Owners as integer IDs
