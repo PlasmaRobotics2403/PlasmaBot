@@ -22,6 +22,11 @@ class GameGuesses(PlasmaCog):
     async def on_message(self, message):
         """Wait for a message in the 2024 Game Guesses Channel"""
         if message.channel.id == 1186891291519365170:
+            if message.author.get_role(message.guild.get_role(1186891025751494656)):
+                await message.reply('You have already guessed!', delete_after=5)
+                await message.delete(delay=5)
+                return
+
             await message.add_reaction('✅')
             await message.author.add_roles(message.guild.get_role(1186891025751494656))
 
