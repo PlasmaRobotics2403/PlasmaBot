@@ -1,3 +1,4 @@
+from traceback import format_exc
 from discord.ext.commands import guild_only, check, has_permissions, NoPrivateMessage
 
 from plasmaBot.cog import PlasmaCog, terminal_command, chat_command
@@ -30,10 +31,11 @@ class GameGuesses(PlasmaCog):
                     await message.delete(delay=5)
                     return
 
-                await message.add_reaction('✅')
-                await message.author.add_roles(message.guild.get_role(1186891025751494656))
-        except Exception as err:
-            terminal.add_message(err)
+                if message.author.id != self.bot.user.id:
+                    await message.add_reaction('✅')
+                    await message.author.add_roles(message.guild.get_role(1186891025751494656))
+        except Exception:
+            terminal.add_message(format_exc())
 
         
 async def setup(bot):
