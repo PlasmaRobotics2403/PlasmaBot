@@ -42,12 +42,10 @@ class Pagination(discord.ui.View):
         await interaction.response.edit_message(embed=embed, view=self)
 
     async def update_buttons(self):
-        if self.index > (self.total // 2):
-            self.children[2].emoji = '⏮️'
-        else:
-            self.children[2].emoji = '⏭️'
         self.children[0].disabled = self.index == 0
-        self.children[1].disabled = self.index == (self.total - 1)
+        self.children[1].disabled = self.index == 0
+        self.children[2].disabled = self.index == (self.total - 1)
+        self.children[3].disabled = self.index == (self.total - 1)
     
     @discord.ui.button(emoji='⏮️', style=discord.ButtonStyle.gray)
     async def first(self, interaction: discord.Interaction, button: discord.Button):
