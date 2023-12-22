@@ -33,12 +33,12 @@ class Pagination(discord.ui.View):
         if self.total == 1:
             self.message = await self.ctx.send(embed=embed, ephemeral=True)
         else:
-            self.update_buttons()
+            await self.update_buttons()
             self.message = await self.ctx.send(embed=embed, view=self, ephemeral=True)
 
     async def edit_page(self, interaction: discord.Interaction):
         embed, self.total = self.pages(self.index)
-        self.update_buttons()
+        await self.update_buttons()
         await interaction.response.edit_message(embed=embed, view=self)
 
     async def update_buttons(self):
