@@ -531,9 +531,9 @@ class Activity(PlasmaCog):
 
         await ctx.send(f'XP configured to use a Mean of {mean} and a Standard Deviation of {std}', ephemeral=True)
 
-    @config_activity.command(name='list_settings', description='List XP Settings')
+    @config_activity.command(name='list_settings', description='List Activity Settings')
     async def config_activity_list_xp_settings(self, ctx):
-        """List XP Settings"""
+        """List Activity Settings"""
         ActivitySettings = self.tables.ActivitySettings
 
         # Pull guild settings
