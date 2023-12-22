@@ -12,7 +12,7 @@ class Default(PlasmaCog):
     @chat_command(name='ping', description='Get Bot Latency')
     async def ping(self, ctx):
         """Get Bot Latency"""
-        await ctx.send(f'🏓 Pong! ({round(self.bot.latency * 1000)}ms)')
+        await ctx.send(f'🏓 Pong! ({round(self.bot.latency * 1000)}ms)', ephemeral=True)
 
     @terminal_command(name='help', description='Display Help Message')
     async def help(self, bot, terminal, command_query=None):
