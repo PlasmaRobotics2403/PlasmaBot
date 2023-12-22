@@ -287,6 +287,12 @@ class Activity(PlasmaCog):
             else:
                 index += 1
 
+        if not pointObj:
+            embed = discord.Embed(description="No Messages Sent During This Period", color=discord.Color.purple())
+            embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+            embed.set_footer(text=f'{period} Rank')
+            return embed
+
         embed = discord.Embed(description=f"#{index} of {len(activity_points)} in this server ({pointObj.ct} AP)", color=discord.Color.purple())
         embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         embed.set_footer(text=f'{period} Rank')
