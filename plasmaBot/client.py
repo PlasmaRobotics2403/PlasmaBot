@@ -1,4 +1,5 @@
 import os
+import sys
 import copy
 import asyncio
 import signal
@@ -86,6 +87,10 @@ class Client(commands.Bot):
 
         # Stop Database
         self.database.close()
+
+    async def on_error(self, event_method, *args, **kwargs):
+        """Event fired when an error occurs"""
+        terminal.add_message(f'Error in {event_method}\n{sys.exc_info()}')
 
     async def on_ready(self):
         """Setup after the bot has started"""
