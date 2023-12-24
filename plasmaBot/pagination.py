@@ -2,8 +2,6 @@ import discord
 from discord.ext.commands import Context
 from typing import Callable, Optional
 
-from discord.interactions import Interaction
-
 class Pagination(discord.ui.View):
     def __init__(self, author:discord.Member, ctx:Context, pages: Callable, *, timeout: int = 60):
         self.author = author
