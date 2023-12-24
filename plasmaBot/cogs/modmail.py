@@ -375,17 +375,6 @@ class ModMail(PlasmaCog):
     async def reply(self, ctx, *,  message:str):
         """Reply to a ModMail Thread"""
         try:
-            ModMailSettings = self.tables.ModMailSettings
-            settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
-
-            if not settings:
-                settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = False, thread_channel = None, proxy_channel = None, external_creation_channel = None)
-                settings.save()
-
-            if not settings.enabled:
-                await ctx.send('ModMail is not enabled', ephemeral=True)
-                return
-            
             if not isinstance(ctx.channel, discord.Thread):
                 await ctx.send('This command can only be used in a ModMail thread', ephemeral=True)
                 return
