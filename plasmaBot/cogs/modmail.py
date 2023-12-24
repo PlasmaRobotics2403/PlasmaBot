@@ -1,9 +1,7 @@
 import peewee
-import traceback
 import asyncio
 
 import discord
-import logging
 
 from plasmaBot import Client
 from plasmaBot.cog import PlasmaCog, chat_command, chat_group
