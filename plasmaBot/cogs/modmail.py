@@ -650,16 +650,6 @@ class ModMail(PlasmaCog):
         if message.content.strip().startswith(self.bot.config['presence']['prefix']):
             return
         
-        ModMailSettings = self.tables.ModMailSettings
-        settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(message.channel.guild.id)).first()
-
-        if not settings:
-            settings = ModMailSettings(guild_id = str(message.channel.guild.id), enabled = False, thread_channel = None, proxy_channel = None, external_creation_channel = None)
-            settings.save()
-
-        if not settings.enabled:
-            return
-        
         ModMailMapping = self.tables.ModMailMapping
         mapping = ModMailMapping.select().where(ModMailMapping.user_thread == str(message.channel.id)).first()
         proxy_mapping = ModMailMapping.select().where(ModMailMapping.proxy_thread == str(message.channel.id)).first()
