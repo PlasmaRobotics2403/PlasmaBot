@@ -3,6 +3,7 @@ import traceback
 import asyncio
 
 import discord
+import logging
 
 from plasmaBot import Client
 from plasmaBot.cog import PlasmaCog, chat_command, chat_group
@@ -424,7 +425,7 @@ class ModMail(PlasmaCog):
             await destination.send(embed=embed_destination, files=destination_files)
             await ctx.send(embed=embed_origin, files=origin_files)
         except Exception:
-            print('REPLY' + traceback.format_exc())
+            logging.exception('Error in ModMail Reply')
 
     @chat_group(name='config_modmail', description='Configure ModMail Settings')
     async def config_modmail(self, ctx):
@@ -683,7 +684,7 @@ class ModMail(PlasmaCog):
             await message.channel.send(embed=embed_origin, files=origin_files)
             await destination.send(embed=embed_destination, files=destination_files)
         except Exception:
-            print('MESSAGE' + traceback.format_exc())
+            logging.exception('Error in ModMail Message')
             
 
 async def setup(bot):
