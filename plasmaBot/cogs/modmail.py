@@ -424,7 +424,7 @@ class ModMail(PlasmaCog):
             await destination.send(embed=embed_destination, files=destination_files)
             await ctx.send(embed=embed_origin, files=origin_files)
         except Exception:
-            terminal.add_message(traceback.format_exc())
+            print('REPLY' + traceback.format_exc())
 
     @chat_group(name='config_modmail', description='Configure ModMail Settings')
     async def config_modmail(self, ctx):
@@ -630,57 +630,60 @@ class ModMail(PlasmaCog):
     @PlasmaCog.listener()
     async def on_message(self, message):
         """Event fired when a message is sent"""
-        if message.author.bot:
-            return
+        try:
+            if message.author.bot:
+                return
 
-        if not isinstance(message.channel, discord.Thread):
-            return
-        
-        if message.content.strip().startswith(self.bot.config['presence']['prefix']):
-            return
-        
-        ModMailMapping = self.tables.ModMailMapping
-        mapping = ModMailMapping.select().where(ModMailMapping.user_thread == str(message.channel.id)).first()
-        proxy_mapping = ModMailMapping.select().where(ModMailMapping.proxy_thread == str(message.channel.id)).first()
-        proxy = False
+            if not isinstance(message.channel, discord.Thread):
+                return
+            
+            if message.content.strip().startswith(self.bot.config['presence']['prefix']):
+                return
+            
+            ModMailMapping = self.tables.ModMailMapping
+            mapping = ModMailMapping.select().where(ModMailMapping.user_thread == str(message.channel.id)).first()
+            proxy_mapping = ModMailMapping.select().where(ModMailMapping.proxy_thread == str(message.channel.id)).first()
+            proxy = False
 
-        if not mapping:
-            mapping = proxy_mapping
-            proxy = True
-        elif not mapping.user_thread:
-            mapping = proxy_mapping
-            proxy = True
+            if not mapping:
+                mapping = proxy_mapping
+                proxy = True
+            elif not mapping.user_thread:
+                mapping = proxy_mapping
+                proxy = True
 
-        if not mapping:
-            return
-        elif not mapping.proxy_thread:
-            return
-        elif not mapping.user_thread:
-            return
-        
-        if proxy:
-            return
+            if not mapping:
+                return
+            elif not mapping.proxy_thread:
+                return
+            elif not mapping.user_thread:
+                return
+            
+            if proxy:
+                return
 
-        destination = self.bot.get_channel(int(mapping.proxy_thread))
+            destination = self.bot.get_channel(int(mapping.proxy_thread))
 
-        origin_files = []
-        destination_files = []
+            origin_files = []
+            destination_files = []
 
-        for attachment in message.attachments:
-            origin_files.append(await attachment.to_file())
-            destination_files.append(await attachment.to_file())
+            for attachment in message.attachments:
+                origin_files.append(await attachment.to_file())
+                destination_files.append(await attachment.to_file())
 
-        embed_origin = discord.Embed(description=message.content, color=discord.Color.purple())
-        embed_origin.set_author(name=message.author.name, icon_url=message.author.avatar.url)
-        embed_origin.set_footer(text='To reply, type your message in this thread')
+            embed_origin = discord.Embed(description=message.content, color=discord.Color.purple())
+            embed_origin.set_author(name=message.author.name, icon_url=message.author.avatar.url)
+            embed_origin.set_footer(text='To reply, type your message in this thread')
 
-        embed_destination = discord.Embed(description=message.content, color=discord.Color.purple())
-        embed_destination.set_author(name=message.author.name, icon_url=message.author.avatar.url)
-        embed_destination.set_footer(text='To reply, use the reply command')
+            embed_destination = discord.Embed(description=message.content, color=discord.Color.purple())
+            embed_destination.set_author(name=message.author.name, icon_url=message.author.avatar.url)
+            embed_destination.set_footer(text='To reply, use the reply command')
 
-        await message.delete()
-        await message.channel.send(embed=embed_origin, files=origin_files)
-        await destination.send(embed=embed_destination, files=destination_files)
+            await message.delete()
+            await message.channel.send(embed=embed_origin, files=origin_files)
+            await destination.send(embed=embed_destination, files=destination_files)
+        except Exception:
+            print('MESSAGE' + traceback.format_exc())
             
 
 async def setup(bot):
