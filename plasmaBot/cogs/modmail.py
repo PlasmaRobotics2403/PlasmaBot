@@ -20,92 +20,89 @@ class ModMailButton(discord.ui.View):
     @discord.ui.button(label='Open New ModMail Thread', style=discord.ButtonStyle.blurple, custom_id='open_modmail_thread')
     async def open_modmail_thread(self, interaction: discord.Interaction, button: discord.Button):
         """Open ModMail Callback"""
-        try:
-            ModMailSettings = self.cog.tables.ModMailSettings
-            settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(interaction.guild.id)).first()
+        ModMailSettings = self.cog.tables.ModMailSettings
+        settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(interaction.guild.id)).first()
 
-            if not settings:
-                settings = ModMailSettings(guild_id = str(interaction.guild.id), enabled = False, thread_channel = None, proxy_channel = None)
-                settings.save()
+        if not settings:
+            settings = ModMailSettings(guild_id = str(interaction.guild.id), enabled = False, thread_channel = None, proxy_channel = None)
+            settings.save()
 
-            if not settings.enabled:
-                await interaction.response.send_message('ModMail is not enabled', ephemeral=True)
-                return
-            
-            if not settings.thread_channel:
-                await interaction.response.send_message('Thread Channel is not set. Contact an Administrator to set this up.', ephemeral=True)
-                return
-            
-            if not settings.proxy_channel:
-                await interaction.response.send_message('Proxy Channel is not set. Contact an Administrator to set this up.', ephemeral=True)
-                return
-            
-            thread_channel = self.cog.bot.get_channel(int(settings.thread_channel))
+        if not settings.enabled:
+            await interaction.response.send_message('ModMail is not enabled', ephemeral=True)
+            return
+        
+        if not settings.thread_channel:
+            await interaction.response.send_message('Thread Channel is not set. Contact an Administrator to set this up.', ephemeral=True)
+            return
+        
+        if not settings.proxy_channel:
+            await interaction.response.send_message('Proxy Channel is not set. Contact an Administrator to set this up.', ephemeral=True)
+            return
+        
+        thread_channel = self.cog.bot.get_channel(int(settings.thread_channel))
 
-            if not thread_channel:
-                await interaction.response.send_message(f'Thread Channel is not available to {self.cog.bot.user.mention}', ephemeral=True)
-                return
-            
-            proxy_channel = self.cog.bot.get_channel(int(settings.proxy_channel))
+        if not thread_channel:
+            await interaction.response.send_message(f'Thread Channel is not available to {self.cog.bot.user.mention}', ephemeral=True)
+            return
+        
+        proxy_channel = self.cog.bot.get_channel(int(settings.proxy_channel))
 
-            if not proxy_channel:
-                await interaction.response.send_message(f'Proxy Channel is not available to {self.cog.bot.user.mention}', ephemeral=True)
-                return
-            
-            if not (isinstance(proxy_channel, discord.TextChannel) or isinstance(proxy_channel, discord.ForumChannel)):
-                await interaction.response.send_message('Proxy Channel is not a Text or Forum Channel - Contact an Administrator to have this fixed', ephemeral=True)
-                return
-            
-            if not settings.moderation_role:
-                await interaction.response.send_message('Moderation Role is not set. Contact an Administrator to set this up.', ephemeral=True)
-                return
-            
-            moderation_role = proxy_channel.guild.get_role(int(settings.moderation_role))
+        if not proxy_channel:
+            await interaction.response.send_message(f'Proxy Channel is not available to {self.cog.bot.user.mention}', ephemeral=True)
+            return
+        
+        if not (isinstance(proxy_channel, discord.TextChannel) or isinstance(proxy_channel, discord.ForumChannel)):
+            await interaction.response.send_message('Proxy Channel is not a Text or Forum Channel - Contact an Administrator to have this fixed', ephemeral=True)
+            return
+        
+        if not settings.moderation_role:
+            await interaction.response.send_message('Moderation Role is not set. Contact an Administrator to set this up.', ephemeral=True)
+            return
+        
+        moderation_role = proxy_channel.guild.get_role(int(settings.moderation_role))
 
-            if not moderation_role:
-                await interaction.response.send_message(f'Moderation Role is not available to {self.cog.bot.user.mention}', ephemeral=True)
-                return
+        if not moderation_role:
+            await interaction.response.send_message(f'Moderation Role is not available to {self.cog.bot.user.mention}', ephemeral=True)
+            return
 
-            thread_channel_thread = await thread_channel.create_thread(name=f'ModMail - {interaction.user.name}', type=discord.ChannelType.private_thread, invitable=True)
-            await thread_channel_thread.add_user(interaction.user)
+        thread_channel_thread = await thread_channel.create_thread(name=f'ModMail - {interaction.user.name}', type=discord.ChannelType.private_thread, invitable=True)
+        await thread_channel_thread.add_user(interaction.user)
 
-            if not isinstance(proxy_channel, discord.ForumChannel):
-                proxy_channel_thread = await proxy_channel.create_thread(name=f'ModMail - {interaction.user.name} ({interaction.user.id})', type=discord.ChannelType.public_thread, invitable=True)
-            
-                for member in proxy_channel.members:
-                    if moderation_role in member.roles:
-                        await proxy_channel_thread.add_user(member)
-            else:
-                proxy_channel_thread, proxy_message = await proxy_channel.create_thread(name=f'ModMail - {interaction.user.name} ({interaction.user.id})', content=f'**{interaction.user.name}** has started a ModMail Thread')
+        if not isinstance(proxy_channel, discord.ForumChannel):
+            proxy_channel_thread = await proxy_channel.create_thread(name=f'ModMail - {interaction.user.name} ({interaction.user.id})', type=discord.ChannelType.public_thread, invitable=True)
+        
+            for member in proxy_channel.members:
+                if moderation_role in member.roles:
+                    await proxy_channel_thread.add_user(member)
+        else:
+            proxy_channel_thread, proxy_message = await proxy_channel.create_thread(name=f'ModMail - {interaction.user.name} ({interaction.user.id})', content=f'**{interaction.user.name}** has started a ModMail Thread')
 
-                if settings.external_creation_channel:
-                    external_creation_channel = self.cog.bot.get_channel(int(settings.external_creation_channel))
+            if settings.external_creation_channel:
+                external_creation_channel = self.cog.bot.get_channel(int(settings.external_creation_channel))
 
-                    if external_creation_channel:
-                        for member in external_creation_channel.members:
-                            if moderation_role in member.roles:
-                                await proxy_channel_thread.add_user(member)
+                if external_creation_channel:
+                    for member in external_creation_channel.members:
+                        if moderation_role in member.roles:
+                            await proxy_channel_thread.add_user(member)
 
-            ModMailMapping = self.cog.tables.ModMailMapping
+        ModMailMapping = self.cog.tables.ModMailMapping
 
-            mapping = ModMailMapping(guild_id = str(interaction.guild.id), user_thread = str(thread_channel_thread.id), proxy_thread = str(proxy_channel_thread.id))
-            mapping.save()
+        mapping = ModMailMapping(guild_id = str(interaction.guild.id), user_thread = str(thread_channel_thread.id), proxy_thread = str(proxy_channel_thread.id))
+        mapping.save()
 
-            thread_embed = discord.Embed(description='This is a ModMail Thread. You can use this to contact the Moderation Team. Please be patient while we respond to your request.', color=discord.Color.purple())
-            thread_embed.set_author(name=interaction.guild.name, icon_url=interaction.guild.icon.url)
-            thread_embed.set_footer(text='To reply, type your message in this thread')
+        thread_embed = discord.Embed(description='This is a ModMail Thread. You can use this to contact the Moderation Team. Please be patient while we respond to your request.', color=discord.Color.purple())
+        thread_embed.set_author(name=interaction.guild.name, icon_url=interaction.guild.icon.url)
+        thread_embed.set_footer(text='To reply, type your message in this thread')
 
-            await thread_channel_thread.send(embed=thread_embed)
+        await thread_channel_thread.send(embed=thread_embed)
 
-            proxy_embed = discord.Embed(description=f'**{interaction.user.name}** has started a ModMail Thread. To reply to this thread, use the reply command.', color=discord.Color.purple())
-            proxy_embed.set_author(name=interaction.guild.name, icon_url=interaction.guild.icon.url)
-            proxy_embed.set_footer(text='To reply, use the reply command')
+        proxy_embed = discord.Embed(description=f'**{interaction.user.name}** has started a ModMail Thread. To reply to this thread, use the reply command.', color=discord.Color.purple())
+        proxy_embed.set_author(name=interaction.guild.name, icon_url=interaction.guild.icon.url)
+        proxy_embed.set_footer(text='To reply, use the reply command')
 
-            await proxy_channel_thread.send(embed=proxy_embed)
+        await proxy_channel_thread.send(embed=proxy_embed)
 
-            await interaction.response.send_message('ModMail Thread Created', ephemeral=True)
-        except Exception:
-            terminal.add_message(traceback.format_exc())
+        await interaction.response.send_message('ModMail Thread Created', ephemeral=True)
 
 class ModMail(PlasmaCog):
     """Mod Messaging Cog"""
@@ -317,18 +314,7 @@ class ModMail(PlasmaCog):
 
     @modmail.command(name='close', description='Close a ModMail Thread')
     async def modmail_close(self, ctx):
-        """Close a ModMail Thread"""
-        ModMailSettings = self.tables.ModMailSettings
-        settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
-
-        if not settings:
-            settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = False, thread_channel = None, proxy_channel = None, external_creation_channel = None)
-            settings.save()
-
-        if not settings.enabled:
-            await ctx.send('ModMail is not enabled', ephemeral=True)
-            return
-        
+        """Close a ModMail Thread"""        
         if not isinstance(ctx.channel, discord.Thread):
             await ctx.send('This command can only be used in a ModMail thread', ephemeral=True)
             return
@@ -375,57 +361,54 @@ class ModMail(PlasmaCog):
     @chat_command(name='reply', description='Reply to a ModMail Thread')
     async def reply(self, ctx, *,  message:str):
         """Reply to a ModMail Thread"""
-        try:
-            if not isinstance(ctx.channel, discord.Thread):
-                await ctx.send('This command can only be used in a ModMail thread', ephemeral=True)
-                return
-            
-            ModMailMapping = self.tables.ModMailMapping
-            mapping = ModMailMapping.select().where(ModMailMapping.user_thread == str(ctx.channel.id)).first()
-            proxy_mapping = ModMailMapping.select().where(ModMailMapping.proxy_thread == str(ctx.channel.id)).first()
-            proxy = False
+        if not isinstance(ctx.channel, discord.Thread):
+            await ctx.send('This command can only be used in a ModMail thread', ephemeral=True)
+            return
+        
+        ModMailMapping = self.tables.ModMailMapping
+        mapping = ModMailMapping.select().where(ModMailMapping.user_thread == str(ctx.channel.id)).first()
+        proxy_mapping = ModMailMapping.select().where(ModMailMapping.proxy_thread == str(ctx.channel.id)).first()
+        proxy = False
 
-            if not mapping:
-                mapping = proxy_mapping
-                proxy = True
-            elif not mapping.user_thread:
-                mapping = proxy_mapping
-                proxy = True
+        if not mapping:
+            mapping = proxy_mapping
+            proxy = True
+        elif not mapping.user_thread:
+            mapping = proxy_mapping
+            proxy = True
 
-            if not mapping:
-                await ctx.send('This thread is not a ModMail thread', ephemeral=True)
-                return
-            elif not mapping.proxy_thread:
-                await ctx.send('This thread is not a ModMail thread', ephemeral=True)
-                return
-            elif not mapping.user_thread:
-                await ctx.send('This thread is not a ModMail thread', ephemeral=True)
-                return
-            
-            destination = self.bot.get_channel(int(mapping.user_thread if proxy else mapping.proxy_thread))
+        if not mapping:
+            await ctx.send('This thread is not a ModMail thread', ephemeral=True)
+            return
+        elif not mapping.proxy_thread:
+            await ctx.send('This thread is not a ModMail thread', ephemeral=True)
+            return
+        elif not mapping.user_thread:
+            await ctx.send('This thread is not a ModMail thread', ephemeral=True)
+            return
+        
+        destination = self.bot.get_channel(int(mapping.user_thread if proxy else mapping.proxy_thread))
 
-            origin_files = []
-            destination_files = []
+        origin_files = []
+        destination_files = []
 
-            for attachment in ctx.message.attachments:
-                origin_files.append(await attachment.to_file())
-                destination_files.append(await attachment.to_file())
+        for attachment in ctx.message.attachments:
+            origin_files.append(await attachment.to_file())
+            destination_files.append(await attachment.to_file())
 
-            embed_origin = discord.Embed(description=message, color=discord.Color.purple())
-            embed_origin.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
-            embed_origin.set_footer(text='To reply, type your message in this thread' if not proxy else 'To reply, use the reply command')
+        embed_origin = discord.Embed(description=message, color=discord.Color.purple())
+        embed_origin.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
+        embed_origin.set_footer(text='To reply, type your message in this thread' if not proxy else 'To reply, use the reply command')
 
-            embed_destination = discord.Embed(description=message, color=discord.Color.purple())
-            embed_destination.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
-            embed_destination.set_footer(text='To reply, type your message in this thread' if proxy else 'To reply, use the reply command')
+        embed_destination = discord.Embed(description=message, color=discord.Color.purple())
+        embed_destination.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
+        embed_destination.set_footer(text='To reply, type your message in this thread' if proxy else 'To reply, use the reply command')
 
-            if not ctx.interaction:
-                await ctx.message.delete()
+        if not ctx.interaction:
+            await ctx.message.delete()
 
-            await destination.send(embed=embed_destination, files=destination_files)
-            await ctx.send(embed=embed_origin, files=origin_files)
-        except Exception:
-            logging.exception('Error in ModMail Reply')
+        await destination.send(embed=embed_destination, files=destination_files)
+        await ctx.send(embed=embed_origin, files=origin_files)
 
     @chat_group(name='config_modmail', description='Configure ModMail Settings')
     async def config_modmail(self, ctx):
@@ -435,26 +418,23 @@ class ModMail(PlasmaCog):
     @config_modmail.command(name='create_button', description='Create a ModMail Button')
     async def config_modmail_create_button(self, ctx):
         """Create ModMail Button"""
-        try:
-            if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
-                await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
-                return
-            
-            ModMailSettings = self.tables.ModMailSettings
-            settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
-            
-            if not settings:
-                settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = False, thread_channel = None, proxy_channel = None, external_creation_channel = None)
-                settings.save()
+        if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
+            await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
+            return
+        
+        ModMailSettings = self.tables.ModMailSettings
+        settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
+        
+        if not settings:
+            settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = False, thread_channel = None, proxy_channel = None, external_creation_channel = None)
+            settings.save()
 
-            if not settings.enabled:
-                await ctx.send('ModMail is not enabled', ephemeral=True)
-                return
-            
-            await ctx.send('Creating Modmail Button', ephemeral=True)
-            await ctx.channel.send('Click to open a ModMail Thread', view=ModMailButton(self))
-        except Exception:
-            terminal.add_message(traceback.format_exc())
+        if not settings.enabled:
+            await ctx.send('ModMail is not enabled', ephemeral=True)
+            return
+        
+        await ctx.send('Creating Modmail Button', ephemeral=True)
+        await ctx.channel.send('Click to open a ModMail Thread', view=ModMailButton(self))
         
     @config_modmail.command(name='toggle', description='Toggle ModMail')
     async def config_modmail_toggle(self, ctx):
@@ -608,83 +588,77 @@ class ModMail(PlasmaCog):
     @config_modmail.command(name='list_settings', description='List ModMail Settings')
     async def config_modmail_list_settings(self, ctx):
         """List ModMail Settings""" 
-        try:
-            if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
-                await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
-                return
+        if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
+            await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
+            return
 
-            ModMailSettings = self.tables.ModMailSettings
-            settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
+        ModMailSettings = self.tables.ModMailSettings
+        settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
 
-            if not settings:
-                settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = False, thread_channel = None, proxy_channel = None, external_creation_channel = None)
-                settings.save()
+        if not settings:
+            settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = False, thread_channel = None, proxy_channel = None, external_creation_channel = None)
+            settings.save()
 
-            embed = discord.Embed(description=f"**ModMail is {'Enabled' if settings.enabled else 'Disabled'}**\n\n**Thread Channel:** {self.bot.get_channel(int(settings.thread_channel)).mention if settings.thread_channel else 'None'}\n**Proxy Channel:** {self.bot.get_channel(int(settings.proxy_channel)).mention if settings.proxy_channel else 'None'}\n**External Creation Channel:** {self.bot.get_channel(int(settings.external_creation_channel)).mention if settings.external_creation_channel else 'None'}\n**Moderation Role:** {self.bot.get_guild(int(settings.guild_id)).get_role(int(settings.moderation_role)).mention if settings.moderation_role else 'None'}", color=discord.Color.purple())
-            embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.guild.icon.url)
-            embed.set_footer(text='ModMail Settings')
+        embed = discord.Embed(description=f"**ModMail is {'Enabled' if settings.enabled else 'Disabled'}**\n\n**Thread Channel:** {self.bot.get_channel(int(settings.thread_channel)).mention if settings.thread_channel else 'None'}\n**Proxy Channel:** {self.bot.get_channel(int(settings.proxy_channel)).mention if settings.proxy_channel else 'None'}\n**External Creation Channel:** {self.bot.get_channel(int(settings.external_creation_channel)).mention if settings.external_creation_channel else 'None'}\n**Moderation Role:** {self.bot.get_guild(int(settings.guild_id)).get_role(int(settings.moderation_role)).mention if settings.moderation_role else 'None'}", color=discord.Color.purple())
+        embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.guild.icon.url)
+        embed.set_footer(text='ModMail Settings')
 
-            await ctx.send(embed=embed, ephemeral=True)
-        except Exception:
-            terminal.add_message(traceback.format_exc())
+        await ctx.send(embed=embed, ephemeral=True)
 
     @PlasmaCog.listener()
     async def on_message(self, message):
         """Event fired when a message is sent"""
-        try:
-            if message.author.bot:
-                return
+        if message.author.bot:
+            return
 
-            if not isinstance(message.channel, discord.Thread):
-                return
-            
-            if message.content.strip().startswith(self.bot.config['presence']['prefix']):
-                return
-            
-            ModMailMapping = self.tables.ModMailMapping
-            mapping = ModMailMapping.select().where(ModMailMapping.user_thread == str(message.channel.id)).first()
-            proxy_mapping = ModMailMapping.select().where(ModMailMapping.proxy_thread == str(message.channel.id)).first()
-            proxy = False
+        if not isinstance(message.channel, discord.Thread):
+            return
+        
+        if message.content.strip().startswith(self.bot.config['presence']['prefix']):
+            return
+        
+        ModMailMapping = self.tables.ModMailMapping
+        mapping = ModMailMapping.select().where(ModMailMapping.user_thread == str(message.channel.id)).first()
+        proxy_mapping = ModMailMapping.select().where(ModMailMapping.proxy_thread == str(message.channel.id)).first()
+        proxy = False
 
-            if not mapping:
-                mapping = proxy_mapping
-                proxy = True
-            elif not mapping.user_thread:
-                mapping = proxy_mapping
-                proxy = True
+        if not mapping:
+            mapping = proxy_mapping
+            proxy = True
+        elif not mapping.user_thread:
+            mapping = proxy_mapping
+            proxy = True
 
-            if not mapping:
-                return
-            elif not mapping.proxy_thread:
-                return
-            elif not mapping.user_thread:
-                return
-            
-            if proxy:
-                return
+        if not mapping:
+            return
+        elif not mapping.proxy_thread:
+            return
+        elif not mapping.user_thread:
+            return
+        
+        if proxy:
+            return
 
-            destination = self.bot.get_channel(int(mapping.proxy_thread))
+        destination = self.bot.get_channel(int(mapping.proxy_thread))
 
-            origin_files = []
-            destination_files = []
+        origin_files = []
+        destination_files = []
 
-            for attachment in message.attachments:
-                origin_files.append(await attachment.to_file())
-                destination_files.append(await attachment.to_file())
+        for attachment in message.attachments:
+            origin_files.append(await attachment.to_file())
+            destination_files.append(await attachment.to_file())
 
-            embed_origin = discord.Embed(description=message.content, color=discord.Color.purple())
-            embed_origin.set_author(name=message.author.name, icon_url=message.author.avatar.url)
-            embed_origin.set_footer(text='To reply, type your message in this thread')
+        embed_origin = discord.Embed(description=message.content, color=discord.Color.purple())
+        embed_origin.set_author(name=message.author.name, icon_url=message.author.avatar.url)
+        embed_origin.set_footer(text='To reply, type your message in this thread')
 
-            embed_destination = discord.Embed(description=message.content, color=discord.Color.purple())
-            embed_destination.set_author(name=message.author.name, icon_url=message.author.avatar.url)
-            embed_destination.set_footer(text='To reply, use the reply command')
+        embed_destination = discord.Embed(description=message.content, color=discord.Color.purple())
+        embed_destination.set_author(name=message.author.name, icon_url=message.author.avatar.url)
+        embed_destination.set_footer(text='To reply, use the reply command')
 
-            await message.delete()
-            await message.channel.send(embed=embed_origin, files=origin_files)
-            await destination.send(embed=embed_destination, files=destination_files)
-        except Exception:
-            logging.exception('Error in ModMail Message')
+        await message.delete()
+        await message.channel.send(embed=embed_origin, files=origin_files)
+        await destination.send(embed=embed_destination, files=destination_files)
             
 
 async def setup(bot):
