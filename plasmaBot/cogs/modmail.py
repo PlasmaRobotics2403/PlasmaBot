@@ -586,22 +586,31 @@ class ModMail(PlasmaCog):
     @config_modmail.command(name='list_settings', description='List ModMail Settings')
     async def config_modmail_list_settings(self, ctx):
         """List ModMail Settings""" 
-        if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
-            await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
-            return
+        try:
+            if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
+                await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
+                return
 
-        ModMailSettings = self.tables.ModMailSettings
-        settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
+            ModMailSettings = self.tables.ModMailSettings
+            settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
 
-        if not settings:
-            settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = False, thread_channel = None, proxy_channel = None, external_creation_channel = None)
-            settings.save()
+            if not settings:
+                settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = False, thread_channel = None, proxy_channel = None, external_creation_channel = None)
+                settings.save()
 
-        embed = discord.Embed(description=f"**ModMail is {'Enabled' if settings.enabled else 'Disabled'}**\n\n**Thread Channel:** {self.bot.get_channel(int(settings.thread_channel)).mention if settings.thread_channel else 'None'}\n**Proxy Channel:** {self.bot.get_channel(int(settings.proxy_channel)).mention if settings.proxy_channel else 'None'}\n**External Creation Channel:** {self.bot.get_channel(int(settings.external_creation_channel)).mention if settings.external_creation_channel else 'None'}\n**Moderation Role:** {self.bot.get_guild(int(settings.guild_id)).get_role(int(settings.moderation_role)).mention if settings.moderation_role else 'None'}", color=discord.Color.purple())
-        embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.guild.icon.url)
-        embed.set_footer(text='ModMail Settings')
+            if not settings.enabled:
+                embed = discord.Embed(description='**ModMail is Disabled**', color=discord.Color.purple())
+                embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.guild.icon.url)
+                embed.set_footer(text='ModMail Settings')
+            else:
+                embed = discord.Embed(description=f"**ModMail is Enabled**\n\n**Thread Channel:** {self.bot.get_channel(int(settings.thread_channel)).mention if settings.thread_channel else 'None'}\n**Proxy Channel:** {self.bot.get_channel(int(settings.proxy_channel)).mention if settings.proxy_channel else 'None'}\n**External Creation Channel:** {self.bot.get_channel(int(settings.external_creation_channel)).mention if settings.external_creation_channel else 'None'}\n**Moderation Role:** {self.bot.get_guild(int(settings.guild_id)).get_role(int(settings.moderation_role)).mention if settings.moderation_role else 'None'}", color=discord.Color.purple())
+                embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.guild.icon.url)
+                embed.set_footer(text='ModMail Settings')
 
-        await ctx.send(embed=embed, ephemeral=True)
+            await ctx.send(embed=embed, ephemeral=True)
+        except Exception:
+            import traceback
+            await ctx.send(traceback.format_exc(), ephemeral=True)
 
     @PlasmaCog.listener()
     async def on_message(self, message):
