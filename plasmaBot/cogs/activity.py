@@ -682,6 +682,7 @@ class Activity(PlasmaCog):
             challenge_embed.set_footer(text=f'{member.display_name} accepted the challenge')
             await challenge_message.edit(embed=challenge_embed)
 
+        embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
         embed.description = f'{ctx.author.display_name} and {member.display_name} are facing off...'
         faceoff_message = await ctx.send(embed=embed, ephemeral=wager is None or wager == 0)
 
@@ -692,6 +693,7 @@ class Activity(PlasmaCog):
 
         author_score = random.randint(25, 100) * author_buff_value
         opponent_score = random.randint(25, 100) * opponent_buffs_value
+
 
         if author_score > opponent_score:
             if wager is not None and wager != 0:
