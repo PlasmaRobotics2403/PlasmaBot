@@ -16,12 +16,7 @@ class Pagination(discord.ui.View):
         if interaction.user == self.author:
             return True
         else:
-            embed = discord.Embed(
-                description=f'Only the author of this command ({self.author.mention}) can perform this action.',
-                color=discord.Color.purple()
-            )
-            embed.set_author(name='Error', icon_url=interaction.user.avatar.url)
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await interaction.response.send_message(f'Only {self.author.mention} can use this button.', ephemeral=True)
             return False
         
     async def navigate(self):
