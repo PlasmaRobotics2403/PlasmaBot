@@ -90,6 +90,9 @@ class Store(discord.ui.View):
         item.save()
 
         return (True, 'Success')
+    
+    async def on_timeout(self):
+        await self.message.edit(view=None)
 
 
 class Activity(PlasmaCog):
