@@ -4,7 +4,9 @@ import asyncio
 from inspect import cleandoc
 from fuzzywuzzy import fuzz
 
-from plasmaBot.cog import PlasmaCog, terminal_command, chat_command, chat_group, is_developer
+from discord.ext import commands
+
+from plasmaBot.cog import PlasmaCog, terminal_command, chat_command, chat_group
 from plasmaBot.interface import terminal
 
 class Default(PlasmaCog):
@@ -15,8 +17,11 @@ class Default(PlasmaCog):
         """Get Bot Latency"""
         await ctx.send(f'🏓 Pong! ({round(self.bot.latency * 1000)}ms)', ephemeral=True)
 
+    def is_developer(ctx):
+        return ctx.author.id in ctx.bot.developers
+
     @chat_group(name='administrative', description='Administrative Commands')
-    @is_developer
+    @commands.check(is_developer)
     async def administrative(self):
         """Administrative Commands"""
         pass
