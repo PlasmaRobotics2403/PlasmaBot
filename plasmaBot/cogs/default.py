@@ -1,9 +1,10 @@
 import os
 import discord
+import asyncio
 from inspect import cleandoc
 from fuzzywuzzy import fuzz
 
-from plasmaBot.cog import PlasmaCog, terminal_command, chat_command
+from plasmaBot.cog import PlasmaCog, terminal_command, chat_command, chat_group, is_developer
 from plasmaBot.interface import terminal
 
 class Default(PlasmaCog):
@@ -13,6 +14,12 @@ class Default(PlasmaCog):
     async def ping(self, ctx):
         """Get Bot Latency"""
         await ctx.send(f'🏓 Pong! ({round(self.bot.latency * 1000)}ms)', ephemeral=True)
+
+    @chat_group(name='administrative', description='Administrative Commands')
+    @is_developer()
+    async def administrative(self):
+        """Administrative Commands"""
+        pass
 
     @terminal_command(name='help', description='Display Help Message')
     async def help(self, bot, terminal, command_query=None):
@@ -70,6 +77,16 @@ class Default(PlasmaCog):
         """Sync Command Tree"""
         await bot.tree.sync()
         terminal.add_message('[purple]Synced Command Tree[/purple]')
+
+    sync_lock = asyncio.Lock()
+
+    @administrative.command(name="sync", description="Sync Command Tree")
+    async def sync_admin(self, ctx):
+        """Sync Command Tree"""
+        async with self.sync_lock:
+            message = await ctx.send('Syncing Command Tree...')
+            await ctx.bot.tree.sync()
+            await message.edit('Command Tree Synced')    
 
     @terminal_command(name='guilds', description='List Servers', aliases=['servers'])
     async def servers(self, bot, terminal):
