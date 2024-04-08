@@ -402,7 +402,7 @@ class Activity(PlasmaCog):
         timestamps = [point.timestamp for point in activity_points]
 
         # Create a list of 30 buckets based on the day of the timestamp
-        buckets = [0] * int((datetime.datetime.utcnow() - timestamps[0]).days / 31) + 1
+        buckets = [0] * (int((datetime.datetime.utcnow() - timestamps[0]).days / 31) + 1)
         for timestamp in timestamps:
             month = int((datetime.datetime.utcnow() - timestamp).days / 31)
             if 0 <= month < 30:
