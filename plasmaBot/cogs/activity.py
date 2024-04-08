@@ -183,7 +183,7 @@ class Activity(PlasmaCog):
             if 0 <= day < 30:
                 buckets[day] += 1
 
-        with self.graph_lock:
+        async with self.graph_lock:
             # Generate the graph
             plt.plot(buckets)
             plt.title("Last Thirty Days of Activity for " + (member.display_name if member else ctx.author.display_name))
