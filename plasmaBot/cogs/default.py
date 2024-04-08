@@ -15,10 +15,13 @@ class Default(PlasmaCog):
         """Get Bot Latency"""
         await ctx.send(f'🏓 Pong! ({round(self.bot.latency * 1000)}ms)', ephemeral=True)
 
-    @chat_group(name='administrative', description='Administrative Commands')
-    async def administrative(self):
+    @chat_group(name='administrative', description='Run Administrative Commands')
+    async def administrative(self, ctx):
         """Administrative Commands"""
-        pass
+        if not ctx.author.id in self.bot.config.developers:
+            await ctx.send('You do not have permission to use this command', ephemeral=True)
+
+        await ctx.send('This command is a placeholder for subcommands', ephemeral=True)
 
     @terminal_command(name='help', description='Display Help Message')
     async def help(self, bot, terminal, command_query=None):
@@ -83,7 +86,7 @@ class Default(PlasmaCog):
     async def sync_admin(self, ctx):
         """Sync Command Tree"""
         if not ctx.author.id in self.bot.config.developers:
-            await ctx.send('You do not have permission to use this command.', ephemeral=True)
+            await ctx.send('You do not have permission to use this command', ephemeral=True)
 
         async with self.sync_lock:
             message = await ctx.send('Syncing Command Tree...')
