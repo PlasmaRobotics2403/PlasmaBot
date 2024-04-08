@@ -183,8 +183,7 @@ class Activity(PlasmaCog):
 
         # Generate the graph
         plt.plot(buckets)
-        plt.title("Last Thirty Days of Activity")
-        plt.subtitle(ctx.author.display_name)
+        plt.title("Last Thirty Days of Activity for " + (member.display_name if member else ctx.author.display_name))
         plt.xlabel("Days")
         plt.ylabel("Activity Count")
 
