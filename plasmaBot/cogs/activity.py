@@ -170,6 +170,19 @@ class Activity(PlasmaCog):
         
         await self.generateMonthlyGraph(ctx, member)
 
+    @graph.command(name='hourly', description='View your Hourly XP Graph', aliases=['hour'])
+    async def graph_hourly(self, ctx, member:discord.Member=None):
+        """View your Hourly XP Graph"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+        
+        await self.generateHourlyGraph(ctx, member)
+
     @graph.command(name='monthly', description='View your Monthly XP Graph', aliases=['month'])
     async def graph_monthly(self, ctx, member:discord.Member=None):
         """View your Monthly XP Graph"""
@@ -185,10 +198,49 @@ class Activity(PlasmaCog):
         
     graph_lock = asyncio.Lock()
 
+    async def generateHourlyGraph(self, ctx, member:discord.Member=None):
+        """Generate Hourly Graph"""
+        ActivityPoint = self.tables.ActivityPoint
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=-1))
+
+        # Convert activity_points to a list of timestamps
+        timestamps = [point.timestamp for point in activity_points]
+
+        # Create a list of 30 buckets based on the day of the timestamp
+        buckets = [0] * 60
+        for timestamp in timestamps:
+            minute = (datetime.datetime.now(datetime.UTC) - timestamp).minutes
+            if 0 <= minute < 60:
+                buckets[minute] += 1
+
+        async with self.graph_lock:
+            # Generate the graph
+            plt.plot(range(-59, 1), buckets[::-1])
+            plt.title("Hourly Activity for " + (member.display_name if member else ctx.author.display_name))
+            plt.xlabel("Minutes")
+            plt.ylabel("Activity Points")
+
+            # Save the graph as a PNG file in memory
+            image_data = io.BytesIO()
+            plt.savefig(image_data, format='png')
+            image_data.seek(0)
+
+            # Clear the plot
+            plt.clf()
+
+        # Create a discord.File object from the image data
+        file = discord.File(image_data, filename='graph.png')
+
+        # Send the file as a message attachment
+        await ctx.send(file=file, ephemeral=True)
+
+        # Close the BytesIO object to free up memory
+        image_data.close()
+
     async def generateMonthlyGraph(self, ctx, member:discord.Member=None):
         """Generate Monthly Graph"""
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30))
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=-30))
 
         # Convert activity_points to a list of timestamps
         timestamps = [point.timestamp for point in activity_points]
@@ -196,7 +248,7 @@ class Activity(PlasmaCog):
         # Create a list of 30 buckets based on the day of the timestamp
         buckets = [0] * 30
         for timestamp in timestamps:
-            day = (datetime.datetime.utcnow() - timestamp).days
+            day = (datetime.datetime.now(datetime.UTC) - timestamp).days
             if 0 <= day < 30:
                 buckets[day] += 1
 
@@ -237,7 +289,7 @@ class Activity(PlasmaCog):
             return
 
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30))
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=-30))
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Monthly')
         await ctx.send(embed=embed, ephemeral=True)
 
@@ -253,7 +305,7 @@ class Activity(PlasmaCog):
             return
 
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365))
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=-365))
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Yearly')
         await ctx.send(embed=embed, ephemeral=True)
 
@@ -269,7 +321,7 @@ class Activity(PlasmaCog):
             return
 
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30))
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=-30))
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Monthly')
         await ctx.send(embed=embed, ephemeral=True)
 
@@ -285,7 +337,7 @@ class Activity(PlasmaCog):
             return
 
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1))
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=-1))
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Daily')
         await ctx.send(embed=embed, ephemeral=True)
 
@@ -301,7 +353,7 @@ class Activity(PlasmaCog):
             return
 
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1))
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=-1))
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Hourly')
         await ctx.send(embed=embed, ephemeral=True)
 
@@ -342,7 +394,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
         
         await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'Monthly'), ephemeral=True)
 
@@ -359,7 +411,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
         
         await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'Daily'))
 
@@ -376,7 +428,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
         
         await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'Hourly'))
     
@@ -393,7 +445,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
         
         await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'Monthly'))
 
@@ -410,7 +462,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=-365)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
         
         await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'Yearly'))
 
@@ -468,7 +520,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
 
         await self.generate_leaderboard(ctx, activity_points, 'Monthly')
 
@@ -485,7 +537,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
 
         await self.generate_leaderboard(ctx, activity_points, 'Daily')
 
@@ -502,7 +554,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
 
         await self.generate_leaderboard(ctx, activity_points, 'Hourly')
 
@@ -519,7 +571,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
 
         await self.generate_leaderboard(ctx, activity_points, 'Monthly')
 
@@ -536,7 +588,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=-365)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
 
         await self.generate_leaderboard(ctx, activity_points, 'Yearly')
 
@@ -1017,7 +1069,7 @@ class Activity(PlasmaCog):
                 await ctx.send(f'{member.display_name} does not have enough XP', ephemeral=True)
                 return
 
-            activity_profile = ActivityStatus(user_id=str(member.id), user_nick=member.display_name, guild_id=str(ctx.guild.id), current_xp=xp, total_xp = 0, last_activity=datetime.datetime.utcnow())
+            activity_profile = ActivityStatus(user_id=str(member.id), user_nick=member.display_name, guild_id=str(ctx.guild.id), current_xp=xp, total_xp = 0, last_activity=datetime.datetime.now(datetime.UTC))
             activity_profile.save()
         else:
             if activity_profile.current_xp + xp < 0:
@@ -1041,7 +1093,7 @@ class Activity(PlasmaCog):
         activity_profile = ActivityStatus.select().where(ActivityStatus.user_id == str(ctx.author.id), ActivityStatus.guild_id == str(ctx.guild.id)).first()
 
         if activity_profile is None:
-            activity_profile = ActivityStatus(user_id=str(ctx.author.id), user_nick=ctx.author.display_name, guild_id=str(ctx.guild.id), current_xp=0, total_xp = 0, last_activity=datetime.datetime.utcnow(), afk=True, afk_message=message)
+            activity_profile = ActivityStatus(user_id=str(ctx.author.id), user_nick=ctx.author.display_name, guild_id=str(ctx.guild.id), current_xp=0, total_xp = 0, last_activity=datetime.datetime.now(datetime.UTC), afk=True, afk_message=message)
             activity_profile.save()
         else:
             activity_profile.afk = True
