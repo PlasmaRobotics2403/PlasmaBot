@@ -183,6 +183,19 @@ class Activity(PlasmaCog):
         
         await self.generateHourlyGraph(ctx, member)
 
+    @graph.command(name='daily', description='View your Daily XP Graph', aliases=['daily'])
+    async def graph_monthly(self, ctx, member:discord.Member=None):
+        """View your Daily XP Graph"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+        
+        await self.generateDailyGraph(ctx, member)
+
     @graph.command(name='monthly', description='View your Monthly XP Graph', aliases=['month'])
     async def graph_monthly(self, ctx, member:discord.Member=None):
         """View your Monthly XP Graph"""
@@ -195,6 +208,32 @@ class Activity(PlasmaCog):
             return
         
         await self.generateMonthlyGraph(ctx, member)
+
+    @graph.command(name='yearly', description='View your Yearly XP Graph', aliases=['yearly'])
+    async def graph_monthly(self, ctx, member:discord.Member=None):
+        """View your Yearly XP Graph"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+        
+        await self.generateYearlyGraph(ctx, member)
+
+    @graph.command(name='all', description='View your All-Time XP Graph', aliases=['all-time', 'alltime'])
+    async def graph_monthly(self, ctx, member:discord.Member=None):
+        """View your All-Time XP Graph"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+        
+        await self.generateAllTimeGraph(ctx, member)
         
     graph_lock = asyncio.Lock()
 
@@ -229,7 +268,46 @@ class Activity(PlasmaCog):
             plt.clf()
 
         # Create a discord.File object from the image data
-        file = discord.File(image_data, filename='graph.png')
+        file = discord.File(image_data, filename=f'hourlyActivity{member.id if member else ctx.author.id}.png')
+
+        # Send the file as a message attachment
+        await ctx.send(file=file, ephemeral=True)
+
+        # Close the BytesIO object to free up memory
+        image_data.close()
+
+    async def generateDailyGraph(self, ctx, member:discord.Member=None):
+        """Generate Daily Graph"""
+        ActivityPoint = self.tables.ActivityPoint
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1))
+
+        # Convert activity_points to a list of timestamps
+        timestamps = [point.timestamp for point in activity_points]
+
+        # Create a list of 30 buckets based on the day of the timestamp
+        buckets = [0] * 24
+        for timestamp in timestamps:
+            hour = int((datetime.datetime.utcnow() - timestamp).seconds / 3600)
+            if 0 <= hour < 24:
+                buckets[hour] += 1
+
+        async with self.graph_lock:
+            # Generate the graph
+            plt.plot(range(-23, 1), buckets[::-1])
+            plt.title("Daily Activity for " + (member.display_name if member else ctx.author.display_name))
+            plt.xlabel("Hours")
+            plt.ylabel("Activity Points")
+
+            # Save the graph as a PNG file in memory
+            image_data = io.BytesIO()
+            plt.savefig(image_data, format='png')
+            image_data.seek(0)
+
+            # Clear the plot
+            plt.clf()
+
+        # Create a discord.File object from the image data
+        file = discord.File(image_data, filename=f'dailyActivity{member.id if member else ctx.author.id}.png')
 
         # Send the file as a message attachment
         await ctx.send(file=file, ephemeral=True)
@@ -268,7 +346,85 @@ class Activity(PlasmaCog):
             plt.clf()
 
         # Create a discord.File object from the image data
-        file = discord.File(image_data, filename='graph.png')
+        file = discord.File(image_data, filename=f'monthlyActivity{member.id if member else ctx.author.id}.png')
+
+        # Send the file as a message attachment
+        await ctx.send(file=file, ephemeral=True)
+
+        # Close the BytesIO object to free up memory
+        image_data.close()
+
+    async def generateYearlyGraph(self, ctx, member:discord.Member=None):
+        """Generate Yearly Graph"""
+        ActivityPoint = self.tables.ActivityPoint
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(years=-1))
+
+        # Convert activity_points to a list of timestamps
+        timestamps = [point.timestamp for point in activity_points]
+
+        # Create a list of 30 buckets based on the day of the timestamp
+        buckets = [0] * 12
+        for timestamp in timestamps:
+            month = int((datetime.datetime.utcnow() - timestamp).days / 31)
+            if 0 <= month < 30:
+                buckets[month] += 1
+
+        async with self.graph_lock:
+            # Generate the graph
+            plt.plot(range(-29, 1), buckets[::-1])
+            plt.title("Monthly Activity for " + (member.display_name if member else ctx.author.display_name))
+            plt.xlabel("Months")
+            plt.ylabel("Activity Points")
+
+            # Save the graph as a PNG file in memory
+            image_data = io.BytesIO()
+            plt.savefig(image_data, format='png')
+            image_data.seek(0)
+
+            # Clear the plot
+            plt.clf()
+
+        # Create a discord.File object from the image data
+        file = discord.File(image_data, filename=f'yearlyActivity{member.id if member else ctx.author.id}.png')
+
+        # Send the file as a message attachment
+        await ctx.send(file=file, ephemeral=True)
+
+        # Close the BytesIO object to free up memory
+        image_data.close()
+
+    async def generateAllTimeGraph(self, ctx, member:discord.Member=None):
+        """Generate AllTime Graph"""
+        ActivityPoint = self.tables.ActivityPoint
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id)).order_by(ActivityPoint.timestamp.asc())
+
+        # Convert activity_points to a list of timestamps
+        timestamps = [point.timestamp for point in activity_points]
+
+        # Create a list of 30 buckets based on the day of the timestamp
+        buckets = [0] * int((datetime.datetime.utcnow() - timestamps[0]).days / 31) + 1
+        for timestamp in timestamps:
+            month = int((datetime.datetime.utcnow() - timestamp).days / 31)
+            if 0 <= month < 30:
+                buckets[month] += 1
+
+        async with self.graph_lock:
+            # Generate the graph
+            plt.plot(range(-29, 1), buckets[::-1])
+            plt.title("All Time Activity for " + (member.display_name if member else ctx.author.display_name))
+            plt.xlabel("Months")
+            plt.ylabel("Activity Points")
+
+            # Save the graph as a PNG file in memory
+            image_data = io.BytesIO()
+            plt.savefig(image_data, format='png')
+            image_data.seek(0)
+
+            # Clear the plot
+            plt.clf()
+
+        # Create a discord.File object from the image data
+        file = discord.File(image_data, filename=f'allTimeActivity{member.id if member else ctx.author.id}.png')
 
         # Send the file as a message attachment
         await ctx.send(file=file, ephemeral=True)
