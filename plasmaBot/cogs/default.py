@@ -18,7 +18,7 @@ class Default(PlasmaCog):
     @chat_group(name='administrative', description='Run Administrative Commands')
     async def administrative(self, ctx):
         """Administrative Commands"""
-        if not ctx.author.id in self.bot.config.developers:
+        if not ctx.author.id in self.bot.developers:
             await ctx.send('You do not have permission to use this command', ephemeral=True)
 
         await ctx.send('This command is a placeholder for subcommands', ephemeral=True)
@@ -85,7 +85,7 @@ class Default(PlasmaCog):
     @administrative.command(name="sync", description="Sync Command Tree")
     async def sync_admin(self, ctx):
         """Sync Command Tree"""
-        if not ctx.author.id in self.bot.config.developers:
+        if not ctx.author.id in self.bot.developers:
             await ctx.send('You do not have permission to use this command', ephemeral=True)
 
         async with self.sync_lock:
