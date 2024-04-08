@@ -209,7 +209,7 @@ class Activity(PlasmaCog):
         # Create a list of 30 buckets based on the day of the timestamp
         buckets = [0] * 60
         for timestamp in timestamps:
-            minute = (datetime.datetime.utcnow() - timestamp).minutes
+            minute = (datetime.datetime.utcnow() - timestamp).seconds / 60
             if 0 <= minute < 60:
                 buckets[minute] += 1
 
