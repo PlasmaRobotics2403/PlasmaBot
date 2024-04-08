@@ -156,8 +156,6 @@ class Activity(PlasmaCog):
 
         await ctx.send(embed=embed, ephemeral=True)
 
-    graph_lock = asyncio.Lock()
-
     @chat_group(name='graph', description='View your XP Graph')
     @guild_only()
     async def graph(self, ctx, member:discord.Member=None):
@@ -169,7 +167,26 @@ class Activity(PlasmaCog):
             embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
             await ctx.send(embed=embed, ephemeral=True)
             return
+        
+        await self.generateMonthlyGraph(ctx, member)
 
+    @graph.command(name='monthly', description='View your Monthly XP Graph', aliases=['month'])
+    async def graph_monthly(self, ctx, member:discord.Member=None):
+        """View your Monthly XP Graph"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+        
+        await self.generateMonthlyGraph(ctx, member)
+        
+    graph_lock = asyncio.Lock()
+
+    async def generateMonthlyGraph(self, ctx, member:discord.Member=None):
+        """Generate Monthly Graph"""
         ActivityPoint = self.tables.ActivityPoint
         activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30))
 
@@ -186,7 +203,7 @@ class Activity(PlasmaCog):
         async with self.graph_lock:
             # Generate the graph
             plt.plot(range(-29, 1), buckets[::-1])
-            plt.title("Last Thirty Days of Activity for " + (member.display_name if member else ctx.author.display_name))
+            plt.title("Monthly Activity for " + (member.display_name if member else ctx.author.display_name))
             plt.xlabel("Days")
             plt.ylabel("Activity Count")
 
