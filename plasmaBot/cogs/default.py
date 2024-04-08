@@ -89,9 +89,9 @@ class Default(PlasmaCog):
             await ctx.send('You do not have permission to use this command', ephemeral=True)
 
         async with self.sync_lock:
-            message = await ctx.send('Syncing Command Tree...')
+            message = await ctx.send('Syncing Command Tree...', ephemeral=True)
             await ctx.bot.tree.sync()
-            await message.edit('Command Tree Synced')    
+            await message.edit(content='Command Tree Synced')    
 
     @terminal_command(name='guilds', description='List Servers', aliases=['servers'])
     async def servers(self, bot, terminal):
@@ -262,9 +262,9 @@ class Default(PlasmaCog):
         """Event fired when a message is sent"""
         if message.channel == terminal.channel:
             if message.reference:
-                terminal.add_message(f'[{message.id}→{message.reference.message_id}] {message.author.display_name.replace('[', '\[')}: {message.content.replace('[', '\[') if message.content else '[yellow]\[No Content][/yellow]'}')
+                terminal.add_message(f'[{message.id}→{message.reference.message_id}] {message.author.display_name.replace('[', '\\[')}: {message.content.replace('[', '\\[') if message.content else '[yellow]\\[No Content][/yellow]'}')
             else:
-                terminal.add_message(f'[{message.id}] {message.author.display_name.replace('[', '\[')}: {message.content.replace('[', '\[') if message.content else '[yellow]\[No Content][/yellow]'}')
+                terminal.add_message(f'[{message.id}] {message.author.display_name.replace('[', '\\[')}: {message.content.replace('[', '\\[') if message.content else '[yellow]\\[No Content][/yellow]'}')
 
     @PlasmaCog.listener('on_message_edit')
     async def on_message_edit(self, before, after):
