@@ -205,7 +205,7 @@ class Activity(PlasmaCog):
             plt.plot(range(-29, 1), buckets[::-1])
             plt.title("Monthly Activity for " + (member.display_name if member else ctx.author.display_name))
             plt.xlabel("Days")
-            plt.ylabel("Activity Count")
+            plt.ylabel("Activity Points")
 
             # Save the graph as a PNG file in memory
             image_data = io.BytesIO()
