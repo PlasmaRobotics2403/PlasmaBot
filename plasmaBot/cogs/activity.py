@@ -372,7 +372,7 @@ class Activity(PlasmaCog):
         async with self.graph_lock:
             # Generate the graph
             plt.plot(range(-11, 1), buckets[::-1])
-            plt.title("Monthly Activity for " + (member.display_name if member else ctx.author.display_name))
+            plt.title("Yearly Activity for " + (member.display_name if member else ctx.author.display_name))
             plt.xlabel("Months")
             plt.ylabel("Activity Points")
 
