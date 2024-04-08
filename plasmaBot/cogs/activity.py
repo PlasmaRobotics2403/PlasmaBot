@@ -357,7 +357,7 @@ class Activity(PlasmaCog):
     async def generateYearlyGraph(self, ctx, member:discord.Member=None):
         """Generate Yearly Graph"""
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(years=-1))
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365))
 
         # Convert activity_points to a list of timestamps
         timestamps = [point.timestamp for point in activity_points]
@@ -410,7 +410,7 @@ class Activity(PlasmaCog):
 
         async with self.graph_lock:
             # Generate the graph
-            plt.plot(range(-29, 1), buckets[::-1])
+            plt.plot(range(-(len(buckets)-1), 1), buckets[::-1])
             plt.title("All Time Activity for " + (member.display_name if member else ctx.author.display_name))
             plt.xlabel("Months")
             plt.ylabel("Activity Points")
