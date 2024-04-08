@@ -16,7 +16,7 @@ class Default(PlasmaCog):
         await ctx.send(f'🏓 Pong! ({round(self.bot.latency * 1000)}ms)', ephemeral=True)
 
     @chat_group(name='administrative', description='Administrative Commands')
-    @is_developer()
+    @is_developer
     async def administrative(self):
         """Administrative Commands"""
         pass
