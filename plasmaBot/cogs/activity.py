@@ -183,7 +183,7 @@ class Activity(PlasmaCog):
         
         await self.generateHourlyGraph(ctx, member)
 
-    @graph.command(name='daily', description='View your Daily XP Graph', aliases=['daily'])
+    @graph.command(name='daily', description='View your Daily XP Graph', aliases=['day'])
     async def graph_monthly(self, ctx, member:discord.Member=None):
         """View your Daily XP Graph"""
         guild_settings = await self.get_guild_settings(ctx.guild)
@@ -209,7 +209,7 @@ class Activity(PlasmaCog):
         
         await self.generateMonthlyGraph(ctx, member)
 
-    @graph.command(name='yearly', description='View your Yearly XP Graph', aliases=['yearly'])
+    @graph.command(name='yearly', description='View your Yearly XP Graph', aliases=['year'])
     async def graph_monthly(self, ctx, member:discord.Member=None):
         """View your Yearly XP Graph"""
         guild_settings = await self.get_guild_settings(ctx.guild)
