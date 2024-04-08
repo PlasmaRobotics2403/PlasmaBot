@@ -4,8 +4,6 @@ import asyncio
 from inspect import cleandoc
 from fuzzywuzzy import fuzz
 
-from discord.ext import commands
-
 from plasmaBot.cog import PlasmaCog, terminal_command, chat_command, chat_group
 from plasmaBot.interface import terminal
 
@@ -17,11 +15,7 @@ class Default(PlasmaCog):
         """Get Bot Latency"""
         await ctx.send(f'🏓 Pong! ({round(self.bot.latency * 1000)}ms)', ephemeral=True)
 
-    def is_developer(ctx):
-        return ctx.author.id in ctx.bot.developers
-
     @chat_group(name='administrative', description='Administrative Commands')
-    @commands.check(is_developer)
     async def administrative(self):
         """Administrative Commands"""
         pass
@@ -88,6 +82,9 @@ class Default(PlasmaCog):
     @administrative.command(name="sync", description="Sync Command Tree")
     async def sync_admin(self, ctx):
         """Sync Command Tree"""
+        if not ctx.author.id in self.bot.config.developers:
+            await ctx.send('You do not have permission to use this command.', ephemeral=True)
+
         async with self.sync_lock:
             message = await ctx.send('Syncing Command Tree...')
             await ctx.bot.tree.sync()
