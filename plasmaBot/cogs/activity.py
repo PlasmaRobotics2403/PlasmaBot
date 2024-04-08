@@ -185,7 +185,7 @@ class Activity(PlasmaCog):
 
         async with self.graph_lock:
             # Generate the graph
-            plt.plot(range(-29, 0), buckets[::-1])
+            plt.plot(range(-29, 1), buckets[::-1])
             plt.title("Last Thirty Days of Activity for " + (member.display_name if member else ctx.author.display_name))
             plt.xlabel("Days")
             plt.ylabel("Activity Count")
