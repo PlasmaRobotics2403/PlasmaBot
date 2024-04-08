@@ -156,6 +156,8 @@ class Activity(PlasmaCog):
 
         await ctx.send(embed=embed, ephemeral=True)
 
+    graph_lock = asyncio.Lock()
+
     @chat_group(name='graph', description='View your XP Graph')
     @guild_only()
     async def graph(self, ctx, member:discord.Member=None):
@@ -181,22 +183,29 @@ class Activity(PlasmaCog):
             if 0 <= day < 30:
                 buckets[day] += 1
 
-        # Generate the graph
-        plt.plot(buckets)
-        plt.title("Last Thirty Days of Activity for " + (member.display_name if member else ctx.author.display_name))
-        plt.xlabel("Days")
-        plt.ylabel("Activity Count")
+        with self.graph_lock:
+            # Generate the graph
+            plt.plot(buckets)
+            plt.title("Last Thirty Days of Activity for " + (member.display_name if member else ctx.author.display_name))
+            plt.xlabel("Days")
+            plt.ylabel("Activity Count")
 
-        # Save the graph as a PNG file in memory
-        image_data = io.BytesIO()
-        plt.savefig(image_data, format='png')
-        image_data.seek(0)
+            # Save the graph as a PNG file in memory
+            image_data = io.BytesIO()
+            plt.savefig(image_data, format='png')
+            image_data.seek(0)
+
+            # Clear the plot
+            plt.clf()
 
         # Create a discord.File object from the image data
         file = discord.File(image_data, filename='graph.png')
 
         # Send the file as a message attachment
-        await ctx.send(file=file)
+        await ctx.send(file=file, ephemeral=True)
+
+        # Close the BytesIO object to free up memory
+        image_data.close()
 
     @chat_group(name='activity', description='View your activity')
     @guild_only()
