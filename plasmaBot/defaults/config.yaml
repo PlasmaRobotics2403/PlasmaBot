@@ -20,5 +20,6 @@ permissions: # Configuration Items impacting the abilities of certain users
   - 180094452860321793 # Bot Developer
 
 terminal: # Configuration Items regarding the Client's command line interface
+  enabled: true # Whether or not the terminal interface is enabled
   prefix: '/' # The prefix for commands sent through the terminal
   channel: null # Channel ID to which the terminal interface is bound

@@ -12,6 +12,7 @@ from discord.ext import commands
 
 from plasmaBot.interface import terminal, TerminalMessage, Popup, logging_in, shutdown, restart
 from utils.state import BotState, update_state
+from utils.tools import get_env_bool
 from plasmaBot.commands import TerminalCommand, TerminalContext
 from plasmaBot.config import Config
 from plasmaBot.database import setup_database
@@ -100,14 +101,16 @@ class Client(commands.Bot):
         for s in (signal.SIGQUIT, signal.SIGTERM, signal.SIGINT):
             self.loop.add_signal_handler(s, lambda s=s: asyncio.create_task(self.shutdown(signal=s)))
 
-        self.loop.add_signal_handler(signal.SIGWINCH, terminal.reformat_messages)
-
         await terminal.store_bot(self)
         update_state(BotState.READY)
 
-        timestamp = int(datetime.datetime.utcnow().timestamp())
-        terminal.set_startup_timestamp(timestamp)
-        asyncio.ensure_future(terminal.terminal_loop(self.loop, timestamp))
+        # Enable Terminal Interface
+        if not self.config['terminal']['enabled']:
+            self.loop.add_signal_handler(signal.SIGWINCH, terminal.reformat_messages)
+
+            timestamp = int(datetime.datetime.now(datetime.UTC).timestamp())
+            terminal.set_startup_timestamp(timestamp)
+            asyncio.ensure_future(terminal.terminal_loop(self.loop, timestamp))
 
         await self.change_presence(status=discord.Status.invisible if self.config['presence']['invisible'] else discord.Status.online)
     

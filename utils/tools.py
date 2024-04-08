@@ -72,3 +72,11 @@ def press_continue():
             termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
 
     return result
+
+def get_env(variable):
+    """Get Environment Variable"""
+    return os.getenv(variable)
+
+def get_env_bool(variable):
+    """Get Environment Variable as Boolean"""
+    return str(get_env(variable)).lower() in ['true', '1', 'yes', 'y']
