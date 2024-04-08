@@ -366,12 +366,12 @@ class Activity(PlasmaCog):
         buckets = [0] * 12
         for timestamp in timestamps:
             month = int((datetime.datetime.utcnow() - timestamp).days / 31)
-            if 0 <= month < 30:
+            if 0 <= month < 12:
                 buckets[month] += 1
 
         async with self.graph_lock:
             # Generate the graph
-            plt.plot(range(-29, 1), buckets[::-1])
+            plt.plot(range(-11, 1), buckets[::-1])
             plt.title("Monthly Activity for " + (member.display_name if member else ctx.author.display_name))
             plt.xlabel("Months")
             plt.ylabel("Activity Points")
@@ -405,7 +405,7 @@ class Activity(PlasmaCog):
         buckets = [0] * (int((datetime.datetime.utcnow() - timestamps[0]).days / 31) + 1)
         for timestamp in timestamps:
             month = int((datetime.datetime.utcnow() - timestamp).days / 31)
-            if 0 <= month < 30:
+            if 0 <= month < len(buckets):
                 buckets[month] += 1
 
         async with self.graph_lock:
