@@ -1,8 +1,11 @@
+import os
+import io
 import peewee
 import datetime
 import random
 import asyncio
 import traceback
+import matplotlib.pyplot as plt
 
 import discord
 from discord.ext.commands import guild_only, check, has_permissions, Context
@@ -152,6 +155,49 @@ class Activity(PlasmaCog):
             embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
 
         await ctx.send(embed=embed, ephemeral=True)
+
+    @chat_group(name='graph', description='View your XP Graph')
+    @guild_only()
+    async def graph(self, ctx, member:discord.Member=None):
+        """View your XP Graph"""
+        guild_settings = await self.get_guild_settings(ctx.guild)
+
+        if guild_settings.enabled is False:
+            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
+        ActivityPoint = self.tables.ActivityPoint
+        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30))
+
+        # Convert activity_points to a list of timestamps
+        timestamps = [point.timestamp for point in activity_points]
+
+        # Create a list of 30 buckets based on the day of the timestamp
+        buckets = [0] * 30
+        for timestamp in timestamps:
+            day = (datetime.datetime.utcnow() - timestamp).days
+            if 0 <= day < 30:
+                buckets[day] += 1
+
+        # Generate the graph
+        plt.plot(buckets)
+        plt.title("Last Thirty Days of Activity")
+        plt.subtitle(ctx.author.display_name)
+        plt.xlabel("Days")
+        plt.ylabel("Activity Count")
+
+        # Save the graph as a PNG file in memory
+        image_data = io.BytesIO()
+        plt.savefig(image_data, format='png')
+        image_data.seek(0)
+
+        # Create a discord.File object from the image data
+        file = discord.File(image_data, filename='graph.png')
+
+        # Send the file as a message attachment
+        await ctx.send(file=file)
 
     @chat_group(name='activity', description='View your activity')
     @guild_only()

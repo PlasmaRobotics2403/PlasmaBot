@@ -8,3 +8,4 @@ fuzzywuzzy>=0.18.0
 python-Levenshtein==0.23.0
 peewee>=3.17.0
 mysqlclient>=2.2.1
+matplotlib>=3.8.4
