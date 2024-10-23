@@ -26,6 +26,12 @@ class ModMailModal(discord.ui.Modal):
         placeholder="First Message", 
         style=discord.TextStyle.paragraph
     )
+    additionalUsers = discord.ui.UserSelect(
+        placeholder='Additional Users', 
+        min_values=0, 
+        max_values=25, 
+        custom_id='mm_additionalUsers'
+    )
 
     def __init__(self, cog, user, *, timeout=None, is_moderator=False):
         self.cog = cog
@@ -37,7 +43,7 @@ class ModMailModal(discord.ui.Modal):
         subject_value = self.subject.value
         message_value = self.message.value
 
-        await self.cog.start_modmail_thread(interaction, subject=subject_value, message=message_value, additionalUsers=[])
+        await self.cog.start_modmail_thread(interaction, subject=subject_value, message=message_value, additionalUsers=self.additionalUsers.values)
         
 
 class ModMailButton(discord.ui.View):
