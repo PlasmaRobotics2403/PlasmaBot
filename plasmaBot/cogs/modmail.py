@@ -225,7 +225,7 @@ class ModMail(PlasmaCog):
             await interaction.response.send_message(f'Moderation Role is not available to {self.bot.user.mention}', ephemeral=True)
             return False
         
-        thread_channel_thread = await thread_channel.create_thread(name=f'ModMail w/ {interaction.user.name}: {subject}', type=discord.ChannelType.private_thread, invitable=True)
+        thread_channel_thread = await thread_channel.create_thread(name=f'ModMail ({interaction.user.name}): {subject}', type=discord.ChannelType.private_thread, invitable=True)
         await thread_channel_thread.add_user(interaction.user)
 
         for user in additionalUsers:
@@ -233,13 +233,13 @@ class ModMail(PlasmaCog):
                 await thread_channel_thread.add_user(user)
 
         if not isinstance(proxy_channel, discord.ForumChannel):
-            proxy_channel_thread = await proxy_channel.create_thread(name=f'ModMail w/ {interaction.user.name} ({interaction.user.id}): {subject}', type=discord.ChannelType.public_thread, invitable=True)
+            proxy_channel_thread = await proxy_channel.create_thread(name=f'ModMail ({interaction.user.name} - {interaction.user.id}): {subject}', type=discord.ChannelType.public_thread, invitable=True)
             
             for member in proxy_channel.members:
                 if moderation_role in member.roles:
                     await proxy_channel_thread.add_user(member)
         else:
-            proxy_channel_thread, proxy_message = await proxy_channel.create_thread(name=f'ModMail w/ {interaction.user.name} ({interaction.user.id}): {subject}', content=f'**{interaction.user.name}** has started a ModMail Thread')
+            proxy_channel_thread, proxy_message = await proxy_channel.create_thread(name=f'ModMail ({interaction.user.name} - {interaction.user.id}): {subject}', content=f'**{interaction.user.name}** has started a ModMail Thread')
 
             for member in proxy_channel.members:
                 if moderation_role in member.roles:
@@ -273,6 +273,8 @@ class ModMail(PlasmaCog):
         first_message_embed_destination.set_footer(text='To reply, use the reply command')
 
         await proxy_channel_thread.send(embed=first_message_embed_destination)
+
+        await interaction.response.send_message(f'ModMail Thread Created! See <#{thread_channel_thread.id}>', ephemeral=True)
 
     @modmail.command(name='close', description='Close a ModMail Thread')
     async def modmail_close(self, ctx):
