@@ -29,7 +29,6 @@ class ModMailModal(discord.ui.Modal):
     user_select = discord.ui.UserSelect(
         placeholder="Select Users to add to this ModMail Ticket",
         custom_id="mm_user_select",
-        default_values = [],
         disabled = True,
     )
 
