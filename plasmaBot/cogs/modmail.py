@@ -26,19 +26,9 @@ class ModMailModal(discord.ui.Modal):
         placeholder="First Message", 
         style=discord.TextStyle.paragraph
     )
-    user_select = discord.ui.UserSelect(
-        placeholder="Select Users to add to this ModMail Ticket",
-        custom_id="mm_user_select",
-        disabled = True,
-    )
 
     def __init__(self, cog, user, *, timeout=None, is_moderator=False):
         self.cog = cog
-
-        # enable user select for moderators only
-        if is_moderator:
-            self.user_select.disabled = False
-            self.default_values = [user]
 
         super().__init__(title="New ModMail Ticket", timeout=timeout)
 
@@ -47,7 +37,7 @@ class ModMailModal(discord.ui.Modal):
         subject_value = self.subject.value
         message_value = self.message.value
 
-        await self.cog.start_modmail_thread(interaction, subject=subject_value, message=message_value, additionalUsers=self.user_select.values)
+        await self.cog.start_modmail_thread(interaction, subject=subject_value, message=message_value, additionalUsers=[])
         
 
 class ModMailButton(discord.ui.View):
