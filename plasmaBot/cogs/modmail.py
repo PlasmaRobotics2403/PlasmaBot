@@ -98,7 +98,7 @@ class ModMailButton(discord.ui.View):
             ModMailModal(
                 self.cog, 
                 interaction.user, 
-                is_moderator=(interaction.user.guild_permissions.manage_guild or interaction.user.id in self.bot.developers)
+                is_moderator=(interaction.user.guild_permissions.manage_messages or interaction.user.id in self.bot.developers)
             )
         )
 
@@ -164,7 +164,7 @@ class ModMail(PlasmaCog):
             ModMailModal(
                 self, 
                 ctx.author,
-                is_moderator=(ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers)
+                is_moderator=(ctx.author.guild_permissions.manage_messages or ctx.author.id in self.bot.developers)
             )
         )
 
