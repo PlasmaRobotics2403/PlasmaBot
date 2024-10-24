@@ -749,11 +749,6 @@ class Activity(PlasmaCog):
     async def buffs(self, ctx, member:discord.Member=None):
         """View your buffs"""
         await self.view_user_buffs(ctx, member)
-
-    @buffs.command(name='list', description='View your buffs')
-    async def buffs_list(self, ctx, member:discord.Member=None):
-        """View your buffs"""
-        await self.view_user_buffs(ctx, member)
         
     async def view_user_buffs(self, ctx, member:discord.Member=None):
         """View User Buffs"""
