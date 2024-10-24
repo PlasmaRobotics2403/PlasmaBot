@@ -185,13 +185,15 @@ class WhisperModal(discord.ui.Modal):
         self.target = target
 
         self.messageItem = discord.ui.TextInput(
+            custom_id='whisper_message',
             label='Message',
             required=True,
             default=whisper_message,
+            style=discord.TextStyle.paragraph
         )
 
         super().__init__(title='', timeout=timeout)
-        
+
         self.add_item(self.messageItem)
 
     async def on_submit(self, interaction: discord.Interaction):
@@ -199,7 +201,7 @@ class WhisperModal(discord.ui.Modal):
         target = self.target
         message = self.messageItem.value
 
-        if not message or message.trim() == '':
+        if not message or message.strip() == '':
             return await interaction.response.send_message('You must provide a message.', ephemeral=True)
         
         await self.cog.sendWhisper(interaction, self.settings, self.origin_user, target, message)
