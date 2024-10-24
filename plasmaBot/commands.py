@@ -75,10 +75,12 @@ class ChatCommandMixin:
 
 class ChatCommand(commands.HybridCommand, ChatCommandMixin):
     """Represents a Command accessible through Discord Chat"""
+    pass
 
 
 class ChatGroup(commands.HybridGroup, ChatCommandMixin):
     """Represents a Group of Commands accessible through Discord Chat"""
+    pass
 
 
 def chat_command(**kwargs):
