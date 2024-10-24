@@ -239,7 +239,7 @@ class Whisper(PlasmaCog):
         super().__init__(bot)
 
     @chat_group(name='whisper', description='Send a Whisper to a User', fallback='send')
-    async def whisper(self, ctx, target: discord.Member=None, *, message: str):
+    async def whisper(self, ctx, target: discord.Member, *, message: str=None):
         """Send a Whisper to a User"""
         if not ctx.guild:
             await ctx.send('Whisper Initiation is only available in Servers.', ephemeral=True)
