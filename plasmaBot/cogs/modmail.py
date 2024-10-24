@@ -369,12 +369,12 @@ class ModMail(PlasmaCog):
         await ctx.send(embed=embed_origin, files=origin_files)
 
     @chat_group(name='config_modmail', description='Configure ModMail Settings')
+    @guild_only()
     async def config_modmail(self, ctx):
         """Configure ModMail Settings"""
         await self.config_modmail_list_settings(ctx)
 
     @config_modmail.command(name='create_button', description='Create a ModMail Button')
-    @guild_only()
     async def config_modmail_create_button(self, ctx):
         """Create ModMail Button"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
