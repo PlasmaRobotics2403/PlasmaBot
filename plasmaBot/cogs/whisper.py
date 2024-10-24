@@ -192,7 +192,7 @@ class WhisperModal(discord.ui.Modal):
             style=discord.TextStyle.paragraph
         )
 
-        super().__init__(title='', timeout=timeout)
+        super().__init__(title=f'Whisper to {self.target}', timeout=timeout)
 
         self.add_item(self.messageItem)
 
