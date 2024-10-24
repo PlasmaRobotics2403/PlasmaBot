@@ -6,6 +6,8 @@ import discord
 from plasmaBot import Client
 from plasmaBot.cog import PlasmaCog, chat_command, chat_group
 
+from discord.ext.commands import guild_only
+
 
 class ModMailModal(discord.ui.Modal):
     """ModMail Creation Modal"""
@@ -109,6 +111,7 @@ class ModMail(PlasmaCog):
         super().__init__(bot)
 
     @chat_group(name='modmail', description='Start a ModMail Thread', aliases=['mail'], fallback="start")
+    @guild_only()
     async def modmail(self, ctx):
         """Start a ModMail Thread"""
         if not ctx.interaction:
@@ -371,6 +374,7 @@ class ModMail(PlasmaCog):
         await self.config_modmail_list_settings(ctx)
 
     @config_modmail.command(name='create_button', description='Create a ModMail Button')
+    @guild_only()
     async def config_modmail_create_button(self, ctx):
         """Create ModMail Button"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
