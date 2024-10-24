@@ -306,7 +306,7 @@ class Whisper(PlasmaCog):
         if settings.confirm_moderation and target.guild_permissions.manage_messages:
             await ctx.send(
                 'You are attempting to Whisper a Moderator. Moderation communication is handled through ModMail. Are you sure you want to proceed?',
-                ephemeral=True, view=ModerationWhisperConfirmation(self, target, message)
+                ephemeral=True, view=ModerationWhisperConfirmation(self, settings, ctx.author, target, message)
             )
         else:
             await self.startWhisper(ctx.interaction, settings, ctx.author, target, message)
