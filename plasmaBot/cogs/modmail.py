@@ -109,7 +109,7 @@ class ModMail(PlasmaCog):
         super().__init__(bot)
 
     @chat_group(name='modmail', description='Start a ModMail Thread', aliases=['mail'], fallback="start")
-    async def modmail_start(self, ctx):
+    async def modmail(self, ctx):
         """Start a ModMail Thread"""
         if not ctx.interaction:
             await ctx.send('This command can only be used as a slash command')
