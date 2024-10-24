@@ -22,7 +22,7 @@ class WhisperLogReply(discord.ui.View):
         """Reply Callback"""
 
         WhisperMessage = self.cog.tables.WhisperMessage
-        whisper_message = WhisperMessage.select().where(log_message_id=interaction.message.id).first()
+        whisper_message = WhisperMessage.select().where(WhisperMessage.log_message_id==interaction.message.id).first()
 
         if not whisper_message:
             await interaction.response.send_message('This Whisper is not available for Reply.', ephemeral=True)
@@ -35,7 +35,7 @@ class WhisperLogReply(discord.ui.View):
             return
         
         WhisperSettings = self.cog.tables.WhisperSettings
-        settings = WhisperSettings.select().where(guild_id=whisper_message.origin_guild_id).first()
+        settings = WhisperSettings.select().where(WhisperSettings.guild_id==whisper_message.origin_guild_id).first()
 
         if not settings:
             settings = WhisperSettings(
@@ -78,13 +78,13 @@ class WhisperLogReply(discord.ui.View):
             return
         
         WhisperBlock = self.cog.tables.WhisperBlock
-        whisper_block_check = WhisperBlock.select().where(user_id=str(interaction.user.id), blocked_user_id=str(target.id)).first()
+        whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(interaction.user.id), WhisperBlock.blocked_user_id==str(target.id)).first()
 
         if whisper_block_check and not target.guild_permissions.manage_messages:
             await interaction.response.send_message('You have blocked this User. You cannot Whisper them.', ephemeral=True)
             return
         
-        whisper_block_check_blocked_by = WhisperBlock.select().where(user_id=str(target.id), blocked_user_id=str(interaction.user.id)).first()
+        whisper_block_check_blocked_by = WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(interaction.user.id)).first()
 
         if whisper_block_check_blocked_by and not origin_user.guild_permissions.manage_messages:
             await interaction.response.send_message('This User has blocked you. You cannot Whisper them.', ephemeral=True)
@@ -104,7 +104,7 @@ class WhisperTargetReply(discord.ui.View):
     async def reply(self, button: discord.ui.Button, interaction: discord.Interaction):
         """Reply Callback"""
         WhisperMessage = self.cog.tables.WhisperMessage
-        whisper_message = WhisperMessage.select().where(inbox_message_id=interaction.message.id).first()
+        whisper_message = WhisperMessage.select().where(WhisperMessage.inbox_message_id==interaction.message.id).first()
 
         if not whisper_message:
             await interaction.response.send_message('This Whisper is not available for Reply.', ephemeral=True)
@@ -117,7 +117,7 @@ class WhisperTargetReply(discord.ui.View):
             return
         
         WhisperSettings = self.cog.tables.WhisperSettings
-        settings = WhisperSettings.select().where(guild_id=whisper_message.origin_guild_id).first()
+        settings = WhisperSettings.select().where(WhisperSettings.guild_id==whisper_message.origin_guild_id).first()
 
         if not settings:
             settings = WhisperSettings(
@@ -160,13 +160,13 @@ class WhisperTargetReply(discord.ui.View):
             return
         
         WhisperBlock = self.cog.tables.WhisperBlock
-        whisper_block_check = WhisperBlock.select().where(user_id=str(interaction.user.id), blocked_user_id=str(target.id)).first()
+        whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(interaction.user.id), WhisperBlock.blocked_user_id==str(target.id)).first()
 
         if whisper_block_check and not target.guild_permissions.manage_messages:
             await interaction.response.send_message('You have blocked this User. You cannot Whisper them.', ephemeral=True)
             return
         
-        whisper_block_check_blocked_by = WhisperBlock.select().where(user_id=str(target.id), blocked_user_id=str(interaction.user.id)).first()
+        whisper_block_check_blocked_by = WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(interaction.user.id)).first()
 
         if whisper_block_check_blocked_by and not origin_user.guild_permissions.manage_messages:
             await interaction.response.send_message('This User has blocked you. You cannot Whisper them.', ephemeral=True)
@@ -291,13 +291,13 @@ class Whisper(PlasmaCog):
             return
         
         WhisperBlock = self.tables.WhisperBlock
-        whisper_block_check = WhisperBlock.select().where(user_id=str(ctx.author.id), blocked_user_id=str(target.id)).first()
+        whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(ctx.author.id), WhisperBlock.blocked_user_id==str(target.id)).first()
 
         if whisper_block_check and not target.guild_permissions.manage_messages:
             await ctx.send('You have blocked this User. You cannot Whisper them.', ephemeral=True)
             return
         
-        whisper_block_check_blocked_by = WhisperBlock.select().where(user_id=str(target.id), blocked_user_id=str(ctx.author.id)).first()
+        whisper_block_check_blocked_by = WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(ctx.author.id)).first()
         
         if whisper_block_check_blocked_by and not ctx.author.guild_permissions.manage_messages:
             await ctx.send('This User has blocked you. You cannot Whisper them.', ephemeral=True)
@@ -387,7 +387,7 @@ class Whisper(PlasmaCog):
     async def block(self, ctx, target: discord.Member):
         """Block a User from Whispering you"""
         WhisperBlock = self.tables.WhisperBlock
-        whisper_block_check = WhisperBlock.select().where(user_id=str(ctx.author.id), blocked_user_id=str(target.id)).first()
+        whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(ctx.author.id), WhisperBlock.blocked_user_id==str(target.id)).first()
 
         if whisper_block_check:
             await ctx.send('You have already blocked this User from Whispering you.')
@@ -406,7 +406,7 @@ class Whisper(PlasmaCog):
     async def unblock(self, ctx, target: discord.Member):
         """Unblock a User from Whispering you"""
         WhisperBlock = self.tables.WhisperBlock
-        whisper_block_check = WhisperBlock.select().where(user_id=str(ctx.author.id), blocked_user_id=str(target.id)).first()
+        whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(ctx.author.id), WhisperBlock.blocked_user_id==str(target.id)).first()
 
         if not whisper_block_check:
             await ctx.send('You have not blocked this User from Whispering you.')
