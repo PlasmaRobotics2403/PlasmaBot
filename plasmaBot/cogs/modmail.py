@@ -5,7 +5,6 @@ import discord
 
 from plasmaBot import Client
 from plasmaBot.cog import PlasmaCog, chat_command, chat_group
-from plasmaBot.interface import terminal
 
 
 class ModMailModal(discord.ui.Modal):
@@ -109,15 +108,7 @@ class ModMail(PlasmaCog):
     def __init__(self, bot: Client):
         super().__init__(bot)
 
-    @chat_group(name='modmail', description='Start a ModMail Thread', aliases=['mail'])
-    async def modmail(self, ctx, user_id:str=None):
-        """Start a ModMail Thread"""
-        if user_id:
-            await self.start_external_thread(ctx, user_id)
-        else:
-            await self.start_modmail_thread(ctx)
-
-    @modmail.command(name='start', description='Start a ModMail Thread')
+    @chat_group(name='modmail', description='Start a ModMail Thread', aliases=['mail'], fallback="start")
     async def modmail_start(self, ctx):
         """Start a ModMail Thread"""
         if not ctx.interaction:
@@ -609,7 +600,7 @@ async def setup(bot):
         """Represents a Guild's ModMail Settings"""
         db_id = peewee.AutoField(primary_key=True)
         guild_id = peewee.TextField()
-        enabled = peewee.BooleanField(default=True)
+        enabled = peewee.BooleanField(default=False)
         moderation_role = peewee.TextField(null=True)
         thread_channel = peewee.TextField(null=True)
         proxy_channel = peewee.TextField(null=True)
