@@ -574,7 +574,7 @@ class Whisper(PlasmaCog):
         settings.save()
 
         await ctx.send(f'Disabling DMs is now {"Enabled" if settings.disable_dms else "Disabled"}', ephemeral=True)
-        
+
 
 async def setup(bot):
     new_cog = Whisper(bot)
@@ -614,5 +614,5 @@ async def setup(bot):
     )
 
     await bot.add_cog(new_cog)
-    bot.add_view(WhisperLogReply)
-    bot.add_view(WhisperTargetReply)
+    bot.add_view(WhisperLogReply(new_cog))
+    bot.add_view(WhisperTargetReply(new_cog))
