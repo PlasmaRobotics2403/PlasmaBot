@@ -184,13 +184,6 @@ class WhisperModal(discord.ui.Modal):
         self.origin_user = origin_user
         self.target = target
 
-        self.targetItem = discord.ui.TextInput(
-            label='Target User',
-            required=True,
-            default=target.name,
-            disabled=True
-        )
-
         self.messageItem = discord.ui.TextInput(
             label='Message',
             required=True,
