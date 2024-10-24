@@ -71,20 +71,20 @@ class WhisperLogReply(discord.ui.View):
             return
         
         target = guild.get_member(int(whisper_message.user_id))
-        origin_user = guild.get_member(int(whisper_message.target_id))
+        origin_user = interaction.user
 
         if not target:
             await interaction.response.send_message('The Origin User for this Whisper is no longer available.', ephemeral=True)
             return
         
         WhisperBlock = self.cog.tables.WhisperBlock
-        whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(interaction.user.id), WhisperBlock.blocked_user_id==str(target.id)).first()
+        whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(origin_user.id), WhisperBlock.blocked_user_id==str(target.id)).first()
 
         if whisper_block_check and not target.guild_permissions.manage_messages:
             await interaction.response.send_message('You have blocked this User. You cannot Whisper them.', ephemeral=True)
             return
         
-        whisper_block_check_blocked_by = WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(interaction.user.id)).first()
+        whisper_block_check_blocked_by = WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(origin_user.id)).first()
 
         if whisper_block_check_blocked_by and not origin_user.guild_permissions.manage_messages:
             await interaction.response.send_message('This User has blocked you. You cannot Whisper them.', ephemeral=True)
@@ -160,13 +160,13 @@ class WhisperTargetReply(discord.ui.View):
             return
         
         WhisperBlock = self.cog.tables.WhisperBlock
-        whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(interaction.user.id), WhisperBlock.blocked_user_id==str(target.id)).first()
+        whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(origin_user.id), WhisperBlock.blocked_user_id==str(target.id)).first()
 
         if whisper_block_check and not target.guild_permissions.manage_messages:
             await interaction.response.send_message('You have blocked this User. You cannot Whisper them.', ephemeral=True)
             return
         
-        whisper_block_check_blocked_by = WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(interaction.user.id)).first()
+        whisper_block_check_blocked_by = WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(origin_user.id)).first()
 
         if whisper_block_check_blocked_by and not origin_user.guild_permissions.manage_messages:
             await interaction.response.send_message('This User has blocked you. You cannot Whisper them.', ephemeral=True)
@@ -320,7 +320,7 @@ class Whisper(PlasmaCog):
     async def sendWhisper(self, interaction, settings, origin_user, target, message):
         """Send a Whisper to the Target User and Log it"""
         whisperEmbed = discord.Embed(description=message, color=discord.Color.purple())
-        whisperEmbed.set_author(name=f'{origin_user.display_name} ({origin_user.name})', icon_url=interaction.user.avatar.url)
+        whisperEmbed.set_author(name=f'{origin_user.display_name} ({origin_user.name})', icon_url=origin_user.avatar.url)
         whisperEmbed.set_footer(text='This is a Whisper. To Reply, hit the Reply Button.')
 
         whisperLogChannel = self.bot.get_channel(int(settings.log_channel))
@@ -354,7 +354,7 @@ class Whisper(PlasmaCog):
                 return
             
             await whisperBackupChannel.send(
-                f'{target.mention}: You have recieved a Whisper from {interaction.user.mention}. However, I was unable to deliver it to you. This is likely because you have DMs disabled for this server or have {self.bot.mention} blocked. Please resolve this issue to recieve future Whispers.'
+                f'{target.mention}: You have recieved a Whisper from {origin_user.mention}. However, I was unable to deliver it to you. This is likely because you have DMs disabled for this server or have {self.bot.mention} blocked. Please resolve this issue to recieve future Whispers.'
             )
             await interaction.response.send_message(
                 f'Whisper Failed to Send. This is probably because {target.display_name} has DMs disabled or has {self.bot.mention} blocked. They have been notified of this issue.',
