@@ -14,22 +14,22 @@ class ModMailModal(discord.ui.Modal):
     subject = discord.ui.TextInput(
         label='Subject', 
         required=True, 
-        custom_id="mm_subject", 
-        placeholder="ModMail Subject", 
+        custom_id='mm_subject', 
+        placeholder='ModMail Subject', 
         max_length=100
     )
     message = discord.ui.TextInput(
         label='Message', 
         required=True, 
-        custom_id="mm_message", 
-        placeholder="First Message", 
+        custom_id='mm_message', 
+        placeholder='First Message', 
         style=discord.TextStyle.paragraph
     )
 
     def __init__(self, cog, user, *, timeout=None, is_moderator=False):
         self.cog = cog
 
-        super().__init__(title="New ModMail Ticket", timeout=timeout)
+        super().__init__(title='New ModMail Ticket', timeout=timeout)
 
     async def on_submit(self, interaction: discord.Interaction):
         """Submit Callback"""
