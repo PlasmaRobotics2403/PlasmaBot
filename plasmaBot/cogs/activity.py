@@ -156,7 +156,7 @@ class Activity(PlasmaCog):
 
         await ctx.send(embed=embed, ephemeral=True)
 
-    @chat_group(name='graph', description='View your XP Graph')
+    @chat_group(name='graph', description='View your XP Graph', fallback='monthly')
     @guild_only()
     async def graph(self, ctx, member:discord.Member=None):
         """View your XP Graph"""
@@ -195,19 +195,6 @@ class Activity(PlasmaCog):
             return
         
         await self.generateDailyGraph(ctx, member)
-
-    @graph.command(name='monthly', description='View your Monthly XP Graph', aliases=['month'])
-    async def graph_monthly(self, ctx, member:discord.Member=None):
-        """View your Monthly XP Graph"""
-        guild_settings = await self.get_guild_settings(ctx.guild)
-
-        if guild_settings.enabled is False:
-            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
-            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
-            await ctx.send(embed=embed, ephemeral=True)
-            return
-        
-        await self.generateMonthlyGraph(ctx, member)
 
     @graph.command(name='yearly', description='View your Yearly XP Graph', aliases=['year'])
     async def graph_yearly(self, ctx, member:discord.Member=None):
@@ -432,7 +419,7 @@ class Activity(PlasmaCog):
         # Close the BytesIO object to free up memory
         image_data.close()
 
-    @chat_group(name='activity', description='View your activity')
+    @chat_group(name='activity', description='View your activity', fallback='monthly')
     @guild_only()
     async def activity(self, ctx, member:discord.Member=None):
         """View your activity"""
@@ -463,22 +450,6 @@ class Activity(PlasmaCog):
         ActivityPoint = self.tables.ActivityPoint
         activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365))
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Yearly')
-        await ctx.send(embed=embed, ephemeral=True)
-
-    @activity.command(name='monthly', description='View your Monthly activity', aliases=['month'])
-    async def activity_monthly(self, ctx, member:discord.Member=None):
-        """View your activity"""
-        guild_settings = await self.get_guild_settings(ctx.guild)
-
-        if guild_settings.enabled is False:
-            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
-            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
-            await ctx.send(embed=embed, ephemeral=True)
-            return
-
-        ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30))
-        embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Monthly')
         await ctx.send(embed=embed, ephemeral=True)
 
     @activity.command(name='daily', description='View your Daily activity', aliases=['day'])
@@ -536,7 +507,7 @@ class Activity(PlasmaCog):
         embed.set_footer(text=f'{period} Activity')
         return embed
 
-    @chat_group(name='rank', description='View your rank')
+    @chat_group(name='rank', description='View your rank', fallback='monthly')
     @guild_only()
     async def rank(self, ctx, member:discord.Member=None):
         """View your Monthly Rank"""
@@ -588,23 +559,6 @@ class Activity(PlasmaCog):
         
         await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'Hourly'))
     
-    @rank.command(name='monthly', description='View your Monthly Rank', aliases=['month'], ephemeral=True)
-    async def rank_monthly(self, ctx, member:discord.Member=None):
-        """View your Monthly Rank"""
-        guild_settings = await self.get_guild_settings(ctx.guild)
-
-        if guild_settings.enabled is False:
-            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
-            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
-            await ctx.send(embed=embed, ephemeral=True)
-            return
-
-        ActivityPoint = self.tables.ActivityPoint
-
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
-        
-        await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'Monthly'))
-
     @rank.command(name='yearly', description='View your Yearly Rank', aliases=['year'], ephemeral=True)
     async def rank_yearly(self, ctx, member:discord.Member=None):
         """View your Yearly Rank"""
@@ -662,7 +616,7 @@ class Activity(PlasmaCog):
 
         return embed
 
-    @chat_group(name='leaderboard', description='View the Activity Leaderboard')
+    @chat_group(name='leaderboard', description='View the Activity Leaderboard', fallback='monthly')
     @guild_only()
     async def leaderboard(self, ctx):
         """View the Activity Leaderboard"""
@@ -713,23 +667,6 @@ class Activity(PlasmaCog):
         activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
 
         await self.generate_leaderboard(ctx, activity_points, 'Hourly')
-
-    @leaderboard.command(name='monthly', description='View the Monthly Leaderboard', aliases=['month'])
-    async def leaderboard_monthly(self, ctx):
-        """View the Monthly Leaderboard"""
-        guild_settings = await self.get_guild_settings(ctx.guild)
-
-        if guild_settings.enabled is False:
-            embed = discord.Embed(description="Activity Tracking is Disabled", color=discord.Color.purple())
-            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
-            await ctx.send(embed=embed, ephemeral=True)
-            return
-
-        ActivityPoint = self.tables.ActivityPoint
-
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
-
-        await self.generate_leaderboard(ctx, activity_points, 'Monthly')
 
     @leaderboard.command(name='yearly', description='View the Yearly Leaderboard', aliases=['year'])
     async def leaderboard_yearly(self, ctx):
@@ -807,7 +744,7 @@ class Activity(PlasmaCog):
             pagination = Pagination(ctx.author, ctx, get_page, timeout=60)
             await pagination.navigate()
 
-    @chat_group(name='buffs', description='View your buffs')
+    @chat_group(name='buffs', description='View your buffs', fallback='list')
     @guild_only()
     async def buffs(self, ctx, member:discord.Member=None):
         """View your buffs"""
