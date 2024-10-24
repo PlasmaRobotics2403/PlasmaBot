@@ -7,6 +7,7 @@ from fuzzywuzzy import fuzz
 from plasmaBot.cog import PlasmaCog, terminal_command, chat_command, chat_group
 from plasmaBot.interface import terminal
 
+
 class Default(PlasmaCog):
     """Default Command Cog"""
 
