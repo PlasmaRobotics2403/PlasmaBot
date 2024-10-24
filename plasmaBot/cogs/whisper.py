@@ -191,8 +191,7 @@ class WhisperModal(discord.ui.Modal):
         )
 
         super().__init__(title='', timeout=timeout)
-
-        self.add_item(self.targetItem)
+        
         self.add_item(self.messageItem)
 
     async def on_submit(self, interaction: discord.Interaction):
