@@ -15,9 +15,9 @@ class WhisperLogReply(discord.ui.View):
 
     def __init__(self, cog: PlasmaCog):
         self.cog = cog
-        super().__init__()
+        super().__init__(timeout=None)
 
-    @discord.ui.button(label='Reply', style=discord.ButtonStyle.primary)
+    @discord.ui.button(label='Reply', style=discord.ButtonStyle.primary, custom_id='whisper_log_reply')
     async def reply(self, button: discord.ui.Button, interaction: discord.Interaction):
         """Reply Callback"""
 
@@ -98,9 +98,9 @@ class WhisperTargetReply(discord.ui.View):
 
     def __init__(self, cog: PlasmaCog):
         self.cog = cog
-        super().__init__()
+        super().__init__(timeout=None)
 
-    @discord.ui.button(label='Reply', style=discord.ButtonStyle.primary)
+    @discord.ui.button(label='Reply', style=discord.ButtonStyle.primary, custom_id='whisper_target_reply')
     async def reply(self, button: discord.ui.Button, interaction: discord.Interaction):
         """Reply Callback"""
         WhisperMessage = self.cog.tables.WhisperMessage
