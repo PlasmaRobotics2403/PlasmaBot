@@ -18,7 +18,7 @@ class WhisperLogReply(discord.ui.View):
         super().__init__(timeout=None)
 
     @discord.ui.button(label='Reply', style=discord.ButtonStyle.primary, custom_id='whisper_log_reply')
-    async def reply(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def reply(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Reply Callback"""
 
         WhisperMessage = self.cog.tables.WhisperMessage
@@ -101,7 +101,7 @@ class WhisperTargetReply(discord.ui.View):
         super().__init__(timeout=None)
 
     @discord.ui.button(label='Reply', style=discord.ButtonStyle.primary, custom_id='whisper_target_reply')
-    async def reply(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def reply(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Reply Callback"""
         WhisperMessage = self.cog.tables.WhisperMessage
         whisper_message = WhisperMessage.select().where(WhisperMessage.inbox_message_id==interaction.message.id).first()
@@ -225,7 +225,7 @@ class ModerationWhisperConfirmation(discord.ui.View):
         super().__init__(timeout=timeout)
 
     @discord.ui.button(label='Confirm', style=discord.ButtonStyle.danger)
-    async def confirm(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Confirmation Callback"""
         await self.cog.startWhisper(interaction, self.settings, self.origin_user, self.target, self.whisper_message)
         self.clear_items()
