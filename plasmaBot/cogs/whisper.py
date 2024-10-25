@@ -17,7 +17,7 @@ class WhisperLogReply(discord.ui.View):
         self.cog = cog
         super().__init__(timeout=None)
 
-    @discord.ui.button(label='Whisper this User', style=discord.ButtonStyle.primary, custom_id='whisper_log_reply')
+    @discord.ui.button(label='Whisper at this User', style=discord.ButtonStyle.primary, custom_id='whisper_log_reply')
     async def reply(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Reply Callback"""
 
@@ -234,6 +234,8 @@ class Whisper(PlasmaCog):
         self.whisper_context_menu = discord.app_commands.ContextMenu(
             name='Whisper',
             callback = self.whisperContextMenu,
+            guild_only = True,
+            type = discord.app_commands.AppCommandType.user
         )
         self.bot.tree.add_command(self.whisper_context_menu)
 
