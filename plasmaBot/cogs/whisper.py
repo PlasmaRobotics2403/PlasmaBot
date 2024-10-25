@@ -232,6 +232,69 @@ class Whisper(PlasmaCog):
     def __init__(self, bot: Client):
         super().__init__(bot)
 
+    @discord.app_commands.context_menu(name='Whisper')
+    async def whisperContextMenu(self, interaction: discord.Interaction, target: discord.Member):
+        """Whisper Context Menu Command"""
+        WhisperSettings = self.tables.WhisperSettings
+        settings = WhisperSettings.select().where(WhisperSettings.guild_id == interaction.guild.id).first()
+
+        if not settings:
+            settings = WhisperSettings(
+                guild_id = str(interaction.guild.id), 
+                enabled = False,
+                confirm_moderation = True, 
+                log_channel = None, 
+                backup_inbox_channel = None
+            )
+            settings.save()
+
+        if not settings.enabled:
+            await interaction.response.send_message('Whispering is not enabled', ephemeral=True)
+            return
+        
+        if not settings.log_channel:
+            await interaction.response.send_message('Whisper Log Channel is not set. Contact an Administrator to set this up.', ephemeral=True)
+            return
+        
+        logChannel = self.bot.get_channel(int(settings.log_channel))
+
+        if not logChannel:
+            await interaction.response.send_message('Whisper Log Channel is invalid or unaccessible. Contact an Administrator to set this up.', ephemeral=True)
+            return
+        
+        if not settings.backup_inbox_channel:
+            await interaction.response.send_message('Whisper Backup Inbox Channel is not set. Contact an Administrator to set this up.', ephemeral=True)
+            return
+        
+        backupInboxChannel = self.bot.get_channel(int(settings.backup_inbox_channel))
+
+        if not backupInboxChannel:
+            await interaction.response.send_message('Whisper Backup Inbox Channel is invalid or unaccessible. Contact an Administrator to set this up.', ephemeral=True)
+            return
+        
+        WhisperBlock = self.tables.WhisperBlock
+        whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(interaction.user.id), WhisperBlock.blocked_user_id==str(target.id)).first()
+
+        if whisper_block_check and not target.guild_permissions.manage_messages:
+            await interaction.response.send_message('You have blocked this User. You cannot Whisper them.', ephemeral=True)
+            return
+        
+        whisper_block_check_blocked_by = WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(interaction.user.id)).first()
+
+        if whisper_block_check_blocked_by and not interaction.user.guild_permissions.manage_messages:
+            await interaction.response.send_message('This User has blocked you. You cannot Whisper them.', ephemeral=True)
+            return
+
+        await self.startWhisper(interaction, settings, interaction.user, target, '')
+
+        if settings.confirm_moderation and target.guild_permissions.manage_messages:
+            await interaction.response.send_message(
+                'You are attempting to Whisper a Moderator. Moderation communication is handled through ModMail. Are you sure you want to proceed?',
+                ephemeral=True, view=ModerationWhisperConfirmation(self, settings, interaction.user, target, '')
+            )
+        else:
+            await self.startWhisper(interaction, settings, interaction.user, target, '')
+
     @chat_group(name='whisper', description='Send a Whisper to a User', fallback='send')
     async def whisper(self, ctx, target: discord.Member, *, message: str=None):
         """Send a Whisper to a User"""
