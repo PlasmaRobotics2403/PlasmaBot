@@ -234,8 +234,7 @@ class Whisper(PlasmaCog):
         self.whisper_context_menu = discord.app_commands.ContextMenu(
             name='Whisper',
             callback = self.whisperContextMenu,
-            type = discord.AppCommandType.user,
-            allowedContexts = discord.app_commands.AppCommandContext(guild=True, dm_channel=False, private_channel=False)
+            type = discord.AppCommandType.user
         )
         self.bot.tree.add_command(self.whisper_context_menu)
 
