@@ -231,8 +231,15 @@ class Whisper(PlasmaCog):
 
     def __init__(self, bot: Client):
         super().__init__(bot)
+        self.whisper_context_menu = discord.app_commands.ContextMenu(
+            name='Whisper',
+            callback = self.whisperContextMenu,
+        )
+        self.bot.tree.add_command(self.whisper_context_menu.name, self.whisper_context_menu.type)
 
-    @discord.app_commands.context_menu(name='Whisper')
+    async def cog_unload(self):
+        self.bot.tree.remove_command(self.whisper_context_menu)
+
     async def whisperContextMenu(self, interaction: discord.Interaction, target: discord.Member):
         """Whisper Context Menu Command"""
         WhisperSettings = self.tables.WhisperSettings
