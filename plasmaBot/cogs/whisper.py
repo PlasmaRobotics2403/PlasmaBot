@@ -17,7 +17,7 @@ class WhisperLogReply(discord.ui.View):
         self.cog = cog
         super().__init__(timeout=None)
 
-    @discord.ui.button(label='Message this User', style=discord.ButtonStyle.primary, custom_id='whisper_log_reply')
+    @discord.ui.button(label='Whisper this User', style=discord.ButtonStyle.primary, custom_id='whisper_log_reply')
     async def reply(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Reply Callback"""
 
