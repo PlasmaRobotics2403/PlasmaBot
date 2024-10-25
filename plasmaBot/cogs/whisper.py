@@ -321,11 +321,11 @@ class Whisper(PlasmaCog):
         """Send a Whisper to the Target User and Log it"""
         targetWhisperEmbed = discord.Embed(description=message, color=discord.Color.purple())
         targetWhisperEmbed.set_author(name=f'{origin_user.display_name} ({origin_user.name})', icon_url=origin_user.avatar.url)
-        targetWhisperEmbed.set_footer(text='This is a Whisper. To Reply, hit the Reply Button.')
+        targetWhisperEmbed.set_footer(text=origin_user.guild.name, icon_url=origin_user.guild.icon.url)
 
         logWhisperEmbed = discord.Embed(description=message, color=discord.Color.purple())
         logWhisperEmbed.set_author(name=f'{origin_user.display_name} ({origin_user.name}) → {target.display_name} ({target.name})', icon_url=origin_user.avatar.url)
-        logWhisperEmbed.set_footer(text='This is a Whisper. To Reply, hit the Reply Button.')
+        logWhisperEmbed.set_footer(text=origin_user.guild.name, icon_url=origin_user.guild.icon.url)
 
         whisperLogChannel = self.bot.get_channel(int(settings.log_channel))
 
