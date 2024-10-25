@@ -1,13 +1,11 @@
 import peewee
-import asyncio
 
 from datetime import datetime
 
 import discord
-from discord.ext import commands
 
 from plasmaBot import Client
-from plasmaBot.cog import PlasmaCog, chat_command, chat_group
+from plasmaBot.cog import PlasmaCog, chat_group
 
 
 class WhisperLogReply(discord.ui.View):
