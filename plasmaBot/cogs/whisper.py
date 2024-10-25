@@ -17,7 +17,7 @@ class WhisperLogReply(discord.ui.View):
         self.cog = cog
         super().__init__(timeout=None)
 
-    @discord.ui.button(label='Reply', style=discord.ButtonStyle.primary, custom_id='whisper_log_reply')
+    @discord.ui.button(label='Message this User', style=discord.ButtonStyle.primary, custom_id='whisper_log_reply')
     async def reply(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Reply Callback"""
 
@@ -25,7 +25,7 @@ class WhisperLogReply(discord.ui.View):
         whisper_message = WhisperMessage.select().where(WhisperMessage.log_message_id==interaction.message.id).first()
 
         if not whisper_message:
-            await interaction.response.send_message('This Whisper is not available for Reply.', ephemeral=True)
+            await interaction.response.send_message('This Whisper does not exist in the database.', ephemeral=True)
             return
         
         guild = self.cog.bot.get_guild(int(whisper_message.origin_guild_id))
@@ -107,7 +107,7 @@ class WhisperTargetReply(discord.ui.View):
         whisper_message = WhisperMessage.select().where(WhisperMessage.inbox_message_id==interaction.message.id).first()
 
         if not whisper_message:
-            await interaction.response.send_message('This Whisper is not available for Reply.', ephemeral=True)
+            await interaction.response.send_message('This Whisper does not exist in the database.', ephemeral=True)
             return
         
         guild = self.cog.bot.get_guild(int(whisper_message.origin_guild_id))
@@ -319,9 +319,13 @@ class Whisper(PlasmaCog):
 
     async def sendWhisper(self, interaction, settings, origin_user, target, message):
         """Send a Whisper to the Target User and Log it"""
-        whisperEmbed = discord.Embed(description=message, color=discord.Color.purple())
-        whisperEmbed.set_author(name=f'{origin_user.display_name} ({origin_user.name})', icon_url=origin_user.avatar.url)
-        whisperEmbed.set_footer(text='This is a Whisper. To Reply, hit the Reply Button.')
+        targetWhisperEmbed = discord.Embed(description=message, color=discord.Color.purple())
+        targetWhisperEmbed.set_author(name=f'{origin_user.display_name} ({origin_user.name})', icon_url=origin_user.avatar.url)
+        targetWhisperEmbed.set_footer(text='This is a Whisper. To Reply, hit the Reply Button.')
+
+        logWhisperEmbed = discord.Embed(description=message, color=discord.Color.purple())
+        logWhisperEmbed.set_author(name=f'{origin_user.display_name} ({origin_user.name}) → {target.display_name} ({target.name})', icon_url=origin_user.avatar.url)
+        logWhisperEmbed.set_footer(text='This is a Whisper. To Reply, hit the Reply Button.')
 
         whisperLogChannel = self.bot.get_channel(int(settings.log_channel))
 
@@ -332,7 +336,7 @@ class Whisper(PlasmaCog):
             )
             return
         
-        logSent = await whisperLogChannel.send(embed=whisperEmbed, view=WhisperLogReply(self))
+        logSent = await whisperLogChannel.send(embed=logWhisperEmbed, view=WhisperLogReply(self))
 
         if not logSent:
             await interaction.response.send_message(
@@ -341,7 +345,7 @@ class Whisper(PlasmaCog):
             )
             return
 
-        targetSent = await target.send(embed=whisperEmbed, view=WhisperTargetReply(self))
+        targetSent = await target.send(embed=targetWhisperEmbed, view=WhisperTargetReply(self))
 
         if not targetSent:
             whisperBackupChannel = self.bot.get_channel(int(settings.backup_inbox_channel))
