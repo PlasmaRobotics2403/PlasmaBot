@@ -235,7 +235,7 @@ class Whisper(PlasmaCog):
             name='Whisper',
             callback = self.whisperContextMenu,
         )
-        self.bot.tree.add_command(self.whisper_context_menu.name, self.whisper_context_menu.type)
+        self.bot.tree.add_command(self.whisper_context_menu)
 
     async def cog_unload(self):
         self.bot.tree.remove_command(self.whisper_context_menu)
