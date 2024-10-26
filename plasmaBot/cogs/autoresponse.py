@@ -136,14 +136,14 @@ class AutoResponse(PlasmaCog):
 
         if not settings.enabled:
             embed = discord.Embed(description='**AutoResponse is Disabled**', color=discord.Color.purple())
-            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
             embed.set_footer(text='AutoResponse Settings')
         else:
             embed = discord.Embed(
                 description=f'**AutoResponse is Enabled**\n\n**Removal Vote Threshold:** {str(settings.removalVoteThreshold)}\n**Cooldown:** {str(settings.cooldown)}',
                 color=discord.Color.purple()
             )
-            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
+            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
             embed.set_footer(text='AutoResponse Settings')
 
         await ctx.send(embed=embed, ephemeral=True)
@@ -213,7 +213,7 @@ class AutoResponse(PlasmaCog):
             return
 
         embed = discord.Embed(title='AutoResponse Entries', color=discord.Color.purple())
-        embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
+        embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
 
         for entry in entries:
             embed.add_field(name=entry.hotword_regex, value=entry.response, inline=False)
