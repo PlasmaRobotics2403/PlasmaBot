@@ -1,8 +1,10 @@
 import peewee
+import aiohttp
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import discord
+from discord.ext import tasks
 
 from plasmaBot import Client
 from plasmaBot.cog import PlasmaCog, chat_group
@@ -695,10 +697,77 @@ class Whisper(PlasmaCog):
             )
             settings.save()
 
+        if not settings.enabled:
+            await ctx.send('Whispering is not enabled', ephemeral=True)
+            return
+
+        if not settings.log_channel:
+            await ctx.send('Whisper Log Channel is not set. Please set this up.', ephemeral=True)
+
+        logChannel = self.bot.get_channel(int(settings.log_channel))
+
+        if not logChannel:
+            await ctx.send('Whisper Log Channel is not accessible. Please confirm this setting is correct.', ephemeral=True)
+
         settings.disable_dms = not settings.disable_dms
         settings.save()
 
-        await ctx.send(f'Disabling DMs is now {"Enabled" if settings.disable_dms else "Disabled"}', ephemeral=True)
+        disableUntil = datetime.now(timezone.utc) + timedelta(days=1)
+        payload = {
+            "invites_disabled_until": None,
+            "dms_disabled_until": disableUntil.strftime('%Y-%m-%dT%H:%M:%S.%fZ') if settings.disable_dms else None
+        }
+        headers = {
+            'Authorization': f'Bot {self.bot.config['connection']['token']}',
+            'Content-Type': 'application/json'
+        }
+
+        await ctx.defer(ephemeral=True)
+
+        async with aiohttp.ClientSession() as session:
+            endpoint = f'https://discord.com/api/v9/guilds/{settings.guild_id}/incident-actions'
+
+            async with session.put(endpoint, json=payload, headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    await ctx.send(f'Disabling DMs is now {"Enabled" if settings.disable_dms else "Disabled"}', ephemeral=True)
+                else:
+                    await ctx.send(f"Error: {response.status}", ephemeral=True)
+
+    @tasks.loop(minutes=1440)
+    async def disableDMs(self):
+        """Disable DMs for configured Servers"""
+        disableUntil = datetime.now(timezone.utc) + timedelta(days=1)
+        payload = {
+            "invites_disabled_until": None,
+            "dms_disabled_until": disableUntil.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        }
+        headers = {
+            'Authorization': f'Bot {self.bot.config['connection']['token']}',
+            'Content-Type': 'application/json'
+        }
+
+        WhisperSettings = self.tables.WhisperSettings
+        serverSettings = WhisperSettings.select().where(WhisperSettings.enabled == True, WhisperSettings.disable_dms == True)
+
+        async with aiohttp.ClientSession() as session:
+            for settings in serverSettings:
+                if not settings.log_channel:
+                    continue
+
+                logChannel = self.bot.get_channel(int(settings.log_channel))
+
+                if not logChannel:
+                    continue
+
+                endpoint = f'https://discord.com/api/v9/guilds/{settings.guild_id}/incident-actions'
+
+                async with session.put(endpoint, json=payload, headers=headers) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        await logChannel.send(f"Received data: {data}")
+                    else:
+                        await logChannel.send(f"Error: {response.status}")
 
 
 async def setup(bot):
