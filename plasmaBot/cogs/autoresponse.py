@@ -25,7 +25,7 @@ class AutoResponseVoter(discord.ui.View):
         await self.message.edit(view=None)
         self.stop()
 
-    @discord.ui.button(label='Not Useful?', style=discord.ButtonStyle.primary)
+    @discord.ui.button(label='Not Relevant?', style=discord.ButtonStyle.primary)
     async def onClick(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Submit Callback"""
         self.users.add(interaction.user)
