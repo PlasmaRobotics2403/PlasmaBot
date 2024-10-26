@@ -266,6 +266,10 @@ class Whisper(PlasmaCog):
 
     async def whisperContextMenu(self, interaction: discord.Interaction, target: discord.Member):
         """Whisper Context Menu Command"""
+        if not interaction.guild:
+            await interaction.response.send_message('Whisper Initiation is only available in Servers.', ephemeral=True)
+            return
+
         WhisperSettings = self.tables.WhisperSettings
         settings = WhisperSettings.select().where(WhisperSettings.guild_id == interaction.guild.id).first()
 
