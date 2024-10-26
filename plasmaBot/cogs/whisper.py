@@ -333,7 +333,7 @@ class Whisper(PlasmaCog):
         if settings.confirm_moderation and target.guild_permissions.manage_messages:
             embed = discord.Embed(title='Moderator Whisper Confirmation', description='You are attempting to Whisper a Moderator. Moderation communication is handled through ModMail. Are you sure you want to proceed?', color=discord.Color.purple())
             embed.set_footer(text='Please confirm to continue, or disregard to cancel.')
-            await interaction.channel.send(
+            await interaction.response.send_message(
                 embed=embed,
                 view=ModerationWhisperConfirmation(self, settings, interaction.user, target, ''),
                 ephemeral=True
@@ -419,7 +419,7 @@ class Whisper(PlasmaCog):
         if settings.confirm_moderation and target.guild_permissions.manage_messages:
             embed = discord.Embed(title='Moderator Whisper Confirmation', description='You are attempting to Whisper a Moderator. Moderation communication is handled through ModMail. Are you sure you want to proceed?', color=discord.Color.purple())
             embed.set_footer(text='Please confirm to continue, or disregard to cancel.')
-            await ctx.channel.send(
+            await ctx.send(
                 embed=embed, 
                 view=ModerationWhisperConfirmation(self, settings, ctx.author, target, message),
                 ephemeral=True
