@@ -7,39 +7,10 @@ from plasmaBot import Client
 from plasmaBot.cog import PlasmaCog, chat_group
 
 
-class AutoResponseVoterButton(discord.ui.Button):
-    """AutoResponse Vote Button"""
-
-    def __init__(self, view: discord.ui.View, cog: PlasmaCog, settings, message: discord.Message,triggeringUser: discord.Member, *, style=discord.ButtonStyle.primary):
-        self.view = view
-        self.cog = cog
-        self.settings = settings
-        self.message = message
-        self.triggeringUser = triggeringUser
-
-        super().__init__(
-            style=style,
-            label='Not Useful?',
-            custom_id=f'autoresponse_vote_{self.message.id}'
-        )
-
-    async def callback(self, interaction: discord.Interaction):
-        """Callback"""
-        if not interaction.user in self.view.users:
-            self.view.users.add(interaction.user)
-
-        if len(self.view.users) >= self.settings.removalVoteThreshold or interaction.user == self.triggeringUser:
-            await self.message.delete()
-            await interaction.response.send_message(f'Thanks for your feedback! This message has been deleted.', ephemeral=True)
-            return
-        else:
-            await interaction.response.send_message(f'Thanks for your feedback! This message will be deleted if it hits the deletion threshold.', ephemeral=True)
-
-
 class AutoResponseVoter(discord.ui.View):
     """AutoResponse Voter Module"""
 
-    def __init__(self, cog: PlasmaCog, settings, message: discord.Message, triggeringUser: discord.Member, *, timeout=3600):
+    def __init__(self, cog: PlasmaCog, settings, message: discord.Message, triggeringUser: discord.Member, *, timeout=43200):
         self.cog = cog
         self.settings = settings
         self.message = message
@@ -47,16 +18,24 @@ class AutoResponseVoter(discord.ui.View):
 
         self.users = set()
 
-        self.button = AutoResponseVoterButton(self, self.cog, self.settings, self.message)
-
         super().__init__(timeout=timeout)
-
-        self.add_item(self.button)
 
     async def on_timeout(self):
         """Timeout Callback"""
         await self.message.edit(view=None)
         self.stop()
+
+    @discord.ui.button(label='Not Useful?', style=discord.ButtonStyle.primary)
+    async def onClick(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Submit Callback"""
+        self.users.add(interaction.user)
+
+        if len(self.users) >= self.settings.removalVoteThreshold or interaction.user == self.triggeringUser:
+            await self.message.delete()
+            await interaction.response.send_message(f'Thanks for your feedback! This message has been deleted.', ephemeral=True)
+            return
+        else:
+            await interaction.response.send_message(f'Thanks for your feedback! This message will be deleted if it hits the deletion threshold.', ephemeral=True)
 
 
 class AutoResponseEditModal(discord.ui.Modal):
@@ -257,7 +236,7 @@ class AutoResponse(PlasmaCog):
         embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
 
         for entry in entries:
-            embed.add_field(name=entry.hotword_regex, value=entry.response, inline=False)
+            embed.add_field(name=f'{entry.db_id}: {entry.hotword_regex}', value=entry.response, inline=False)
 
         await ctx.send(embed=embed, ephemeral=True)
 
@@ -305,13 +284,17 @@ class AutoResponse(PlasmaCog):
         AutoResponseEntry = self.tables.AutoResponseEntry
         entry = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.hotword_regex == hotword_regex).first()
 
+        if entry:
+            await ctx.send(f'AutoResponse Entry already exists as #{entry.db_id}', ephemeral=True)
+            return
+
         if ctx.interaction:
             await ctx.interaction.response.send_modal(
                 AutoResponseEditModal(
                     self,
                     settings,
                     hotword_regex,
-                    entry.response if entry else response
+                    response
                 )
             )
         else:
@@ -320,14 +303,14 @@ class AutoResponse(PlasmaCog):
             await message.edit(view=view)
 
     @config_autoresponse.command(name='remove_response', description='Remove AutoResponse Entry')
-    async def remove_response(self, ctx, hotword_regex:str):
+    async def remove_response(self, ctx, entry_id:int):
         """Remove AutoResponse Entry"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
             return
 
         AutoResponseEntry = self.tables.AutoResponseEntry
-        entry = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.hotword_regex == hotword_regex).first()
+        entry = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.entry_id == entry_id).first()
 
         if not entry:
             await ctx.send('AutoResponse Entry not found', ephemeral=True)
@@ -337,19 +320,55 @@ class AutoResponse(PlasmaCog):
         await ctx.send('AutoResponse Entry Removed', ephemeral=True)
 
     @config_autoresponse.command(name='edit_response', description='Edit AutoResponse Entry')
-    async def edit_response(self, ctx, hotword_regex:str):
+    async def edit_response(self, ctx, entry_id:int):
         """Edit AutoResponse Entry"""
-        await self.add_response(ctx, hotword_regex)
+
+        if not (ctx.author.guild_permissions.manage_guild or ctx.author in self.bot.developers):
+            await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
+            return
+        
+        AutoResponseSettings = self.tables.AutoReponseSettings
+        settings = AutoResponseSettings.get_or_none(guild_id=ctx.guild.id)
+
+        if not settings:
+            settings = AutoResponseSettings(
+                guild_id= str(ctx.guild.id)
+            )
+            settings.save()
+
+        if not settings.enabled:
+            await ctx.send('AutoResponse is Disabled', ephemeral=True)
+
+        AutoResponseEntry = self.tables.AutoResponseEntry
+        entry = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.db_id == entry_id).first()
+
+        if not entry:
+            await ctx.send(f'AutoResponse Entry does not exist.', ephemeral=True)
+            return
+
+        if ctx.interaction:
+            await ctx.interaction.response.send_modal(
+                AutoResponseEditModal(
+                    self,
+                    settings,
+                    entry.hotword_regex,
+                    entry.response
+                )
+            )
+        else:
+            message = await ctx.send('Click below to edit this entry.', ephemeral=True)
+            view = AutoResponseEditView(self, settings, message, ctx.author, entry.hotword_regex, entry.response)
+            await message.edit(view=view)
 
     @config_autoresponse.command(name='add_channel_limit', description='Add Channel Limit to AutoResponse Entry')
-    async def add_channel_limit(self, ctx, hotword_regex:str, channel:discord.TextChannel):
+    async def add_channel_limit(self, ctx, entry_id:int, channel:discord.TextChannel):
         """Add Channel Limit to AutoResponse Entry"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
             return
 
         AutoResponseEntry = self.tables.AutoResponseEntry
-        entry = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.hotword_regex == hotword_regex).first()
+        entry = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.db_id == entry_id).first()
 
         if not entry:
             await ctx.send('AutoResponse Entry not found', ephemeral=True)
@@ -371,14 +390,14 @@ class AutoResponse(PlasmaCog):
         await ctx.send('Channel Limit Added', ephemeral=True)
 
     @config_autoresponse.command(name='remove_channel_limit', description='Remove Channel Limit from AutoResponse Entry')
-    async def remove_channel_limit(self, ctx, hotword_regex:str, channel:discord.TextChannel):
+    async def remove_channel_limit(self, ctx, entry_id:int, channel:discord.TextChannel):
         """Remove Channel Limit from AutoResponse Entry"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
             return
 
         AutoResponseEntry = self.tables.AutoResponseEntry
-        entry = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.hotword_regex == hotword_regex).first()
+        entry = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.db_id==entry_id).first()
 
         if not entry:
             await ctx.send('AutoResponse Entry not found', ephemeral=True)
@@ -421,8 +440,8 @@ class AutoResponse(PlasmaCog):
         entries = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == message.guild.id)
 
         for entry in entries:
-            pattern = re.compile(re.escape(entry.hotword_regex))
-            if pattern.match(message.content):
+            pattern = re.compile(entry.hotword_regex)
+            if pattern.search(message.content):
                 if entry.channel_limits:
                     if not message.channel.id in [limit.channel_id for limit in entry.channel_limits]:
                         continue
@@ -434,8 +453,9 @@ class AutoResponse(PlasmaCog):
                 entry.last_sent = message.created_at
                 entry.save()
 
-                view = AutoResponseVoter(self, settings, message, message.author)
-                await message.reply(entry.response, view=view)
+                new_message = await message.reply(entry.response)
+                view = AutoResponseVoter(self, settings, new_message, message.author)
+                await new_message.edit(view=view)
                 return
 
 
