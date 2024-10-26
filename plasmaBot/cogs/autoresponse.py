@@ -272,7 +272,7 @@ class AutoResponse(PlasmaCog):
             )
         )
 
-    @config_autoresponse(name='remove_response', description='Remove AutoResponse Entry')
+    @config_autoresponse.command(name='remove_response', description='Remove AutoResponse Entry')
     async def remove_response(self, ctx, hotword_regex:str):
         """Remove AutoResponse Entry"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author in self.bot.developers):
@@ -289,12 +289,12 @@ class AutoResponse(PlasmaCog):
         entry.delete_instance()
         await ctx.send('AutoResponse Entry Removed', ephemeral=True)
 
-    @config_autoresponse(name='edit_response', description='Edit AutoResponse Entry')
+    @config_autoresponse.command(name='edit_response', description='Edit AutoResponse Entry')
     async def edit_response(self, ctx, hotword_regex:str):
         """Edit AutoResponse Entry"""
         await self.add_response(ctx, hotword_regex)
 
-    @config_autoresponse(name='add_channel_limit', description='Add Channel Limit to AutoResponse Entry')
+    @config_autoresponse.command(name='add_channel_limit', description='Add Channel Limit to AutoResponse Entry')
     async def add_channel_limit(self, ctx, hotword_regex:str, channel:discord.TextChannel):
         """Add Channel Limit to AutoResponse Entry"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author in self.bot.developers):
@@ -323,7 +323,7 @@ class AutoResponse(PlasmaCog):
 
         await ctx.send('Channel Limit Added', ephemeral=True)
 
-    @config_autoresponse(name='remove_channel_limit', description='Remove Channel Limit from AutoResponse Entry')
+    @config_autoresponse.command(name='remove_channel_limit', description='Remove Channel Limit from AutoResponse Entry')
     async def remove_channel_limit(self, ctx, hotword_regex:str, channel:discord.TextChannel):
         """Remove Channel Limit from AutoResponse Entry"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author in self.bot.developers):
