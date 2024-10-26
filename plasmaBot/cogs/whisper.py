@@ -240,12 +240,12 @@ class ModerationWhisperConfirmation(discord.ui.View):
     async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Confirmation Callback"""
         await self.cog.startWhisper(interaction, self.settings, self.origin_user, self.target, self.whisper_message)
-        await self.clear_items()
+        self.clear_items()
         self.stop()
 
     async def on_timeout(self):
         """Timeout Callback"""
-        await self.clear_items()
+        self.clear_items()
         self.stop()
 
 
