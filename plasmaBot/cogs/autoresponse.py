@@ -87,6 +87,9 @@ class AutoResponseEditModal(discord.ui.Modal):
 
         super().__init__(title='Edit AutoResponse', timeout=timeout)
 
+        self.add_item(self.hotwordItem)
+        self.add_item(self.responseItem)
+
     async def on_submit(self, interaction: discord.Interaction):
         """Submit Callback"""
         hotword = self.hotwordItem.value
