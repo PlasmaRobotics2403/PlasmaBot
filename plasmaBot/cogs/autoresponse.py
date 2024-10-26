@@ -115,6 +115,41 @@ class AutoResponseEditModal(discord.ui.Modal):
         await interaction.response.send_message('AutoResponse Entry Updated', ephemeral=True)
 
 
+class AutoResponseEditView(discord.ui.View):
+    """AutoResponse Edit View"""
+
+    def __init__(self, cog: PlasmaCog, settings, message: discord.Message, triggeringUser: discord.Member, hotword:str='', response:str='', *, timeout=30):
+        self.cog = cog
+        self.settings = settings
+        self.message = message
+        self.triggeringUser = triggeringUser
+        self.hotword = hotword
+        self.response = response
+
+        super().__init__(timeout=timeout)
+
+    async def on_timeout(self):
+        """Timeout Callback"""
+        await self.message.delete()
+        self.stop()
+
+    @discord.ui.button(label='Edit Entry', style=discord.ButtonStyle.primary)
+    async def submit(self, button: discord.ui.Button, interaction: discord.Interaction):
+        """Submit Callback"""
+        if not interaction.user == self.triggeringUser:
+            await interaction.response.send_message('You are not authorized to use this button.', ephemeral=True)
+            return
+        
+        await interaction.response.send_modal(
+            AutoResponseEditModal(
+                self,
+                self.settings,
+                self.hotword,
+                self.response
+            )
+        )
+
+
 class AutoResponse(PlasmaCog):
     """Automatic HotWord Response System"""
 
@@ -247,6 +282,7 @@ class AutoResponse(PlasmaCog):
     @config_autoresponse.command(name='add_response', description='Add AutoResponse Entry')
     async def add_response(self, ctx, hotword_regex:str, *, response:str=''):
         """Add AutoResponse Entry"""
+
         if not (ctx.author.guild_permissions.manage_guild or ctx.author in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
             return
@@ -266,14 +302,19 @@ class AutoResponse(PlasmaCog):
         AutoResponseEntry = self.tables.AutoResponseEntry
         entry = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.hotword_regex == hotword_regex).first()
 
-        await ctx.interaction.response.send_modal(
-            AutoResponseEditModal(
-                self,
-                settings,
-                hotword_regex,
-                entry.response if entry else response
+        if ctx.interaction:
+            await ctx.interaction.response.send_modal(
+                AutoResponseEditModal(
+                    self,
+                    settings,
+                    hotword_regex,
+                    entry.response if entry else response
+                )
             )
-        )
+        else:
+            message = await ctx.send('Click below to edit this entry.', ephemeral=True)
+            view = AutoResponseEditView(self, settings, message, ctx.author, hotword_regex, entry.response if entry else response)
+            await message.edit(view=view)
 
     @config_autoresponse.command(name='remove_response', description='Remove AutoResponse Entry')
     async def remove_response(self, ctx, hotword_regex:str):
