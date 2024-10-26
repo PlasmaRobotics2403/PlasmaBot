@@ -142,7 +142,7 @@ class AutoResponseEditView(discord.ui.View):
         
         await interaction.response.send_modal(
             AutoResponseEditModal(
-                self,
+                self.cog,
                 self.settings,
                 self.hotword,
                 self.response
