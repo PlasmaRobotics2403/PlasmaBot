@@ -79,13 +79,23 @@ class WhisperLogReply(discord.ui.View):
         whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(origin_user.id), WhisperBlock.blocked_user_id==str(target.id)).first()
 
         if whisper_block_check and not target.guild_permissions.manage_messages:
-            await interaction.response.send_message('You have blocked this User. You cannot Whisper them.', ephemeral=True)
+            blocked_embed = discord.Embed(
+                title='Blocked User',
+                description='You have blocked this User. You cannot Whisper them.',
+                color=discord.Color.red()
+            )
+            await interaction.response.send_message(embed=blocked_embed, ephemeral=True)
             return
         
         whisper_block_check_blocked_by = WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(origin_user.id)).first()
 
         if whisper_block_check_blocked_by and not origin_user.guild_permissions.manage_messages:
-            await interaction.response.send_message('This User has blocked you. You cannot Whisper them.', ephemeral=True)
+            blocked_by_embed = discord.Embed(
+                title='Blocked User',
+                description='This User has blocked you. You cannot Whisper them.',
+                color=discord.Color.red()
+            )
+            await interaction.response.send_message(embed=blocked_by_embed, ephemeral=True)
             return
         
         await self.cog.startWhisper(interaction, settings, origin_user, target, '')
@@ -161,13 +171,23 @@ class WhisperTargetReply(discord.ui.View):
         whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(origin_user.id), WhisperBlock.blocked_user_id==str(target.id)).first()
 
         if whisper_block_check and not target.guild_permissions.manage_messages:
-            await interaction.response.send_message('You have blocked this User. You cannot Whisper them.', ephemeral=True)
+            blocked_embed = discord.Embed(
+                title='Blocked User',
+                description='You have blocked this User. You cannot Whisper them.',
+                color=discord.Color.red()
+            )
+            await interaction.response.send_message(embed=blocked_embed, ephemeral=True)
             return
         
         whisper_block_check_blocked_by = WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(origin_user.id)).first()
 
         if whisper_block_check_blocked_by and not origin_user.guild_permissions.manage_messages:
-            await interaction.response.send_message('This User has blocked you. You cannot Whisper them.', ephemeral=True)
+            blocked_by_embed = discord.Embed(
+                title='Blocked User',
+                description='This User has blocked you. You cannot Whisper them.',
+                color=discord.Color.red()
+            )
+            await interaction.response.send_message(embed=blocked_by_embed, ephemeral=True)
             return
         
         await self.cog.startWhisper(interaction, settings, origin_user, target, '')
@@ -208,7 +228,7 @@ class WhisperModal(discord.ui.Modal):
 class ModerationWhisperConfirmation(discord.ui.View):
     """Confirmation View for Moderation Whispers"""
 
-    def __init__(self, cog: PlasmaCog, settings, origin_user: discord.Member, target: discord.Member, whisper_message: str, *, timeout=30.0):
+    def __init__(self, cog: PlasmaCog, settings, origin_user: discord.Member, target: discord.Member, whisper_message: str, *, timeout=30):
         self.cog = cog
         self.settings = settings
         self.origin_user = origin_user
@@ -220,7 +240,12 @@ class ModerationWhisperConfirmation(discord.ui.View):
     async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Confirmation Callback"""
         await self.cog.startWhisper(interaction, self.settings, self.origin_user, self.target, self.whisper_message)
-        self.clear_items()
+        await self.whisper_message.edit(view=None)
+        self.stop()
+
+    async def on_timeout(self):
+        """Timeout Callback"""
+        await self.whisper_message.edit(view=None)
         self.stop()
 
 
@@ -282,21 +307,34 @@ class Whisper(PlasmaCog):
         whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(interaction.user.id), WhisperBlock.blocked_user_id==str(target.id)).first()
 
         if whisper_block_check and not target.guild_permissions.manage_messages:
-            await interaction.response.send_message('You have blocked this User. You cannot Whisper them.', ephemeral=True)
+            blocked_embed = discord.Embed(
+                title='Blocked User',
+                description='You have blocked this User. You cannot Whisper them.',
+                color=discord.Color.red()
+            )
+            await interaction.response.send_message(embed=blocked_embed, ephemeral=True)
             return
         
         whisper_block_check_blocked_by = WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(interaction.user.id)).first()
 
         if whisper_block_check_blocked_by and not interaction.user.guild_permissions.manage_messages:
-            await interaction.response.send_message('This User has blocked you. You cannot Whisper them.', ephemeral=True)
+            blocked_by_embed = discord.Embed(
+                title='Blocked User',
+                description='This User has blocked you. You cannot Whisper them.',
+                color=discord.Color.red()
+            )
+            await interaction.response.send_message(embed=blocked_by_embed, ephemeral=True)
             return
 
         await self.startWhisper(interaction, settings, interaction.user, target, '')
 
         if settings.confirm_moderation and target.guild_permissions.manage_messages:
+            embed = discord.Embed(title='Moderator Whisper Confirmation', description='You are attempting to Whisper a Moderator. Moderation communication is handled through ModMail. Are you sure you want to proceed?', color=discord.Color.purple())
+            embed.set_footer(text='Please confirm to continue, or disregard to cancel.')
             await interaction.response.send_message(
-                'You are attempting to Whisper a Moderator. Moderation communication is handled through ModMail. Are you sure you want to proceed?',
-                ephemeral=True, view=ModerationWhisperConfirmation(self, settings, interaction.user, target, '')
+                embed=embed,
+                view=ModerationWhisperConfirmation(self, settings, interaction.user, target, ''),
+                ephemeral=True
             )
         else:
             await self.startWhisper(interaction, settings, interaction.user, target, '')
@@ -357,19 +395,32 @@ class Whisper(PlasmaCog):
         whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(ctx.author.id), WhisperBlock.blocked_user_id==str(target.id)).first()
 
         if whisper_block_check and not target.guild_permissions.manage_messages:
-            await ctx.send('You have blocked this User. You cannot Whisper them.', ephemeral=True)
+            blocked_embed = discord.Embed(
+                title='Blocked User',
+                description='You have blocked this User. You cannot Whisper them.',
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=blocked_embed, ephemeral=True)
             return
         
         whisper_block_check_blocked_by = WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(ctx.author.id)).first()
-        
+
         if whisper_block_check_blocked_by and not ctx.author.guild_permissions.manage_messages:
-            await ctx.send('This User has blocked you. You cannot Whisper them.', ephemeral=True)
+            blocked_by_embed = discord.Embed(
+                title='Blocked User',
+                description='This User has blocked you. You cannot Whisper them.',
+                color=discord.Color.red()
+            )
+            await ctx.send(embed=blocked_by_embed, ephemeral=True)
             return
 
         if settings.confirm_moderation and target.guild_permissions.manage_messages:
+            embed = discord.Embed(title='Moderator Whisper Confirmation', description='You are attempting to Whisper a Moderator. Moderation communication is handled through ModMail. Are you sure you want to proceed?', color=discord.Color.purple())
+            embed.set_footer(text='Please confirm to continue, or disregard to cancel.')
             await ctx.send(
-                'You are attempting to Whisper a Moderator. Moderation communication is handled through ModMail. Are you sure you want to proceed?',
-                ephemeral=True, view=ModerationWhisperConfirmation(self, settings, ctx.author, target, message)
+                embed=embed, 
+                view=ModerationWhisperConfirmation(self, settings, ctx.author, target, message),
+                ephemeral=True
             )
         else:
             await self.startWhisper(ctx.interaction, settings, ctx.author, target, message)
