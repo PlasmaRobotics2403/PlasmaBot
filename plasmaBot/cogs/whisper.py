@@ -228,11 +228,12 @@ class WhisperModal(discord.ui.Modal):
 class ModerationWhisperConfirmation(discord.ui.View):
     """Confirmation View for Moderation Whispers"""
 
-    def __init__(self, cog: PlasmaCog, settings, origin_user: discord.Member, target: discord.Member, whisper_message: str, *, timeout=30):
+    def __init__(self, cog: PlasmaCog, settings, message: discord.Message, origin_user: discord.Member, target: discord.Member, whisper_message: str, *, timeout=30):
         self.cog = cog
         self.settings = settings
         self.origin_user = origin_user
         self.target = target
+        self.message = message
         self.whisper_message = whisper_message
         super().__init__(timeout=timeout)
 
@@ -240,12 +241,12 @@ class ModerationWhisperConfirmation(discord.ui.View):
     async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Confirmation Callback"""
         await self.cog.startWhisper(interaction, self.settings, self.origin_user, self.target, self.whisper_message)
-        self.clear_items()
+        await self.message.edit(content='Thank You!', view=None)
         self.stop()
 
     async def on_timeout(self):
         """Timeout Callback"""
-        self.clear_items()
+        await self.message.edit(content='Thank You!', view=None)
         self.stop()
 
 
@@ -333,12 +334,12 @@ class Whisper(PlasmaCog):
         if settings.confirm_moderation and target.guild_permissions.manage_messages:
             embed = discord.Embed(title='Moderator Whisper Confirmation', description='You are attempting to Whisper a Moderator. Moderation communication is handled through ModMail. Are you sure you want to proceed?', color=discord.Color.purple())
             embed.set_footer(text='Please confirm to continue, or disregard to cancel.')
-            view = ModerationWhisperConfirmation(self, settings, interaction.user, target, '')
-            await interaction.response.send_message(
+            sent_confirmation_message = await interaction.response.send_message(
                 embed=embed,
-                view=view,
                 ephemeral=True
             )
+            view = ModerationWhisperConfirmation(self, settings, sent_confirmation_message, interaction.user, target, '')
+            await sent_confirmation_message.edit(view=view)
         else:
             await self.startWhisper(interaction, settings, interaction.user, target, '')
 
@@ -420,12 +421,12 @@ class Whisper(PlasmaCog):
         if settings.confirm_moderation and target.guild_permissions.manage_messages:
             embed = discord.Embed(title='Moderator Whisper Confirmation', description='You are attempting to Whisper a Moderator. Moderation communication is handled through ModMail. Are you sure you want to proceed?', color=discord.Color.purple())
             embed.set_footer(text='Please confirm to continue, or disregard to cancel.')
-            view = ModerationWhisperConfirmation(self, settings, ctx.author, target, message)
-            await ctx.send(
+            sent_confirmation_message = await ctx.send(
                 embed=embed,
-                view=view,
                 ephemeral=True
             )
+            view = ModerationWhisperConfirmation(self, settings, sent_confirmation_message, ctx.author, target, message)
+            await sent_confirmation_message.edit(view=view)
         else:
             await self.startWhisper(ctx.interaction, settings, ctx.author, target, message)
 
