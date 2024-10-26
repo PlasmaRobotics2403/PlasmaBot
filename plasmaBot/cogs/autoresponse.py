@@ -134,7 +134,7 @@ class AutoResponseEditView(discord.ui.View):
         self.stop()
 
     @discord.ui.button(label='Edit Entry', style=discord.ButtonStyle.primary)
-    async def submit(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def onClick(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Submit Callback"""
         if not interaction.user == self.triggeringUser:
             await interaction.response.send_message('You are not authorized to use this button.', ephemeral=True)
@@ -148,6 +148,9 @@ class AutoResponseEditView(discord.ui.View):
                 self.response
             )
         )
+
+        await self.message.delete()
+        self.stop()
 
 
 class AutoResponse(PlasmaCog):
