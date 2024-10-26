@@ -235,18 +235,19 @@ class ModerationWhisperConfirmation(discord.ui.View):
         self.target = target
         self.message = message
         self.whisper_message = whisper_message
+        self.thank_you = discord.Embed(title='Thank You!', description='Future Moderation Communication should be handled through ModMail.', color=discord.Color.purple())
         super().__init__(timeout=timeout)
 
     @discord.ui.button(label='Confirm', style=discord.ButtonStyle.danger)
     async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Confirmation Callback"""
         await self.cog.startWhisper(interaction, self.settings, self.origin_user, self.target, self.whisper_message)
-        await self.message.edit(content='Thank You!', view=None)
+        await self.message.edit(embed=self.thank_you, view=None)
         self.stop()
 
     async def on_timeout(self):
         """Timeout Callback"""
-        await self.message.edit(content='Thank You!', view=None)
+        await self.message.edit(embed=self.thank_you, view=None)
         self.stop()
 
 
