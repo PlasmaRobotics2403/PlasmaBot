@@ -436,6 +436,10 @@ class Whisper(PlasmaCog):
 
     async def startWhisper(self, interaction, settings, origin_user, target, message):
         """Open the Whisper Modal"""
+        if target == origin_user:
+            await interaction.response.send_message('You cannot Whisper yourself.', ephemeral=True)
+            return
+
         await interaction.response.send_modal(
             WhisperModal(
                 self,
