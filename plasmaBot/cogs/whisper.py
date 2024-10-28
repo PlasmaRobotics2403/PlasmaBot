@@ -8,6 +8,7 @@ from discord.ext import tasks
 
 from plasmaBot import Client
 from plasmaBot.cog import PlasmaCog, chat_group
+from plasmaBot.interface import terminal
 
 
 class WhisperLogReply(discord.ui.View):
@@ -39,11 +40,7 @@ class WhisperLogReply(discord.ui.View):
 
         if not settings:
             settings = WhisperSettings(
-                guild_id = whisper_message.origin_guild_id, 
-                enabled = False,
-                confirm_moderation = True, 
-                log_channel = None, 
-                backup_inbox_channel = None
+                guild_id = whisper_message.origin_guild_id
             )
 
         if not settings.enabled:
@@ -131,11 +128,7 @@ class WhisperTargetReply(discord.ui.View):
 
         if not settings:
             settings = WhisperSettings(
-                guild_id = whisper_message.origin_guild_id, 
-                enabled = False,
-                confirm_moderation = True, 
-                log_channel = None, 
-                backup_inbox_channel = None
+                guild_id = whisper_message.origin_guild_id
             )
 
         if not settings.enabled:
@@ -268,6 +261,11 @@ class Whisper(PlasmaCog):
     async def cog_unload(self):
         self.bot.tree.remove_command(self.whisper_context_menu)
 
+    @PlasmaCog.listener()
+    async def on_ready(self):
+        """On Ready Event"""
+        self.disableDMs.start()
+
     async def whisperContextMenu(self, interaction: discord.Interaction, target: discord.Member):
         """Whisper Context Menu Command"""
         if not interaction.guild:
@@ -279,11 +277,7 @@ class Whisper(PlasmaCog):
 
         if not settings:
             settings = WhisperSettings(
-                guild_id = str(interaction.guild.id), 
-                enabled = False,
-                confirm_moderation = True, 
-                log_channel = None, 
-                backup_inbox_channel = None
+                guild_id = str(interaction.guild.id)
             )
             settings.save()
 
@@ -363,11 +357,7 @@ class Whisper(PlasmaCog):
 
         if not settings:
             settings = WhisperSettings(
-                guild_id = str(ctx.guild.id), 
-                enabled = False,
-                confirm_moderation = True, 
-                log_channel = None, 
-                backup_inbox_channel = None
+                guild_id = str(ctx.guild.id)
             )
             settings.save()
 
@@ -559,11 +549,7 @@ class Whisper(PlasmaCog):
 
         if not settings:
             settings = WhisperSettings(
-                guild_id = str(ctx.guild.id), 
-                enabled = False,
-                confirm_moderation = True, 
-                log_channel = None, 
-                backup_inbox_channel = None
+                guild_id = str(ctx.guild.id)
             )
             settings.save()
 
@@ -593,11 +579,7 @@ class Whisper(PlasmaCog):
 
         if not settings:
             settings = WhisperSettings(
-                guild_id = str(ctx.guild.id), 
-                enabled = False,
-                confirm_moderation = True, 
-                log_channel = None, 
-                backup_inbox_channel = None
+                guild_id = str(ctx.guild.id)
             )
             settings.save()
 
@@ -618,11 +600,7 @@ class Whisper(PlasmaCog):
 
         if not settings:
             settings = WhisperSettings(
-                guild_id = str(ctx.guild.id), 
-                enabled = False,
-                confirm_moderation = True, 
-                log_channel = None, 
-                backup_inbox_channel = None
+                guild_id = str(ctx.guild.id)
             )
             settings.save()
 
@@ -643,11 +621,7 @@ class Whisper(PlasmaCog):
 
         if not settings:
             settings = WhisperSettings(
-                guild_id = str(ctx.guild.id), 
-                enabled = False,
-                confirm_moderation = True, 
-                log_channel = None, 
-                backup_inbox_channel = None
+                guild_id = str(ctx.guild.id)
             )
             settings.save()
 
@@ -668,11 +642,7 @@ class Whisper(PlasmaCog):
 
         if not settings:
             settings = WhisperSettings(
-                guild_id = str(ctx.guild.id), 
-                enabled = False,
-                confirm_moderation = True, 
-                log_channel = None, 
-                backup_inbox_channel = None
+                guild_id = str(ctx.guild.id)
             )
             settings.save()
 
@@ -693,11 +663,7 @@ class Whisper(PlasmaCog):
 
         if not settings:
             settings = WhisperSettings(
-                guild_id = str(ctx.guild.id), 
-                enabled = False,
-                confirm_moderation = True, 
-                log_channel = None, 
-                backup_inbox_channel = None
+                guild_id = str(ctx.guild.id)
             )
             settings.save()
 
@@ -735,12 +701,15 @@ class Whisper(PlasmaCog):
                 if response.status == 200:
                     data = await response.json()
                     await ctx.send(f'Disabling DMs is now {"Enabled" if settings.disable_dms else "Disabled"}', ephemeral=True)
+
+                    settings.last_disabled = datetime.now(timezone.utc)
+                    settings.save()
                 else:
                     await ctx.send(f"Error: {response.status}", ephemeral=True)
 
-    @tasks.loop(minutes=1440)
+    @tasks.loop(minutes=1)
     async def disableDMs(self):
-        """Disable DMs for configured Servers"""
+        """Disable DMs for configured Guilds"""
         disableUntil = datetime.now(timezone.utc) + timedelta(days=1)
         payload = {
             "invites_disabled_until": None,
@@ -752,7 +721,11 @@ class Whisper(PlasmaCog):
         }
 
         WhisperSettings = self.tables.WhisperSettings
-        serverSettings = WhisperSettings.select().where(WhisperSettings.enabled == True, WhisperSettings.disable_dms == True)
+        serverSettings = WhisperSettings.select().where(
+            WhisperSettings.enabled == True,
+            WhisperSettings.disable_dms == True, 
+            WhisperSettings.last_disabled == None or WhisperSettings.last_disabled < datetime.now(timezone.utc) - timedelta(days=1)
+        )
 
         async with aiohttp.ClientSession() as session:
             for settings in serverSettings:
@@ -769,7 +742,10 @@ class Whisper(PlasmaCog):
                 async with session.put(endpoint, json=payload, headers=headers) as response:
                     if response.status == 200:
                         data = await response.json()
-                        await logChannel.send(f"Received data: {data}")
+                        await logChannel.send(f"Disabling DMs for 24 hours...")
+
+                        settings.last_disabled = datetime.now(timezone.utc)
+                        settings.save()
                     else:
                         await logChannel.send(f"Error: {response.status}")
 
@@ -786,6 +762,7 @@ async def setup(bot):
         log_channel = peewee.TextField(null=True)
         backup_inbox_channel = peewee.TextField(null=True)
         disable_dms = peewee.BooleanField(default=False)
+        last_disabled = peewee.DateTimeField(null=True)
 
     class WhisperBlock(bot.database.base_model):
         """Represents a User's Block List Item"""
