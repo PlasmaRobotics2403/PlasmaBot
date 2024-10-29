@@ -748,7 +748,7 @@ class Whisper(PlasmaCog):
                 if response.status == 200:
                     await ctx.send(f'Disabling DMs is now {"Enabled" if settings.disable_dms else "Disabled"}', ephemeral=True)
 
-                    settings.next_disable = disableUntil - timedelta(minutes=1) if settings.disable_dms else None
+                    settings.next_disable = disableUntil - timedelta(minutes=10) if settings.disable_dms else None
                     settings.save()
 
                     logger.info(f'DMs {"Disabled" if settings.disable_dms else "Enabled"} for {ctx.guild.name} ({ctx.guild.id}) until {disableUntil}')
@@ -756,7 +756,7 @@ class Whisper(PlasmaCog):
                     await ctx.send(f"Error: {response.status}", ephemeral=True)
                     logger.error(f'Error Disabling DMs for {ctx.guild.name} ({ctx.guild.id}): {response.status}')
 
-    @tasks.loop(minutes=1)
+    @tasks.loop(minutes=5)
     async def disableDMs(self):
         """Disable DMs for configured Guilds"""
         disableUntil = datetime.now(timezone.utc) + timedelta(days=1)
@@ -797,7 +797,7 @@ class Whisper(PlasmaCog):
                     if response.status == 200:
                         await logChannel.send(f"Disabling DMs until {disableUntil.strftime('%Y-%m-%dT%H:%M:%S.%fZ')}")
 
-                        settings.next_disable = disableUntil - timedelta(minutes=1)
+                        settings.next_disable = disableUntil - timedelta(minutes=10)
                         settings.save()
 
                         logger.info(f'DMs {"Disabled" if settings.disable_dms else "Enabled"} for {guild.name} ({guild.id}) until {disableUntil}')
