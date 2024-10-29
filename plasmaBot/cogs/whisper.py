@@ -633,6 +633,46 @@ class Whisper(PlasmaCog):
 
         await ctx.send(f'Whisper Log Channel set to {channel.mention}', ephemeral=True)
 
+    @config_whisper.command(name='log_channel_by_id', description='Set the Whisper Log Channel by ID')
+    async def log_channel_by_id(self, ctx, channel_id: int):
+        """Set the Whisper Log Channel by ID"""
+        if not (ctx.author.guild_permissions.manage_guild or ctx.author in self.bot.developers):
+            await ctx.send(f'You must have `Manage Server` permissions in {ctx.guild.name} to use this command', ephemeral=True)
+            return
+        
+        try:
+            channel = await self.bot.fetch_channel(channel_id)
+        except discord.NotFound:
+            await ctx.send('This Channel does not exist.', ephemeral=True)
+            return
+        except discord.Forbidden:
+            await ctx.send(f'{self.bot.mention} does not have permission to access this Channel.', ephemeral=True)
+            return
+        except:
+            await ctx.send('An error occurred while fetching this Channel.', ephemeral=True)
+            return
+        
+        targetGuild = channel.guild
+        member = await targetGuild.fetch_member(ctx.author.id)
+
+        if not member.guild_permissions.manage_guild:
+            await ctx.send(f'You must also have `Manage Server` permissions in {targetGuild.name} to set {channel.mention} as a Log Channel', ephemeral=True)
+            return
+        
+        WhisperSettings = self.tables.WhisperSettings
+        settings = WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id).first()
+
+        if not settings:
+            settings = WhisperSettings(
+                guild_id = str(ctx.guild.id)
+            )
+            settings.save()
+
+        settings.log_channel = str(channel.id)
+        settings.save()
+
+        await ctx.send(f'Whisper Log Channel set to {channel.mention}', ephemeral=True)
+
     @config_whisper.command(name='backup_inbox_channel', description='Set the Whisper Backup Inbox Channel')
     async def backup_inbox_channel(self, ctx, channel: discord.TextChannel):
         """Set the Whisper Backup Inbox Channel"""
