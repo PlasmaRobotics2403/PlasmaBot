@@ -791,7 +791,7 @@ class Whisper(PlasmaCog):
 
                 async with session.put(endpoint, json=payload, headers=headers) as response:
                     if response.status == 200:
-                        await logChannel.send(f"Disabling DMs for 24 hours...")
+                        await logChannel.send(f"Disabling DMs until {disableUntil.strftime('%Y-%m-%dT%H:%M:%S.%fZ')}")
 
                         settings.next_disable = disableUntil - timedelta(minutes=1)
                         settings.save()
