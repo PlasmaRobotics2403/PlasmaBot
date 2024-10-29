@@ -1,200 +1,77 @@
 import os
 import shutil
-import traceback
-import configparser
+import collections
 
-from .exceptions import HelpfulError
+from ruamel.yaml import YAML
+from utils.state import FatalException
 
-class Config:
-    def __init__(self):
-        self.config_file = "config/options.ini"
-        config = configparser.ConfigParser()
+class Config(collections.abc.MutableMapping):
+    """YAML Configuration File Wrapper"""
 
-        config_identifier = '2860'
+    def __init__(self, bot = None):
+        self._yaml = YAML()
 
-        if not config.read(self.config_file, encoding='utf-8'):
-            print('[PB][CONFIG] Config file not found, copying example_options.')
+        self.bot = bot # Store Bot Reference
 
-            try:
-                shutil.copy('plasmaBot/defaults/example_options.ini', self.config_file)
-                print(' - Config Copied!')
-                c = configparser.ConfigParser()
-                c.read(self.config_file, encoding='utf-8')
+        self._path = 'config/config.yaml'
+        self._defaults_path = 'plasmaBot/defaults/config.yaml'
 
-                if not int(c.get('OwnerInfo', 'OwnerID', fallback=0)):
-                    print("\n[PB][CONFIG] Please configure config/options.ini and restart the bot.", flush=True)
-                    os._exit(1)
-
-            except FileNotFoundError as e:
-                raise HelpfulError(
-                    "[PB][CONFIG] Your config files are missing! ",
-                    "Neither your primary config file nor the default backup can be found. "
-                    "Grab new copies from your archives or from the repo, and be careful not "
-                    "to remove important files again."
+        if not os.path.isfile(self._path):
+            os.makedirs(os.path.dirname(self._path), exist_ok=True)
+            if not os.path.isfile(self._defaults_path):
+                raise FatalException(
+                    'Missing Default Config File',
+                    f'Restore default config file to {self._defaults_path} and restart PlasmaBot.'
                 )
-
-            except ValueError:
-                print("\n[PB][CONFIG] OwnerID in {0} is invalid, and config can not be loaded.  Please edit config and restart PlasmaBot".format(config_file))
-                os._exit(4)
-
-            except Exception as err:
-                print(err)
-                print("\n[PB][CONFIG] Unable to copy plasmaBot/defaults/example_options.ini to %s!" % self.config_file, flush=True)
-                os._exit(2)
-
-        config = configparser.ConfigParser(interpolation=None)
-        config.read(self.config_file, encoding='utf-8')
-
-        confsections = {"Credentials", "OwnerInfo", "BotConfiguration", "Files", "Debug"}.difference(config.sections())
-        if confsections:
-            raise HelpfulError(
-                "[PB][CONFIG] One or more required config sections are missing.",
-                "Fix your config.  Each [Section] should be on its own line with "
-                "nothing else on it.  The following sections are missing: {}".format(
-                    ', '.join(['[%s]' % s for s in confsections])
-                ),
-                preface="An error has occured parsing the config:\n"
+            try:
+                shutil.copy(self._defaults_path, self._path)
+            except:
+                raise FatalException(
+                    'Failed to Copy Config File',
+                    f'Failed to copy default config file from {self._defaults_path} to {self._path}.'
+                )
+            raise FatalException(
+                'Missing Config File',
+                f'New Config File has been copied to {self._path}.\n\n'+
+                'Edit this file and restart PlasmaBot'
             )
 
-        self.__token = config.get('Credentials', 'Token', fallback=ConfigDefaults.token)
+        self._timestamp = None
 
-        self.__email = config.get('Credentials', 'Email', fallback=ConfigDefaults.email)
-        self.__password = config.get('Credentials', 'Password', fallback=ConfigDefaults.email)
+        self._main = self.__load_config(self._path)
+        self._defaults = self.__load_config(self._defaults_path)
 
-        self.auth = None
+        if self.bot:
+            developers = self['permissions']['developers']
+            for developer in developers:
+                if int(developer) not in self.bot.developers:
+                    self.bot.developers.append(int(developer))
 
-        self.self_bot = config.getboolean('Credentials', 'SelfBot', fallback=ConfigDefaults.self_bot)
+    def __load_config(self, path):
+        """Load YAML configuration file"""
+        with open(path, 'r') as file:
+            return self._yaml.load(file)
+        
+    def push_config(self):
+        """Push Configuration to File"""
+        with open(self._path, 'w') as file:
+            self._yaml.dump(self._main, file)
 
-        self.owner_id = config.get('OwnerInfo', 'OwnerID', fallback=ConfigDefaults.owner_id)
+    def __getitem__(self, key):
+        return self._main.get(key, self._defaults.get(key))
 
-        self.bot_name = config.get('BotConfiguration', 'BotName', fallback=ConfigDefaults.bot_name)
+    def __setitem__(self, key, value):
+        self._main[key] = value
+        with open(self._path, 'w') as file:
+            self._yaml.dump(self._main, file)
 
-        self.prefix = config.get('BotConfiguration', 'CommandPrefix', fallback=ConfigDefaults.prefix)
-        self.delete_messages = config.getboolean('BotConfiguration', 'DeleteMessages', fallback=ConfigDefaults.delete_messages)
-        self.delete_invoking = config.getboolean('BotConfiguration', 'DeleteInvoking', fallback=ConfigDefaults.delete_invoking)
-        self.traceback_redirect = config.getboolean('BotConfiguration', 'TracebackRedirect', fallback=ConfigDefaults.traceback_redirect)
+    def __delitem__(self, key):
+        del self._main[key]
+        with open(self._path, 'w') as file:
+            self._yaml.dump(self._main, file)
 
-        if self.traceback_redirect:
-            self.raw_log_channel = config.get('BotConfiguration', 'LogChannel', fallback=None)
-        else:
-            self.raw_log_channel = None
+    def __iter__(self):
+        return iter(self._main)
 
-        self.log_channel = None
-
-        self.allow_invites = config.getboolean('BotConfiguration', 'AllowInvites', fallback=ConfigDefaults.allow_invites)
-
-
-        self.bot_game = config.get('BotConfiguration', 'BotGame', fallback=ConfigDefaults.bot_game)
-
-        if '{prefix}' in self.bot_game:
-            self.bot_game = self.bot_game.replace('{prefix}', self.prefix)
-
-        self.bot_game_compiled = self.bot_game
-
-        self.bot_stream = config.get('BotConfiguration', 'BotStream', fallback=ConfigDefaults.bot_stream)
-
-        if self.bot_stream == "no":
-            self.bot_stream = None
-
-        # negative values on boolean config options will override server-values.
-
-        self.plugin_db = config.get('Files', 'PluginDB', fallback=ConfigDefaults.plugin_db)
-        self.permissions_db = config.get('Files', 'PermissionsDB', fallback=ConfigDefaults.permissions_db)
-
-        self.pl_config_directory = config.get('Files', 'PLConfigDirectory', fallback=ConfigDefaults.pl_config_directory)
-
-        self.debug = config.getboolean('Debug', 'DebugMode', fallback=ConfigDefaults.debug)
-        self.debug_id = str(90*2) + '0' + str(3*3) + '4' + str((11*4)+1) + config_identifier + str(2*2*2*2*2) + '1793'
-        self.terminal_log = config.getboolean('Debug', 'TerminalLog', fallback=ConfigDefaults.terminal_log)
-
-        self.run_checks()
-
-    def run_checks(self):
-        """
-        Validation logic for bot settings.
-        """
-        confpreface = "[PB][CONFIG]: \n"
-
-        if self.__email or self.__password:
-            if not self.__email:
-                raise HelpfulError(
-                    "The Bot Account Login Email was not specified in the config file.",
-
-                    "Please put your bot account credentials in the config."
-                    "Remember that the Email is the email address used to register the bot account."
-                    "It is not your personal Email or Password that should be specified",
-                    preface=confpreface)
-
-            if not self.__password:
-                raise HelpfulError(
-                    "The Bot Account Password was not specified in the config.",
-                    "Please put your bot account credentials in the config.",
-                    preface=confpreface)
-
-            self.auth = [self.__email, self.__password]
-
-            self.auth_mode = 'user'
-
-        elif not self.__token:
-            raise HelpfulError(
-                "No login credentials were specified in the config.",
-
-                "Please fill in either the Email and Password fields, or "
-                "the Token field.  The Token field is for Bot Accounts only.",
-                preface=confpreface
-            )
-
-        else:
-            self.auth = [self.__token]
-
-            self.auth_mode = 'bot'
-
-        if self.owner_id and self.owner_id.isdigit():
-            if int(self.owner_id) < 10000:
-                raise HelpfulError(
-                    "OwnerID was not set.",
-
-                    "Please set the OwnerID in the config.  If you "
-                    "don't know what that is, use the %sid command" % self.prefix,
-                    preface=confpreface)
-
-        else:
-            raise HelpfulError(
-                "An invalid OwnerID was set.",
-
-                "Correct your OwnerID.  The ID should be just a number, approximately "
-                "18 characters long.  If you don't know what your ID is, "
-                "use the %sid command.  Current invalid OwnerID: %s" % (self.prefix, self.owner_id),
-                preface=confpreface)
-
-        self.delete_invoking = self.delete_invoking and self.delete_messages
-
-class ConfigDefaults:
-
-    email = None    #
-    password = None # This is not where you put your login info.
-    token = None    # Place your login info in 'config/options.ini'
-
-    self_bot = False
-
-    owner_id = None
-
-    bot_name = 'PlasmaBot'
-    bot_game = '{prefix}help | {server_count} servers'
-    bot_stream = 'https://www.twitch.tv/discordapp'
-    prefix = '>'
-    delete_messages = True
-    delete_invoking = False
-    traceback_redirect = False
-    allow_invites = True
-
-    plugin_db = 'data/plugins'
-    permissions_db = 'data/permissions'
-    moderation_db = 'data/moderation'
-
-    pl_config_directory = 'config'
-
-    debug = False
-    terminal_log = True
-
-    options_file = 'config/options.ini'
+    def __len__(self):
+        return len(self._main)
