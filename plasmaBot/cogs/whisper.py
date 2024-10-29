@@ -261,8 +261,12 @@ class Whisper(PlasmaCog):
         )
         self.bot.tree.add_command(self.whisper_context_menu)
 
+        if self.bot.is_ready():
+            self.disableDMs.start()
+
     async def cog_unload(self):
         self.bot.tree.remove_command(self.whisper_context_menu)
+        self.disable_dms.stop()
 
     @PlasmaCog.listener()
     async def on_ready(self):
