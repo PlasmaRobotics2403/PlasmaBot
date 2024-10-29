@@ -1,5 +1,6 @@
 import peewee
 import aiohttp
+import logging
 
 from datetime import datetime, timedelta, timezone
 
@@ -9,6 +10,8 @@ from discord.ext import tasks
 from plasmaBot import Client
 from plasmaBot.cog import PlasmaCog, chat_group
 from plasmaBot.interface import terminal
+
+logger = logging.getLogger('plasmaBot.whisper')
 
 
 class WhisperLogReply(discord.ui.View):
@@ -677,7 +680,7 @@ class Whisper(PlasmaCog):
         logChannel = self.bot.get_channel(int(settings.log_channel))
 
         if not logChannel:
-            await ctx.send('Whisper Log Channel is not accessible. Please confirm this setting is correct.', ephemeral=True)
+            await ctx.send('Whisper Log Channel is not accessible. Please confirm this setting is correct.', ephemeral=True)        
 
         settings.disable_dms = not settings.disable_dms
         settings.save()
@@ -699,13 +702,15 @@ class Whisper(PlasmaCog):
 
             async with session.put(endpoint, json=payload, headers=headers) as response:
                 if response.status == 200:
-                    data = await response.json()
                     await ctx.send(f'Disabling DMs is now {"Enabled" if settings.disable_dms else "Disabled"}', ephemeral=True)
 
-                    settings.last_disabled = datetime.now(timezone.utc)
+                    settings.next_disable = disableUntil - timedelta(minutes=1) if settings.disable_dms else None
                     settings.save()
+
+                    logger.info(f'DMs {"Disabled" if settings.disable_dms else "Enabled"} for {ctx.guild.name} ({ctx.guild.id}) until {disableUntil}')
                 else:
                     await ctx.send(f"Error: {response.status}", ephemeral=True)
+                    logger.error(f'Error Disabling DMs for {ctx.guild.name} ({ctx.guild.id}): {response.status}')
 
     @tasks.loop(minutes=1)
     async def disableDMs(self):
@@ -724,7 +729,7 @@ class Whisper(PlasmaCog):
         serverSettings = WhisperSettings.select().where(
             WhisperSettings.enabled == True,
             WhisperSettings.disable_dms == True, 
-            WhisperSettings.last_disabled == None or WhisperSettings.last_disabled < datetime.now(timezone.utc) - timedelta(days=1)
+            WhisperSettings.next_disable <= datetime.now(timezone.utc)
         )
 
         async with aiohttp.ClientSession() as session:
@@ -737,17 +742,24 @@ class Whisper(PlasmaCog):
                 if not logChannel:
                     continue
 
+                guild = await self.bot.fetch_guild(settings.guild_id)
+
+                if not guild:
+                    continue
+
                 endpoint = f'https://discord.com/api/v9/guilds/{settings.guild_id}/incident-actions'
 
                 async with session.put(endpoint, json=payload, headers=headers) as response:
                     if response.status == 200:
-                        data = await response.json()
                         await logChannel.send(f"Disabling DMs for 24 hours...")
 
-                        settings.last_disabled = datetime.now(timezone.utc)
+                        settings.next_disable = disableUntil - timedelta(minutes=1)
                         settings.save()
+
+                        logger.info(f'DMs {"Disabled" if settings.disable_dms else "Enabled"} for {guild.name} ({guild.id}) until {disableUntil}')
                     else:
                         await logChannel.send(f"Error: {response.status}")
+                        logger.error(f'Error Disabling DMs for {guild.name} ({guild.id}): {response.status}')
 
 
 async def setup(bot):
@@ -762,7 +774,7 @@ async def setup(bot):
         log_channel = peewee.TextField(null=True)
         backup_inbox_channel = peewee.TextField(null=True)
         disable_dms = peewee.BooleanField(default=False)
-        last_disabled = peewee.DateTimeField(null=True)
+        next_disable = peewee.DateTimeField(null=True)
 
     class WhisperBlock(bot.database.base_model):
         """Represents a User's Block List Item"""
