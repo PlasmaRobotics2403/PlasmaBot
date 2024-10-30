@@ -48,7 +48,7 @@ class VoterCommunicationButton(discord.ui.View):
         self.cog = cog
         super().__init__(timeout=timeout)
 
-    @discord.ui.button(label='Create Appproval Thread', style=discord.ButtonStyle.blurple, custom_id='create_approval_thread')
+    @discord.ui.button(label='Create Approval Thread', style=discord.ButtonStyle.blurple, custom_id='create_approval_thread')
     async def open_votechannel_modal(self, interaction: discord.Interaction, button: discord.Button):
         """Create Approval Thread Callback"""
         VoteChannelSettings = self.cog.tables.VoteChannelSettings
