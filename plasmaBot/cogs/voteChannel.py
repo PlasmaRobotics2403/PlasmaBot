@@ -320,6 +320,52 @@ class VoteChannels(PlasmaCog):
 
         await ctx.send(f'Voting is now {"Enabled" if settings.enabled else "Disabled"}', ephemeral=True)
 
+    @config_vote_channel.command(name='toggle_approval', description='Toggle Vote Channel Approval Requirement')
+    async def config_votechannel_toggle_approval(self, ctx):
+        """Toggle Vote Channel Approval Requirement"""
+        if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
+            await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
+            return
+
+        VoteChannelSettings = self.tables.VoteChannelSettings
+        settings = VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)).first()
+
+        if not settings:
+            settings = VoteChannelSettings(channel_id = str(ctx.channel.id))
+            settings.save()
+
+        if not settings.enabled:
+            await ctx.send('This is not a Vote Channel', ephemeral=True)
+            return
+        
+        settings.require_approval = not settings.require_approval
+        settings.save()
+
+        await ctx.send(f'Approval Requirement is now {"Enabled" if settings.require_approval else "Disabled"}', ephemeral=True)
+
+    @config_vote_channel.command(name='toggle_vote_buttons', description='Toggle Vote Channel Vote Buttons')
+    async def config_votechannel_toggle_vote_buttons(self, ctx):
+        """Toggle Vote Channel Vote Buttons"""
+        if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
+            await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
+            return
+
+        VoteChannelSettings = self.tables.VoteChannelSettings
+        settings = VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)).first()
+
+        if not settings:
+            settings = VoteChannelSettings(channel_id = str(ctx.channel.id))
+            settings.save()
+
+        if not settings.enabled:
+            await ctx.send('This is not a Vote Channel', ephemeral=True)
+            return
+        
+        settings.add_vote_buttons = not settings.add_vote_buttons
+        settings.save()
+
+        await ctx.send(f'Vote Buttons are now {"Enabled" if settings.add_vote_buttons else "Disabled"}', ephemeral=True)
+
     @config_vote_channel.command(name='set_moderation_role', description='Set the Vote Channel Moderation Role')
     async def config_votechannel_set_moderation_role(self, ctx, role_id:str):
         """Set the Vote Channel Moderation Role"""
