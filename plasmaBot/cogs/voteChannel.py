@@ -17,7 +17,7 @@ class VoterCommunicationModal(discord.ui.Modal):
         label='Subject', 
         required=True, 
         custom_id='vcm_subject', 
-        placeholder='ModMail Subject', 
+        placeholder='VoteChannel Subject', 
         max_length=100
     )
     message = discord.ui.TextInput(
@@ -49,7 +49,7 @@ class VoterCommunicationButton(discord.ui.View):
         super().__init__(timeout=timeout)
 
     @discord.ui.button(label='Create Appproval Thread', style=discord.ButtonStyle.blurple, custom_id='create_approval_thread')
-    async def open_modmail_modal(self, interaction: discord.Interaction, button: discord.Button):
+    async def open_votechannel_modal(self, interaction: discord.Interaction, button: discord.Button):
         """Create Approval Thread Callback"""
         VoteChannelSettings = self.cog.tables.VoteChannelSettings
         settings = VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(interaction.channel.id)).first()
@@ -158,7 +158,7 @@ class VoteChannels(PlasmaCog):
                 if moderation_role in member.roles:
                     await proxy_channel_thread.add_user(member)
         else:
-            proxy_channel_thread, proxy_message = await proxy_channel.create_thread(name=f'Option Approval ({interaction.user.name} - {interaction.user.id}): {subject}', content=f'**{interaction.user.name}** has started a ModMail Thread')
+            proxy_channel_thread, proxy_message = await proxy_channel.create_thread(name=f'Option Approval ({interaction.user.name} - {interaction.user.id}): {subject}', content=f'**{interaction.user.name}** has started a VoteChannel Thread')
 
             for member in proxy_channel.members:
                 if moderation_role in member.roles:
@@ -175,7 +175,7 @@ class VoteChannels(PlasmaCog):
 
         await thread_channel_thread.send(embed=thread_embed)
 
-        proxy_embed = discord.Embed(description=f'**{interaction.user.name}** has started a ModMail Thread. To reply to this thread, use the reply command.', color=discord.Color.purple())
+        proxy_embed = discord.Embed(description=f'**{interaction.user.name}** has started a VoteChannel Thread. To reply to this thread, use the reply command.', color=discord.Color.purple())
         proxy_embed.set_author(name=interaction.guild.name, icon_url=interaction.guild.icon.url)
         proxy_embed.set_footer(text='To reply, use the reply command')
 
@@ -196,8 +196,8 @@ class VoteChannels(PlasmaCog):
         await interaction.response.send_message(f'Approval Thread Created! See <#{thread_channel_thread.id}>', ephemeral=True)
 
     @approvals.command(name='close', description='Close an Approval Thread')
-    async def modmail_close(self, ctx):
-        """Close a ModMail Thread"""        
+    async def votechannel_close(self, ctx):
+        """Close a VoteChannel Thread"""        
         if not isinstance(ctx.channel, discord.Thread):
             await ctx.send('This command can only be used in an Approval thread', ephemeral=True)
             return
@@ -242,7 +242,7 @@ class VoteChannels(PlasmaCog):
         await destination.edit(archived=True)
         await ctx.channel.edit(archived=True)
 
-    @approvals.command(name='reply', description='Reply to a ModMail Thread')
+    @approvals.command(name='reply', description='Reply to a VoteChannel Thread')
     async def reply(self, ctx, *,  message:str):
         """Reply to an Approval Thread"""
         if not isinstance(ctx.channel, discord.Thread):
@@ -298,11 +298,11 @@ class VoteChannels(PlasmaCog):
     @chat_group(name='config_vote_channel', description='Configure Vote Channel Settings')
     @guild_only()
     async def config_vote_channel(self, ctx):
-        """Configure ModMail Settings"""
-        await self.config_modmail_list_settings(ctx)
+        """Configure VoteChannel Settings"""
+        await self.config_votechannel_list_settings(ctx)
         
     @config_vote_channel.command(name='toggle', description='Toggle Vote Channel')
-    async def config_modmail_toggle(self, ctx):
+    async def config_votechannel_toggle(self, ctx):
         """Toggle Vote Channel"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
@@ -318,10 +318,10 @@ class VoteChannels(PlasmaCog):
             settings.enabled = not settings.enabled
             settings.save()
 
-        await ctx.send(f'ModMail is now {"Enabled" if settings.enabled else "Disabled"}', ephemeral=True)
+        await ctx.send(f'Voting is now {"Enabled" if settings.enabled else "Disabled"}', ephemeral=True)
 
     @config_vote_channel.command(name='set_moderation_role', description='Set the Vote Channel Moderation Role')
-    async def config_modmail_set_moderation_role(self, ctx, role_id:str):
+    async def config_votechannel_set_moderation_role(self, ctx, role_id:str):
         """Set the Vote Channel Moderation Role"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
@@ -360,7 +360,7 @@ class VoteChannels(PlasmaCog):
         await ctx.send(f'Moderation Role set to {role.name} in {proxy_channel.guild.name}', ephemeral=True)
         
     @config_vote_channel.command(name='set_proxy_channel', description='Set the Vote Channel Proxy Channel')
-    async def config_modmail_set_proxy_channel(self, ctx, channel_id:str):
+    async def config_votechannel_set_proxy_channel(self, ctx, channel_id:str):
         """Set the Vote Channel Proxy Channel"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
@@ -392,7 +392,7 @@ class VoteChannels(PlasmaCog):
         await ctx.send(f'Proxy Channel set to {channel.mention}', ephemeral=True)
 
     @config_vote_channel.command(name='list_settings', description='List Vote Channel Settings')
-    async def config_modmail_list_settings(self, ctx):
+    async def config_votechannel_list_settings(self, ctx):
         """List Vote Channel Settings""" 
         try:
             if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
