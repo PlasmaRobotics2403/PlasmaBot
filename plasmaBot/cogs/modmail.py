@@ -235,7 +235,7 @@ class ModMail(PlasmaCog):
         else:
             proxy_channel_thread, proxy_message = await proxy_channel.create_thread(name=f'ModMail ({interaction.user.name} - {interaction.user.id}): {subject}', content=f'**{interaction.user.name}** has started a ModMail Thread')
 
-            for member in proxy_channel.members:
+            for member in proxy_channel.guild.members:
                 if moderation_role in member.roles:
                     await proxy_channel_thread.add_user(member)
 
