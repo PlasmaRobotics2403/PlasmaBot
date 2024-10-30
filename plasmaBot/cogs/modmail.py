@@ -316,7 +316,7 @@ class ModMail(PlasmaCog):
         await destination.edit(archived=True)
         await ctx.channel.edit(archived=True)
 
-    @chat_command(name='reply', description='Reply to a ModMail Thread')
+    @modmail.command(name='reply', description='Reply to a ModMail Thread')
     async def reply(self, ctx, *,  message:str):
         """Reply to a ModMail Thread"""
         if not isinstance(ctx.channel, discord.Thread):
