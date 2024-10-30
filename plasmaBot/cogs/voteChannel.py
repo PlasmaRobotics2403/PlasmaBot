@@ -490,9 +490,10 @@ class VoteChannels(PlasmaCog):
                     if last_approval_message:
                         await last_approval_message.delete()
 
-                await message.channel.send('Want to submit an option for voting?', view=VoterCommunicationButton(self))
+                await message.channel.send('test')
+                new_approval_message = await message.channel.send('Want to submit an option for voting?', view=VoterCommunicationButton(self))
                 
-                settings.last_approval_message = str(message.id)
+                settings.last_approval_message = str(new_approval_message.id)
                 settings.save()            
 
         if not isinstance(message.channel, discord.Thread):
