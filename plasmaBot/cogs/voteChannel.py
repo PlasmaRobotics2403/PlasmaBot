@@ -469,6 +469,12 @@ class VoteChannels(PlasmaCog):
     @PlasmaCog.listener()
     async def on_message(self, message):
         """Event fired when a message is sent"""
+        if message.author.bot:
+            return
+        
+        if message.content.strip().startswith(self.bot.config['presence']['prefix']):
+            return
+
         VoteChannelSettings = self.tables.VoteChannelSettings
         settings = VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(message.channel.id)).first()
 
@@ -488,13 +494,7 @@ class VoteChannels(PlasmaCog):
                 settings.last_approval_message = str(message.id)
                 settings.save()            
 
-        if message.author.bot:
-            return
-
         if not isinstance(message.channel, discord.Thread):
-            return
-        
-        if message.content.strip().startswith(self.bot.config['presence']['prefix']):
             return
         
         VoteChannelMapping = self.tables.VoteChannelMapping
