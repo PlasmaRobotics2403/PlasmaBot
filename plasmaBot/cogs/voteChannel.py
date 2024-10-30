@@ -295,7 +295,7 @@ class VoteChannels(PlasmaCog):
         await destination.send(embed=embed_destination, files=destination_files)
         await ctx.send(embed=embed_origin, files=origin_files)
 
-    @chat_group(name='config_voteChannel', description='Configure Vote Channel Settings')
+    @chat_group(name='config_vote_channel', description='Configure Vote Channel Settings')
     @guild_only()
     async def config_vote_channel(self, ctx):
         """Configure ModMail Settings"""
