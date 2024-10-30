@@ -4,7 +4,7 @@ import asyncio
 import discord
 
 from plasmaBot import Client
-from plasmaBot.cog import PlasmaCog, chat_command, chat_group
+from plasmaBot.cog import PlasmaCog, chat_group
 
 from discord.ext.commands import guild_only
 
