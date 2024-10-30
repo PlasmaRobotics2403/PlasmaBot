@@ -479,9 +479,12 @@ class VoteChannels(PlasmaCog):
                 await message.add_reaction('🤷')
 
             if settings.enabled and settings.require_approval:
-                last_approval_message = await message.channel.fetch_message(settings.last_approval_message)
-                await last_approval_message.delete()
+                if settings.last_approval_message:
+                    last_approval_message = await message.channel.fetch_message(settings.last_approval_message)
+                    await last_approval_message.delete()
+
                 await message.channel.send('Want to submit an option for voting?', view=VoterCommunicationButton(self))
+                
                 settings.last_approval_message = str(message.id)
                 settings.save()            
 
