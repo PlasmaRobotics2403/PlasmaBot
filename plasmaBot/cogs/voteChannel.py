@@ -312,7 +312,7 @@ class VoteChannels(PlasmaCog):
         settings = VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)).first()
 
         if not settings:
-            settings = VoteChannelSettings(guild_id = str(ctx.guild.id), enabled = True, thread_channel = None, proxy_channel = None)
+            settings = VoteChannelSettings(channel_id = str(ctx.channel.id))
             settings.save()
         else:
             settings.enabled = not settings.enabled
