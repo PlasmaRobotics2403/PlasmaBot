@@ -479,10 +479,38 @@ class ModMail(PlasmaCog):
         settings.save()
 
         await ctx.send(f'Thread Channel set to {channel.mention}', ephemeral=True)
-        
+
     @config_modmail.command(name='set_proxy_channel', description='Set the ModMail Proxy Channel')
-    async def config_modmail_set_proxy_channel(self, ctx, channel_id:str):
+    async def config_modmail_set_proxy_channel(self, ctx, channel:discord.TextChannel):
         """Set the ModMail Proxy Channel"""
+        if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
+            await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
+            return
+        
+        ModMailSettings = self.tables.ModMailSettings
+        settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
+
+        if not settings:
+            settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = False, thread_channel = None, proxy_channel = None)
+            settings.save()
+
+        if not settings.enabled:
+            await ctx.send('ModMail is not enabled', ephemeral=True)
+            return
+        
+        channel_bot = self.bot.get_channel(int(channel.id))
+        if not channel_bot:
+            await ctx.send(f'Channel not available to {self.bot.user.mention}', ephemeral=True)
+            return
+        
+        settings.proxy_channel = str(channel.id)
+        settings.save()
+
+        await ctx.send(f'Proxy Channel set to {channel.mention}', ephemeral=True)
+        
+    @config_modmail.command(name='set_proxy_channel_by_id', description='Set the ModMail Proxy Channel by Channel ID')
+    async def config_modmail_set_proxy_channel_by_id(self, ctx, channel_id:str):
+        """Set the ModMail Proxy Channel by Channel ID"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
             return
