@@ -292,7 +292,8 @@ class ModMail(PlasmaCog):
         if not mapping:
             await ctx.send('This thread is not a ModMail thread', ephemeral=True)
             return
-        elif not mapping.proxy_thread:
+        
+        if not mapping.proxy_thread:
             await ctx.send('This thread is not a ModMail thread', ephemeral=True)
             return
         elif not mapping.user_thread:
