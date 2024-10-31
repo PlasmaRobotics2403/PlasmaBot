@@ -89,7 +89,7 @@ class TBA(PlasmaCog):
         """List all teams (optionally for a specific year)"""
         await ctx.defer(ephemeral=True)
 
-        teams = await self.get_teams_from_cache(year if year else 'All')
+        teams, last_checked = await self.get_teams_from_cache(year if year else 'All')
         
         def get_page(page):
             lower = page * 20
@@ -102,7 +102,7 @@ class TBA(PlasmaCog):
                 embed_content += f'**Team {team.team_number}**: [{team.nickname}](https://www.thebluealliance.com/team/{team.team_number})\n'
 
             embed = discord.Embed(title = f'{f"Participating " if year else "All "}Teams{f" for {year}" if year else ""}', description=embed_content, color=discord.Color.purple())
-            embed.set_footer(text=f'Page {page + 1} of {len(teams) // 20 + 1}')
+            embed.set_footer(text=f'Page {page + 1} of {len(teams) // 20 + 1} | Accurate as of {last_checked.strftime("%d %b %Y")}')
 
             return embed, len(teams) // 20 + 1
 
@@ -114,7 +114,7 @@ class TBA(PlasmaCog):
         try:
             year = int(year)
             if year < 1992 or (year > datetime.now().year + 1):
-                return []
+                return [], datetime.now()
         except:
             pass
         
@@ -129,42 +129,42 @@ class TBA(PlasmaCog):
         if teams and (year == datetime.now().year or year == datetime.now().year + 1):
             if teams.last_checked and (datetime.now() - teams.last_checked).days < 1:
                 teams_obj = json.loads(teams.teams, cls=SimpleTeamDecoder)
-                return teams_obj
+                return teams_obj, teams.last_checked
             else:
-                teams_obj = await self.load_new_teams(year)
+                teams_obj, last_checked = await self.load_new_teams(year)
 
                 teams.teams = json.dumps(teams_obj, cls=SimpleTeamEncoder)
-                teams.last_checked = datetime.now()
+                teams.last_checked = last_checked
                 teams.save()
                 
-                return teams_obj
+                return teams_obj, last_checked
         elif teams and year != 'All':
             teams_obj = json.loads(teams.teams, cls=SimpleTeamDecoder)
-            return teams_obj
+            return teams_obj, teams.last_checked
         elif teams and year == 'All':
             if teams.last_checked and (datetime.now() - teams.last_checked).days < 7:
                 teams_obj = json.loads(teams.teams, cls=SimpleTeamDecoder)
-                return teams_obj
+                return teams_obj, teams.last_checked
             else:
-                teams_obj = await self.load_new_teams(year)
+                teams_obj, last_checked = await self.load_new_teams(year)
 
                 teams.teams = json.dumps(teams_obj, cls=SimpleTeamEncoder)
-                teams.last_checked = datetime.now()
+                teams.last_checked = last_checked
                 teams.save()
 
-                return teams_obj
+                return teams_obj, last_checked
         else:
-            teams_obj = await self.load_new_teams(year)
+            teams_obj, last_checked = await self.load_new_teams(year)
+            terminal.add_message('TEST')
     
             new_teams = TBATeamsCache.create(
                 year=year,
                 teams=json.dumps(teams_obj, cls=SimpleTeamEncoder),
-                last_checked=datetime.now()
+                last_checked=last_checked
             )
             new_teams.save()
 
-
-            return teams_obj
+            return teams_obj, last_checked
 
     async def load_new_teams(self, year='All'):
         """Load new teams from TBA API"""
@@ -173,7 +173,7 @@ class TBA(PlasmaCog):
         except aiotba.http.AioTBAError:
             return []
 
-        return [SimpleTeam(team.team_number, team.nickname) for team in tba_teams]
+        return [SimpleTeam(team.team_number, team.nickname) for team in tba_teams], datetime.now()
 
 
 async def setup(bot: Client):
