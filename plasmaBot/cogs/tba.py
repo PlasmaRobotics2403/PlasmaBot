@@ -54,7 +54,7 @@ class TBA(PlasmaCog):
 
         await ctx.send(embed=embed, ephemeral=True)
 
-    @tba.command(name='tba teams', description='List all teams')
+    @tba.command(name='teams', description='List all teams')
     async def tba_teams(self, ctx, year=None):
         """List all teams (optionally for a specific year)"""
         try:
