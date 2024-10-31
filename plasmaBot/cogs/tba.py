@@ -16,7 +16,7 @@ class TBA(PlasmaCog):
         super().__init__bot(bot)
         self.tba_session = aiotba.TBASession(self.bot.config['cogs']['TBA']['api_key'])
 
-    @chat_group.command(name='tba', description='The Blue Alliance Data Viewer', fallback='help')
+    @chat_group(name='tba', description='The Blue Alliance Data Viewer', fallback='help')
     async def tba(self, ctx):
         """The Blue Alliance Data Viewer"""
         embed = discord.Embed(
@@ -54,7 +54,7 @@ class TBA(PlasmaCog):
 
         await ctx.send(embed=embed, ephemeral=True)
 
-    @chat_group.command(name='tba teams', description='List all teams')
+    @tba.command(name='tba teams', description='List all teams')
     async def tba_teams(self, ctx, year=None):
         """List all teams (optionally for a specific year)"""
         try:
