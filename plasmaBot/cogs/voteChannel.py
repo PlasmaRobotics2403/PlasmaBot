@@ -299,10 +299,10 @@ class VoteChannels(PlasmaCog):
     @guild_only()
     async def config_vote_channel(self, ctx):
         """Configure VoteChannel Settings"""
-        await self.config_votechannel_list_settings(ctx)
+        await self.config_vote_channel_list_settings(ctx)
         
     @config_vote_channel.command(name='toggle', description='Toggle Vote Channel')
-    async def config_votechannel_toggle(self, ctx):
+    async def config_vote_channel_toggle(self, ctx):
         """Toggle Vote Channel"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
@@ -321,7 +321,7 @@ class VoteChannels(PlasmaCog):
         await ctx.send(f'Voting is now {"Enabled" if settings.enabled else "Disabled"}', ephemeral=True)
 
     @config_vote_channel.command(name='toggle_approval', description='Toggle Vote Channel Approval Requirement')
-    async def config_votechannel_toggle_approval(self, ctx):
+    async def config_vote_channel_toggle_approval(self, ctx):
         """Toggle Vote Channel Approval Requirement"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
@@ -344,7 +344,7 @@ class VoteChannels(PlasmaCog):
         await ctx.send(f'Approval Requirement is now {"Enabled" if settings.require_approval else "Disabled"}', ephemeral=True)
 
     @config_vote_channel.command(name='toggle_vote_buttons', description='Toggle Vote Channel Vote Buttons')
-    async def config_votechannel_toggle_vote_buttons(self, ctx):
+    async def config_vote_channel_toggle_vote_buttons(self, ctx):
         """Toggle Vote Channel Vote Buttons"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
@@ -367,7 +367,7 @@ class VoteChannels(PlasmaCog):
         await ctx.send(f'Vote Buttons are now {"Enabled" if settings.add_vote_buttons else "Disabled"}', ephemeral=True)
 
     @config_vote_channel.command(name='set_moderation_role', description='Set the Vote Channel Moderation Role')
-    async def config_votechannel_set_moderation_role(self, ctx, role_id:str):
+    async def config_vote_channel_set_moderation_role(self, ctx, role_id:str):
         """Set the Vote Channel Moderation Role"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
@@ -406,7 +406,7 @@ class VoteChannels(PlasmaCog):
         await ctx.send(f'Moderation Role set to {role.name} in {proxy_channel.guild.name}', ephemeral=True)
         
     @config_vote_channel.command(name='set_proxy_channel', description='Set the Vote Channel Proxy Channel')
-    async def config_votechannel_set_proxy_channel(self, ctx, channel_id:str):
+    async def config_vote_channel_set_proxy_channel(self, ctx, channel_id:str):
         """Set the Vote Channel Proxy Channel"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
@@ -438,7 +438,7 @@ class VoteChannels(PlasmaCog):
         await ctx.send(f'Proxy Channel set to {channel.mention}', ephemeral=True)
 
     @config_vote_channel.command(name='list_settings', description='List Vote Channel Settings')
-    async def config_votechannel_list_settings(self, ctx):
+    async def config_vote_channel_list_settings(self, ctx):
         """List Vote Channel Settings""" 
         try:
             if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
