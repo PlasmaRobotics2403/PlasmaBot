@@ -69,19 +69,19 @@ class TBA(PlasmaCog):
             return
         
         def get_page(page):
-            lower = page * 15
-            upper = (page + 1) * 15
+            lower = page * 20
+            upper = (page + 1) * 20
             slice = teams[lower:upper]
 
             embed_content = ''
 
             for team in slice:
-                embed_content += f'{team.team_number} - {team.nickname}\n'
+                embed_content += f'**Team {team.team_number}**: {team.nickname}\n'
 
             embed = discord.Embed(title = f'Teams{f" for {year}" if year else ""}', description=embed_content, color=discord.Color.purple())
-            embed.set_footer(text=f'Page {page + 1} of {len(teams) // 15 + 1}')
+            embed.set_footer(text=f'Page {page + 1} of {len(teams) // 20 + 1}')
 
-            return embed, len(teams) // 15 + 1
+            return embed, len(teams) // 20 + 1
         
         pagination = Pagination(ctx.author, ctx, get_page, timeout=60)
         await pagination.navigate()
