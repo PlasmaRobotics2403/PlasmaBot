@@ -13,7 +13,7 @@ class TBA(PlasmaCog):
     """The Blue Alliance Data Viewer Cog"""
 
     def __init__(self, bot: Client):
-        super().__init__bot(bot)
+        super().__init__(bot)
         self.tba_session = aiotba.TBASession(self.bot.config['cogs']['TBA']['api_key'])
 
     @chat_group(name='tba', description='The Blue Alliance Data Viewer', fallback='help')
