@@ -58,8 +58,8 @@ class TBA(PlasmaCog):
     async def tba_teams(self, ctx, year=None):
         """List all teams (optionally for a specific year)"""
         try:
-            teams = await self.tba_session.get_teams(page=None, year=year)
-        except aiotba.TBAError as e:
+            teams = await self.tba_session.teams(page=None, year=year)
+        except aiotba.http.AioTBAError as e:
             failEmbed = discord.Embed(
                 title='Error Fetching Teams',
                 description=f'Error: {e}',
