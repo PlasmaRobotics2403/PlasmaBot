@@ -37,8 +37,9 @@ class Pagination(discord.ui.View):
     async def update_buttons(self):
         self.children[0].disabled = self.index == 0
         self.children[1].disabled = self.index == 0
-        self.children[2].disabled = self.index == (self.total - 1)
+        self.children[2].disabled = self.index == self.total//2
         self.children[3].disabled = self.index == (self.total - 1)
+        self.children[4].disabled = self.index == (self.total - 1)
     
     @discord.ui.button(emoji='⏮️', style=discord.ButtonStyle.gray)
     async def first(self, interaction: discord.Interaction, button: discord.Button):
@@ -55,7 +56,15 @@ class Pagination(discord.ui.View):
             await self.edit_page(interaction)
         else:
             await interaction.response.send_message('You are already on the first page.', ephemeral=True)
-    
+
+    @discord.ui.button(emoji='↕️', style=discord.ButtonStyle.gray)
+    async def mid(self, interaction: discord.Interaction, button: discord.Button):
+        if self.index != self.total//2:
+            self.index = self.total//2
+            await self.edit_page(interaction)
+        else:
+            await interaction.response.send_message('You are already on the middle page.', ephemeral=True)
+
     @discord.ui.button(emoji='➡️', style=discord.ButtonStyle.gray)
     async def next(self, interaction: discord.Interaction, button: discord.Button):
         if self.index < (self.total - 1):
