@@ -57,6 +57,7 @@ class TBA(PlasmaCog):
     @tba.command(name='teams', description='List all teams')
     async def tba_teams(self, ctx, year=None):
         """List all teams (optionally for a specific year)"""
+        await ctx.defer()
         try:
             teams = await self.tba_session.teams(page=None, year=year)
         except aiotba.http.AioTBAError as e:
