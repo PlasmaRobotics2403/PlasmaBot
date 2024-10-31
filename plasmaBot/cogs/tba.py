@@ -76,7 +76,7 @@ class TBA(PlasmaCog):
             embed_content = ''
 
             for team in slice:
-                embed_content += f'**Team {team.team_number}**: {team.nickname}\n'
+                embed_content += f'**Team {team.team_number}**: [{team.nickname}](https://www.thebluealliance.com/team/{team.team_number})\n'
 
             embed = discord.Embed(title = f'{f"Participating " if year else "All "}Teams{f" for {year}" if year else ""}', description=embed_content, color=discord.Color.purple())
             embed.set_footer(text=f'Page {page + 1} of {len(teams) // 20 + 1}')
