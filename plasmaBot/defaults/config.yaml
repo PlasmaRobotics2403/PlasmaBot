@@ -24,3 +24,7 @@ terminal: # Configuration Items regarding the Client's command line interface
   enabled: true # Whether or not the terminal interface is enabled
   prefix: '/' # The prefix for commands sent through the terminal
   channel: null # Channel ID to which the terminal interface is bound
+
+cogs: # Configuration Items regarding the Bot's Cogs
+  TBA: # Configuration Items regarding the TBA Cog
+    api_key: 'place_api_key_here' # The API Token for The Blue Alliance
