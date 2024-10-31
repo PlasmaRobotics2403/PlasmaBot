@@ -81,7 +81,7 @@ class TBA(PlasmaCog):
             embed = discord.Embed(title = f'Teams{f" for {year}" if year else ""}', description=embed_content, color=discord.Color.purple())
             embed.set_footer(text=f'Page {page + 1} of {len(teams) // 15 + 1}')
 
-            return embed, len(teams)
+            return embed, len(teams) // 15 + 1
         
         pagination = Pagination(ctx.author, ctx, get_page, timeout=60)
         await pagination.navigate()
