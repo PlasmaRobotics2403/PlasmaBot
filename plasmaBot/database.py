@@ -1,10 +1,11 @@
 import peewee
+import peewee_async
 
 database = None
 
 def setup_database(host:str,port:str,user:str,password:str,db:str):
     global database
-    database = peewee.MySQLDatabase(
+    database = peewee_async.PooledMySQLDatabase(
         host=host,
         port=port,
         user=user,
