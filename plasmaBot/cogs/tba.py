@@ -160,7 +160,8 @@ class TBA(PlasmaCog):
 
         for team in tba_teams:
             found_team = next((t for t in currentTeams if t.team_number == int(team.team_number)), None)
-            currentTeams.remove(found_team)
+            if found_team:
+                currentTeams.remove(found_team)
 
             if found_team:
                 if found_team.nickname != team.nickname or found_team.name != team.name or found_team.city != team.city or found_team.state_prov != team.state_prov or found_team.country != team.country or found_team.address != team.address or found_team.postal_code != team.postal_code or found_team.gmaps_place_id != team.gmaps_place_id or found_team.gmaps_url != team.gmaps_url or found_team.lat != team.lat or found_team.lng != team.lng or found_team.location_name != team.location_name or found_team.website != team.website or found_team.rookie_year != team.rookie_year or found_team.home_championship != team.home_championship:
