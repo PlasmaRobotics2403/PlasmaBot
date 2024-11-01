@@ -176,9 +176,9 @@ class VoteChannels(PlasmaCog):
 
         await thread_channel_thread.send(embed=thread_embed)
 
-        proxy_embed = discord.Embed(description=f'**{interaction.user.name}** has started a VoteChannel Thread. To reply to this thread, use the reply command.', color=discord.Color.purple())
+        proxy_embed = discord.Embed(description=f'**{interaction.user.name}** has started a VoteChannel Thread. To reply to this thread, use the `/approvals reply` command.', color=discord.Color.purple())
         proxy_embed.set_author(name=interaction.guild.name, icon_url=interaction.guild.icon.url)
-        proxy_embed.set_footer(text='To reply, use the reply command')
+        proxy_embed.set_footer(text='To reply, use the `/approvals reply` command')
 
         await proxy_channel_thread.send(embed=proxy_embed)
 
@@ -190,7 +190,7 @@ class VoteChannels(PlasmaCog):
 
         first_message_embed_destination = discord.Embed(description=message, color=discord.Color.purple())
         first_message_embed_destination.set_author(name=interaction.user.name, icon_url=interaction.user.avatar.url)
-        first_message_embed_destination.set_footer(text='To reply, use the reply command')
+        first_message_embed_destination.set_footer(text='To reply, use the `/approvals reply` command')
 
         await proxy_channel_thread.send(embed=first_message_embed_destination)
 
@@ -243,7 +243,7 @@ class VoteChannels(PlasmaCog):
         await destination.edit(archived=True)
         await ctx.channel.edit(archived=True)
 
-    @approvals.command(name='reply', description='Reply to a VoteChannel Thread')
+    @approvals.command(name='reply', description='Reply to an Approval Thread')
     async def reply(self, ctx, *,  message:str):
         """Reply to an Approval Thread"""
         if not isinstance(ctx.channel, discord.Thread):
@@ -284,11 +284,11 @@ class VoteChannels(PlasmaCog):
 
         embed_origin = discord.Embed(description=message, color=discord.Color.purple())
         embed_origin.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
-        embed_origin.set_footer(text='To reply, type your message in this thread' if not proxy else 'To reply, use the reply command')
+        embed_origin.set_footer(text='To reply, type your message in this thread' if not proxy else 'To reply, use the `/approvals reply` command')
 
         embed_destination = discord.Embed(description=message, color=discord.Color.purple())
         embed_destination.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
-        embed_destination.set_footer(text='To reply, type your message in this thread' if proxy else 'To reply, use the reply command')
+        embed_destination.set_footer(text='To reply, type your message in this thread' if proxy else 'To reply, use the `/approvals reply` command')
 
         if not ctx.interaction:
             await ctx.message.delete()
@@ -537,7 +537,7 @@ class VoteChannels(PlasmaCog):
 
         embed_destination = discord.Embed(description=message.content, color=discord.Color.purple())
         embed_destination.set_author(name=message.author.name, icon_url=message.author.avatar.url)
-        embed_destination.set_footer(text='To reply, use the reply command')
+        embed_destination.set_footer(text='To reply, use the `/approvals reply` command')
 
         await message.delete()
         await message.channel.send(embed=embed_origin, files=origin_files)
