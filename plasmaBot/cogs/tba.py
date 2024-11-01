@@ -5,6 +5,7 @@ import discord
 import aiotba
 
 from datetime import datetime
+from uuid import uuid4
 
 from plasmaBot import Client
 from plasmaBot.cog import PlasmaCog, chat_group
@@ -100,7 +101,9 @@ class TBA(PlasmaCog):
         else:
             year = 0
 
+        TBATeamCache = self.tables.TBATeamCache
         TBATeamsCacheLog = self.tables.TBATeamsCacheLog
+        TBATeamYearRelator = self.tables.TBATeamYearRelator
         year_log = await aio_first(TBATeamsCacheLog.select().where(TBATeamsCacheLog.year == year))
 
         if year_log:
@@ -108,25 +111,22 @@ class TBA(PlasmaCog):
                 if not ctx.interaction:
                     await ctx.send('Please wait while I fetch data and update the Team Cache...')
 
-                TBATeamCache = self.tables.TBATeamCache
                 all_teams = await TBATeamCache.select().order_by(TBATeamCache.team_number).aio_execute()
                 teams = await self.cache_new_teams(year, all_teams)
             elif year >= current_year and (current_date - year_log.last_checked).days >= 7:
                 if not ctx.interaction:
                     await ctx.send('Please wait while I fetch data and update the Team Cache...')
                 
-                TBATeamCache = self.tables.TBATeamCache
                 all_teams = await TBATeamCache.select().order_by(TBATeamCache.team_number).aio_execute()
                 teams = await self.cache_new_teams(year, all_teams)
             else: 
-                teams = year_log.teams
+                teams = await TBATeamYearRelator.select().join(TBATeamCache).where(TBATeamYearRelator.year == year_log).order_by(TBATeamCache.team_number).aio_execute()
 
             await self.generate_teams_pagination(ctx, teams, year)
         else:
             if not ctx.interaction:
                 await ctx.send('Please wait while I fetch data and update the Team Cache...')
             
-            TBATeamCache = self.tables.TBATeamCache
             all_teams = await TBATeamCache.select().order_by(TBATeamCache.team_number).aio_execute()
             teams = await self.cache_new_teams(year, all_teams)
             await self.generate_teams_pagination(ctx, teams, year)
@@ -134,6 +134,7 @@ class TBA(PlasmaCog):
     async def cache_new_teams(self, year, currentTeams):
         """Cache new teams from TBA API"""
         now = datetime.now()
+        create_tracker = str(uuid4())
 
         try:
             tba_teams = await self.tba_session.teams(page=None, year=year)
@@ -151,11 +152,11 @@ class TBA(PlasmaCog):
             log = new_year_log
 
         TBATeamCache = self.tables.TBATeamCache
-        TBAYearRelator = self.tables.TBATeamYearRelator
+        TBATeamYearRelator = self.tables.TBATeamYearRelator
 
-        team_returns = []
         update_teams = []
         create_teams = []
+        existing_teams = []
         create_relators = []
 
         for team in tba_teams:
@@ -182,13 +183,11 @@ class TBA(PlasmaCog):
                     found_team.home_championship = team.home_championship
                     found_team.last_checked = now
                     update_teams.append(found_team)
+                existing_teams.append(found_team)
 
-                new_year_relator = TBAYearRelator(team=found_team, year=log)
-                create_relators.append(new_year_relator)
-
-                team_returns.append(new_year_relator)
             else:
                 new_team = TBATeamCache(
+                    tracking_uuid=create_tracker,
                     team_number=int(team.team_number),
                     nickname=team.nickname,
                     name=team.name,
@@ -209,21 +208,24 @@ class TBA(PlasmaCog):
                 )
                 create_teams.append(new_team)
 
-                new_year_relator = TBAYearRelator(team=new_team, year=log)
-                create_relators.append(new_year_relator)
-
-                team_returns.append(new_year_relator)
-
         if len(create_teams) > 0:
             TBATeamCache.bulk_create(create_teams, batch_size=100)
 
         if len(update_teams) > 0:
             TBATeamCache.bulk_update(update_teams, batch_size=50)
 
-        if len(create_relators) > 0:
-            TBAYearRelator.bulk_create(create_relators, batch_size=100)
+        for team in existing_teams:
+            create_relators.append(TBATeamYearRelator(team=team, year=log))
 
-        return team_returns
+        new_teams = await TBATeamCache.select().where(TBATeamCache.tracking_uuid == create_tracker).aio_execute()
+
+        for team in new_teams:
+            create_relators.append(TBATeamYearRelator(team=team, year=log))
+
+        if len(create_relators) > 0:
+            TBATeamYearRelator.bulk_create(create_relators, batch_size=100)
+
+        return create_relators
 
     async def generate_teams_pagination(self, ctx, teams, year):
         """Generate a Pagination for Teams"""
@@ -253,6 +255,7 @@ async def setup(bot: Client):
     class TBATeamCache(bot.database.base_model):
         """Cache for TBA Teams in a given year"""
         db_id = peewee.AutoField(primary_key=True)
+        tracking_uuid = peewee.TextField(null=True)
         team_number = peewee.IntegerField()
         nickname = peewee.TextField(null=True)
         name = peewee.TextField(null=True)
