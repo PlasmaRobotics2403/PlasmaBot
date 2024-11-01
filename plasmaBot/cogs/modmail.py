@@ -5,6 +5,7 @@ import discord
 
 from plasmaBot import Client
 from plasmaBot.cog import PlasmaCog, chat_group
+from plasmaBot.database import aio_first
 
 from discord.ext.commands import guild_only
 
@@ -52,11 +53,11 @@ class ModMailButton(discord.ui.View):
     async def open_modmail_modal(self, interaction: discord.Interaction, button: discord.Button):
         """Open ModMail Callback"""
         ModMailSettings = self.cog.tables.ModMailSettings
-        settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(interaction.guild.id)).first()
+        settings = await aio_first(ModMailSettings.select().where(ModMailSettings.guild_id == str(interaction.guild.id)))
 
         if not settings:
             settings = ModMailSettings(guild_id = str(interaction.guild.id), enabled = False, thread_channel = None, proxy_channel = None)
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await interaction.response.send_message('ModMail is not enabled', ephemeral=True)
@@ -119,11 +120,11 @@ class ModMail(PlasmaCog):
             return
         
         ModMailSettings = self.tables.ModMailSettings
-        settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
+        settings = await aio_first(ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)))
 
         if not settings:
             settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = False, thread_channel = None, proxy_channel = None)
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await ctx.send('ModMail is not enabled', ephemeral=True)
@@ -175,11 +176,11 @@ class ModMail(PlasmaCog):
         """Create a ModMail Thread"""
 
         ModMailSettings = self.tables.ModMailSettings
-        settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(interaction.guild.id)).first()
+        settings = await aio_first(ModMailSettings.select().where(ModMailSettings.guild_id == str(interaction.guild.id)))
 
         if not settings:
             settings = ModMailSettings(guild_id = str(interaction.guild.id), enabled = False, thread_channel = None, proxy_channel = None)
-            settings.save()
+            await settings.aio_save()
         
         if not settings.enabled:
             await interaction.response.send_message('ModMail is not enabled', ephemeral=True)
@@ -242,7 +243,7 @@ class ModMail(PlasmaCog):
         ModMailMapping = self.tables.ModMailMapping
 
         mapping = ModMailMapping(guild_id = str(interaction.guild.id), user_thread = str(thread_channel_thread.id), proxy_thread = str(proxy_channel_thread.id))
-        mapping.save()
+        await mapping.aio_save()
 
         thread_embed = discord.Embed(description='This is a ModMail Thread. You can use this to contact the Moderation Team. Please be patient while we respond to your request.', color=discord.Color.purple())
         thread_embed.set_author(name=interaction.guild.name, icon_url=interaction.guild.icon.url)
@@ -278,8 +279,8 @@ class ModMail(PlasmaCog):
             return
         
         ModMailMapping = self.tables.ModMailMapping
-        mapping = ModMailMapping.select().where(ModMailMapping.user_thread == str(ctx.channel.id)).first()
-        proxy_mapping = ModMailMapping.select().where(ModMailMapping.proxy_thread == str(ctx.channel.id)).first()
+        mapping = await aio_first(ModMailMapping.select().where(ModMailMapping.user_thread == str(ctx.channel.id)))
+        proxy_mapping = await aio_first(ModMailMapping.select().where(ModMailMapping.proxy_thread == str(ctx.channel.id)))
         proxy = False
 
         if not mapping:
@@ -325,8 +326,8 @@ class ModMail(PlasmaCog):
             return
         
         ModMailMapping = self.tables.ModMailMapping
-        mapping = ModMailMapping.select().where(ModMailMapping.user_thread == str(ctx.channel.id)).first()
-        proxy_mapping = ModMailMapping.select().where(ModMailMapping.proxy_thread == str(ctx.channel.id)).first()
+        mapping = await aio_first(ModMailMapping.select().where(ModMailMapping.user_thread == str(ctx.channel.id)))
+        proxy_mapping = await aio_first(ModMailMapping.select().where(ModMailMapping.proxy_thread == str(ctx.channel.id)))
         proxy = False
 
         if not mapping:
@@ -384,11 +385,11 @@ class ModMail(PlasmaCog):
             return
         
         ModMailSettings = self.tables.ModMailSettings
-        settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
+        settings = await aio_first(ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)))
         
         if not settings:
             settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = False, thread_channel = None, proxy_channel = None)
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await ctx.send('ModMail is not enabled', ephemeral=True)
@@ -405,14 +406,14 @@ class ModMail(PlasmaCog):
             return
 
         ModMailSettings = self.tables.ModMailSettings
-        settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
+        settings = await aio_first(ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)))
 
         if not settings:
             settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = True, thread_channel = None, proxy_channel = None)
-            settings.save()
+            await settings.aio_save()
         else:
             settings.enabled = not settings.enabled
-            settings.save()
+            await settings.aio_save()
 
         await ctx.send(f'ModMail is now {"Enabled" if settings.enabled else "Disabled"}', ephemeral=True)
 
@@ -424,11 +425,11 @@ class ModMail(PlasmaCog):
             return
         
         ModMailSettings = self.tables.ModMailSettings
-        settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
+        settings = await aio_first(ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)))
 
         if not settings:
             settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = False, thread_channel = None, proxy_channel = None)
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await ctx.send('ModMail is not enabled', ephemeral=True)
@@ -451,7 +452,7 @@ class ModMail(PlasmaCog):
             return
         
         settings.moderation_role = str(role.id)
-        settings.save()
+        await settings.aio_save()
 
         await ctx.send(f'Moderation Role set to {role.name} in {proxy_channel.guild.name}', ephemeral=True)
         
@@ -467,18 +468,18 @@ class ModMail(PlasmaCog):
             return
         
         ModMailSettings = self.tables.ModMailSettings
-        settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
+        settings = await aio_first(ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)))
 
         if not settings:
             settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = False, thread_channel = None, proxy_channel = None)
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await ctx.send('ModMail is not enabled', ephemeral=True)
             return
         
         settings.thread_channel = str(channel.id)
-        settings.save()
+        await settings.aio_save()
 
         await ctx.send(f'Thread Channel set to {channel.mention}', ephemeral=True)
 
@@ -490,11 +491,11 @@ class ModMail(PlasmaCog):
             return
         
         ModMailSettings = self.tables.ModMailSettings
-        settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
+        settings = await aio_first(ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)))
 
         if not settings:
             settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = False, thread_channel = None, proxy_channel = None)
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await ctx.send('ModMail is not enabled', ephemeral=True)
@@ -506,7 +507,7 @@ class ModMail(PlasmaCog):
             return
         
         settings.proxy_channel = str(channel.id)
-        settings.save()
+        await settings.aio_save()
 
         await ctx.send(f'Proxy Channel set to {channel.mention}', ephemeral=True)
         
@@ -518,11 +519,11 @@ class ModMail(PlasmaCog):
             return
         
         ModMailSettings = self.tables.ModMailSettings
-        settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
+        settings = await aio_first(ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)))
 
         if not settings:
             settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = False, thread_channel = None, proxy_channel = None)
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await ctx.send('ModMail is not enabled', ephemeral=True)
@@ -538,7 +539,7 @@ class ModMail(PlasmaCog):
             return
         
         settings.proxy_channel = str(channel.id)
-        settings.save()
+        await settings.aio_save()
 
         await ctx.send(f'Proxy Channel set to {channel.mention}', ephemeral=True)
 
@@ -551,11 +552,11 @@ class ModMail(PlasmaCog):
                 return
 
             ModMailSettings = self.tables.ModMailSettings
-            settings = ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)).first()
+            settings = await aio_first(ModMailSettings.select().where(ModMailSettings.guild_id == str(ctx.guild.id)))
 
             if not settings:
                 settings = ModMailSettings(guild_id = str(ctx.guild.id), enabled = False, thread_channel = None, proxy_channel = None)
-                settings.save()
+                await settings.aio_save()
 
             if not settings.enabled:
                 embed = discord.Embed(description='**ModMail is Disabled**', color=discord.Color.purple())
@@ -584,8 +585,8 @@ class ModMail(PlasmaCog):
             return
         
         ModMailMapping = self.tables.ModMailMapping
-        mapping = ModMailMapping.select().where(ModMailMapping.user_thread == str(message.channel.id)).first()
-        proxy_mapping = ModMailMapping.select().where(ModMailMapping.proxy_thread == str(message.channel.id)).first()
+        mapping = await aio_first(ModMailMapping.select().where(ModMailMapping.user_thread == str(message.channel.id)))
+        proxy_mapping = await aio_first(ModMailMapping.select().where(ModMailMapping.proxy_thread == str(message.channel.id)))
         proxy = False
 
         if not mapping:

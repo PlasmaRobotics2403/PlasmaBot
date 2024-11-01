@@ -10,6 +10,7 @@ from discord.ext import tasks
 from plasmaBot import Client
 from plasmaBot.cog import PlasmaCog, chat_group
 from plasmaBot.interface import terminal
+from plasmaBot.database import aio_first
 
 logger = logging.getLogger('plasmaBot.whisper')
 
@@ -26,7 +27,7 @@ class WhisperLogReply(discord.ui.View):
         """Reply Callback"""
 
         WhisperMessage = self.cog.tables.WhisperMessage
-        whisper_message = WhisperMessage.select().where(WhisperMessage.log_message_id==interaction.message.id).first()
+        whisper_message = await aio_first(WhisperMessage.select().where(WhisperMessage.log_message_id==interaction.message.id))
 
         if not whisper_message:
             await interaction.response.send_message('This Whisper does not exist in the database.', ephemeral=True)
@@ -39,7 +40,7 @@ class WhisperLogReply(discord.ui.View):
             return
         
         WhisperSettings = self.cog.tables.WhisperSettings
-        settings = WhisperSettings.select().where(WhisperSettings.guild_id==whisper_message.origin_guild_id).first()
+        settings = await aio_first(WhisperSettings.select().where(WhisperSettings.guild_id==whisper_message.origin_guild_id))
 
         if not settings:
             settings = WhisperSettings(
@@ -78,7 +79,7 @@ class WhisperLogReply(discord.ui.View):
             return
         
         WhisperBlock = self.cog.tables.WhisperBlock
-        whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(origin_user.id), WhisperBlock.blocked_user_id==str(target.id)).first()
+        whisper_block_check = await aio_first(WhisperBlock.select().where(WhisperBlock.user_id==str(origin_user.id), WhisperBlock.blocked_user_id==str(target.id)))
 
         if whisper_block_check and not target.guild_permissions.manage_messages:
             blocked_embed = discord.Embed(
@@ -89,7 +90,7 @@ class WhisperLogReply(discord.ui.View):
             await interaction.response.send_message(embed=blocked_embed, ephemeral=True)
             return
         
-        whisper_block_check_blocked_by = WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(origin_user.id)).first()
+        whisper_block_check_blocked_by = await aio_first(WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(origin_user.id)))
 
         if whisper_block_check_blocked_by and not origin_user.guild_permissions.manage_messages:
             blocked_by_embed = discord.Embed(
@@ -114,7 +115,7 @@ class WhisperTargetReply(discord.ui.View):
     async def reply(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Reply Callback"""
         WhisperMessage = self.cog.tables.WhisperMessage
-        whisper_message = WhisperMessage.select().where(WhisperMessage.inbox_message_id==interaction.message.id).first()
+        whisper_message = await aio_first(WhisperMessage.select().where(WhisperMessage.inbox_message_id==interaction.message.id))
 
         if not whisper_message:
             await interaction.response.send_message('This Whisper does not exist in the database.', ephemeral=True)
@@ -127,7 +128,7 @@ class WhisperTargetReply(discord.ui.View):
             return
         
         WhisperSettings = self.cog.tables.WhisperSettings
-        settings = WhisperSettings.select().where(WhisperSettings.guild_id==whisper_message.origin_guild_id).first()
+        settings = await aio_first(WhisperSettings.select().where(WhisperSettings.guild_id==whisper_message.origin_guild_id))
 
         if not settings:
             settings = WhisperSettings(
@@ -166,7 +167,7 @@ class WhisperTargetReply(discord.ui.View):
             return
         
         WhisperBlock = self.cog.tables.WhisperBlock
-        whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(origin_user.id), WhisperBlock.blocked_user_id==str(target.id)).first()
+        whisper_block_check = await aio_first(WhisperBlock.select().where(WhisperBlock.user_id==str(origin_user.id), WhisperBlock.blocked_user_id==str(target.id)))
 
         if whisper_block_check and not target.guild_permissions.manage_messages:
             blocked_embed = discord.Embed(
@@ -177,7 +178,7 @@ class WhisperTargetReply(discord.ui.View):
             await interaction.response.send_message(embed=blocked_embed, ephemeral=True)
             return
         
-        whisper_block_check_blocked_by = WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(origin_user.id)).first()
+        whisper_block_check_blocked_by = await aio_first(WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(origin_user.id)))
 
         if whisper_block_check_blocked_by and not origin_user.guild_permissions.manage_messages:
             blocked_by_embed = discord.Embed(
@@ -280,13 +281,13 @@ class Whisper(PlasmaCog):
             return
 
         WhisperSettings = self.tables.WhisperSettings
-        settings = WhisperSettings.select().where(WhisperSettings.guild_id == interaction.guild.id).first()
+        settings = await aio_first(WhisperSettings.select().where(WhisperSettings.guild_id == interaction.guild.id))
 
         if not settings:
             settings = WhisperSettings(
                 guild_id = str(interaction.guild.id)
             )
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await interaction.response.send_message('Whispering is not enabled', ephemeral=True)
@@ -313,7 +314,7 @@ class Whisper(PlasmaCog):
             return
         
         WhisperBlock = self.tables.WhisperBlock
-        whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(interaction.user.id), WhisperBlock.blocked_user_id==str(target.id)).first()
+        whisper_block_check = await aio_first(WhisperBlock.select().where(WhisperBlock.user_id==str(interaction.user.id), WhisperBlock.blocked_user_id==str(target.id)))
 
         if whisper_block_check and not target.guild_permissions.manage_messages:
             blocked_embed = discord.Embed(
@@ -324,7 +325,7 @@ class Whisper(PlasmaCog):
             await interaction.response.send_message(embed=blocked_embed, ephemeral=True)
             return
         
-        whisper_block_check_blocked_by = WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(interaction.user.id)).first()
+        whisper_block_check_blocked_by = await aio_first(WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(interaction.user.id)))
 
         if whisper_block_check_blocked_by and not interaction.user.guild_permissions.manage_messages:
             blocked_by_embed = discord.Embed(
@@ -360,13 +361,13 @@ class Whisper(PlasmaCog):
             return
 
         WhisperSettings = self.tables.WhisperSettings
-        settings = WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id).first()
+        settings = await aio_first(WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id))
 
         if not settings:
             settings = WhisperSettings(
                 guild_id = str(ctx.guild.id)
             )
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await ctx.send('Whispering is not enabled', ephemeral=True)
@@ -397,7 +398,7 @@ class Whisper(PlasmaCog):
             return
         
         WhisperBlock = self.tables.WhisperBlock
-        whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(ctx.author.id), WhisperBlock.blocked_user_id==str(target.id)).first()
+        whisper_block_check = await aio_first(WhisperBlock.select().where(WhisperBlock.user_id==str(ctx.author.id), WhisperBlock.blocked_user_id==str(target.id)))
 
         if whisper_block_check and not target.guild_permissions.manage_messages:
             blocked_embed = discord.Embed(
@@ -408,7 +409,7 @@ class Whisper(PlasmaCog):
             await ctx.send(embed=blocked_embed, ephemeral=True)
             return
         
-        whisper_block_check_blocked_by = WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(ctx.author.id)).first()
+        whisper_block_check_blocked_by = await aio_first(WhisperBlock.select().where(WhisperBlock.user_id==str(target.id), WhisperBlock.blocked_user_id==str(ctx.author.id)))
 
         if whisper_block_check_blocked_by and not ctx.author.guild_permissions.manage_messages:
             blocked_by_embed = discord.Embed(
@@ -507,7 +508,7 @@ class Whisper(PlasmaCog):
             log_message_id = logSent.id
         )
 
-        newWhisper.save()
+        await newWhisper.aio_save()
 
         await interaction.response.send_message('Whisper Sent!', ephemeral=True)
 
@@ -515,7 +516,7 @@ class Whisper(PlasmaCog):
     async def block(self, ctx, target: discord.Member):
         """Block a User from Whispering you"""
         WhisperBlock = self.tables.WhisperBlock
-        whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(ctx.author.id), WhisperBlock.blocked_user_id==str(target.id)).first()
+        whisper_block_check = await aio_first(WhisperBlock.select().where(WhisperBlock.user_id==str(ctx.author.id), WhisperBlock.blocked_user_id==str(target.id)))
 
         if whisper_block_check:
             await ctx.send('You have already blocked this User from Whispering you.')
@@ -526,7 +527,7 @@ class Whisper(PlasmaCog):
             blocked_user_id = str(target.id)
         )
 
-        newBlock.save()
+        await newBlock.aio_save()
 
         await ctx.send(f'You have blocked {target.display_name} from Whispering you.')
 
@@ -534,7 +535,7 @@ class Whisper(PlasmaCog):
     async def unblock(self, ctx, target: discord.Member):
         """Unblock a User from Whispering you"""
         WhisperBlock = self.tables.WhisperBlock
-        whisper_block_check = WhisperBlock.select().where(WhisperBlock.user_id==str(ctx.author.id), WhisperBlock.blocked_user_id==str(target.id)).first()
+        whisper_block_check = await aio_first(WhisperBlock.select().where(WhisperBlock.user_id==str(ctx.author.id), WhisperBlock.blocked_user_id==str(target.id)))
 
         if not whisper_block_check:
             await ctx.send('You have not blocked this User from Whispering you.')
@@ -552,13 +553,13 @@ class Whisper(PlasmaCog):
             return
         
         WhisperSettings = self.tables.WhisperSettings
-        settings = WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id).first()
+        settings = await aio_first(WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id))
 
         if not settings:
             settings = WhisperSettings(
                 guild_id = str(ctx.guild.id)
             )
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             embed = discord.Embed(description='**Whispering is Disabled**', color=discord.Color.purple())
@@ -582,16 +583,16 @@ class Whisper(PlasmaCog):
             return
         
         WhisperSettings = self.tables.WhisperSettings
-        settings = WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id).first()
+        settings = await aio_first(WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id))
 
         if not settings:
             settings = WhisperSettings(
                 guild_id = str(ctx.guild.id)
             )
-            settings.save()
+            await settings.aio_save()
 
         settings.enabled = not settings.enabled
-        settings.save()
+        await settings.aio_save()
 
         await ctx.send(f'Whispering is now {"Enabled" if settings.enabled else "Disabled"}', ephemeral=True)
 
@@ -603,16 +604,16 @@ class Whisper(PlasmaCog):
             return
         
         WhisperSettings = self.tables.WhisperSettings
-        settings = WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id).first()
+        settings = await aio_first(WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id))
 
         if not settings:
             settings = WhisperSettings(
                 guild_id = str(ctx.guild.id)
             )
-            settings.save()
+            await settings.aio_save()
 
         settings.confirm_moderation = not settings.confirm_moderation
-        settings.save()
+        await settings.aio_save()
 
         await ctx.send(f'Moderation Confirmation is now {"Enabled" if settings.confirm_moderation else "Disabled"}', ephemeral=True)
 
@@ -624,16 +625,16 @@ class Whisper(PlasmaCog):
             return
         
         WhisperSettings = self.tables.WhisperSettings
-        settings = WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id).first()
+        settings = await aio_first(WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id))
 
         if not settings:
             settings = WhisperSettings(
                 guild_id = str(ctx.guild.id)
             )
-            settings.save()
+            await settings.aio_save()
 
         settings.log_channel = str(channel.id)
-        settings.save()
+        await settings.aio_save()
 
         await ctx.send(f'Whisper Log Channel set to {channel.mention}', ephemeral=True)
 
@@ -664,16 +665,16 @@ class Whisper(PlasmaCog):
             return
         
         WhisperSettings = self.tables.WhisperSettings
-        settings = WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id).first()
+        settings = await aio_first(WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id))
 
         if not settings:
             settings = WhisperSettings(
                 guild_id = str(ctx.guild.id)
             )
-            settings.save()
+            await settings.aio_save()
 
         settings.log_channel = str(channel.id)
-        settings.save()
+        await settings.aio_save()
 
         await ctx.send(f'Whisper Log Channel set to {channel.mention}', ephemeral=True)
 
@@ -685,16 +686,16 @@ class Whisper(PlasmaCog):
             return
         
         WhisperSettings = self.tables.WhisperSettings
-        settings = WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id).first()
+        settings = await aio_first(WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id))
 
         if not settings:
             settings = WhisperSettings(
                 guild_id = str(ctx.guild.id)
             )
-            settings.save()
+            await settings.aio_save()
 
         settings.backup_inbox_channel = str(channel.id)
-        settings.save()
+        await settings.aio_save()
 
         await ctx.send(f'Whisper Backup Inbox Channel set to {channel.mention}', ephemeral=True)
 
@@ -706,13 +707,13 @@ class Whisper(PlasmaCog):
             return
         
         WhisperSettings = self.tables.WhisperSettings
-        settings = WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id).first()
+        settings = await aio_first(WhisperSettings.select().where(WhisperSettings.guild_id == ctx.guild.id))
 
         if not settings:
             settings = WhisperSettings(
                 guild_id = str(ctx.guild.id)
             )
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await ctx.send('Whispering is not enabled', ephemeral=True)
@@ -727,7 +728,7 @@ class Whisper(PlasmaCog):
             await ctx.send('Whisper Log Channel is not accessible. Please confirm this setting is correct.', ephemeral=True)        
 
         settings.disable_dms = not settings.disable_dms
-        settings.save()
+        await settings.aio_save()
 
         disableUntil = datetime.now(timezone.utc) + timedelta(days=1)
         payload = {
@@ -749,7 +750,7 @@ class Whisper(PlasmaCog):
                     await ctx.send(f'Disabling DMs is now {"Enabled" if settings.disable_dms else "Disabled"}', ephemeral=True)
 
                     settings.next_disable = disableUntil - timedelta(minutes=10) if settings.disable_dms else None
-                    settings.save()
+                    await settings.aio_save()
 
                     logger.info(f'DMs {"Disabled" if settings.disable_dms else "Enabled"} for {ctx.guild.name} ({ctx.guild.id}) until {disableUntil}')
                 else:
@@ -770,11 +771,11 @@ class Whisper(PlasmaCog):
         }
 
         WhisperSettings = self.tables.WhisperSettings
-        serverSettings = WhisperSettings.select().where(
+        serverSettings = await WhisperSettings.select().where(
             WhisperSettings.enabled == True,
             WhisperSettings.disable_dms == True, 
             WhisperSettings.next_disable <= datetime.now(timezone.utc)
-        )
+        ).aio_execute()
 
         async with aiohttp.ClientSession() as session:
             for settings in serverSettings:
@@ -798,7 +799,7 @@ class Whisper(PlasmaCog):
                         await logChannel.send(f"Disabling DMs until {disableUntil.strftime('%Y-%m-%dT%H:%M:%S.%fZ')}")
 
                         settings.next_disable = disableUntil - timedelta(minutes=10)
-                        settings.save()
+                        await settings.aio_save()
 
                         logger.info(f'DMs {"Disabled" if settings.disable_dms else "Enabled"} for {guild.name} ({guild.id}) until {disableUntil}')
                     else:

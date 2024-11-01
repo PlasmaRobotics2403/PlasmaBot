@@ -82,12 +82,13 @@ class Client(commands.Bot):
 
         # End Client Session
         await self.close()
+        
+        # Stop Database
+        self.database.close()
 
         # Stop Loop
         self.loop.stop()
 
-        # Stop Database
-        self.database.close()
 
     async def on_error(self, event_method, *args, **kwargs):
         """Event fired when an error occurs"""

@@ -13,6 +13,7 @@ from discord.ext.commands import guild_only, check, has_permissions, Context
 from plasmaBot.cog import PlasmaCog, chat_command, chat_group
 from plasmaBot.interface import terminal
 from plasmaBot.pagination import Pagination
+from plasmaBot.database import aio_first
 
 
 class StoreButton(discord.ui.Button):
@@ -75,10 +76,10 @@ class Store(discord.ui.View):
     async def buy(self, item):
         """Buy Item"""
         ActivityStatus = self.cog.tables.ActivityStatus
-        activity_profile = ActivityStatus.select().where(ActivityStatus.user_id == str(self.ctx.author.id), ActivityStatus.guild_id == str(self.ctx.guild.id)).first()
+        activity_profile = await aio_first(ActivityStatus.select().where(ActivityStatus.user_id == str(self.ctx.author.id), ActivityStatus.guild_id == str(self.ctx.guild.id)))
 
         table = self.table
-        has_item = table.select().where(table.user_id == str(self.ctx.author.id), table.guild_id == str(self.ctx.guild.id), table.item_id == item.id).first()
+        has_item = await aio_first(table.select().where(table.user_id == str(self.ctx.author.id), table.guild_id == str(self.ctx.guild.id), table.item_id == item.id))
 
         if has_item:
             return (False, 'You already own this item')
@@ -87,10 +88,10 @@ class Store(discord.ui.View):
             return (False, 'You do not have enough XP to buy this item')
         
         activity_profile.current_xp -= item.cost
-        activity_profile.save()
+        await activity_profile.aio_save()
 
         item = table(user_id=str(self.ctx.author.id), guild_id=str(self.ctx.guild.id), item=item)
-        item.save()
+        await item.aio_save()
 
         return (True, 'Success')
     
@@ -111,11 +112,11 @@ class Activity(PlasmaCog):
             guild_settings = self.guild_settings[str(guild.id)]
         else:
             ActivitySettings = self.tables.ActivitySettings
-            guild_settings = ActivitySettings.select().where(ActivitySettings.guild_id == str(guild.id)).first()
+            guild_settings = await aio_first(ActivitySettings.select().where(ActivitySettings.guild_id == str(guild.id)))
 
             if guild_settings is None:
                 guild_settings = ActivitySettings(guild_id=str(guild.id))
-                guild_settings.save()
+                await guild_settings.aio_save()
 
             self.guild_settings[str(guild.id)] = guild_settings
 
@@ -136,7 +137,7 @@ class Activity(PlasmaCog):
         ActivityStatus = self.tables.ActivityStatus
 
         if member is None:
-            activity_profile = ActivityStatus.select().where(ActivityStatus.user_id == str(ctx.author.id), ActivityStatus.guild_id == str(ctx.guild.id)).first()
+            activity_profile = await aio_first(ActivityStatus.select().where(ActivityStatus.user_id == str(ctx.author.id), ActivityStatus.guild_id == str(ctx.guild.id)))
 
             if activity_profile is None:
                 embed = discord.Embed(description="Current XP: 0 XP", color=discord.Color.purple())
@@ -145,7 +146,7 @@ class Activity(PlasmaCog):
 
             embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
         else:
-            activity_profile = ActivityStatus.select().where(ActivityStatus.user_id == str(member.id), ActivityStatus.guild_id == str(ctx.guild.id)).first()
+            activity_profile = await aio_first(ActivityStatus.select().where(ActivityStatus.user_id == str(member.id), ActivityStatus.guild_id == str(ctx.guild.id)))
 
             if activity_profile is None:
                 embed = discord.Embed(description="Current XP: 0 XP", color=discord.Color.purple())
@@ -227,7 +228,7 @@ class Activity(PlasmaCog):
     async def generateHourlyGraph(self, ctx, member:discord.Member=None):
         """Generate Hourly Graph"""
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1))
+        activity_points = await ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1)).aio_execute()
 
         # Convert activity_points to a list of timestamps
         timestamps = [point.timestamp for point in activity_points]
@@ -266,7 +267,7 @@ class Activity(PlasmaCog):
     async def generateDailyGraph(self, ctx, member:discord.Member=None):
         """Generate Daily Graph"""
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1))
+        activity_points = await ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1)).aio_execute()
 
         # Convert activity_points to a list of timestamps
         timestamps = [point.timestamp for point in activity_points]
@@ -305,7 +306,7 @@ class Activity(PlasmaCog):
     async def generateMonthlyGraph(self, ctx, member:discord.Member=None):
         """Generate Monthly Graph"""
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30))
+        activity_points = await ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).aio_execute()
 
         # Convert activity_points to a list of timestamps
         timestamps = [point.timestamp for point in activity_points]
@@ -344,7 +345,7 @@ class Activity(PlasmaCog):
     async def generateYearlyGraph(self, ctx, member:discord.Member=None):
         """Generate Yearly Graph"""
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365))
+        activity_points = await ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365)).aio_execute()
 
         # Convert activity_points to a list of timestamps
         timestamps = [point.timestamp for point in activity_points]
@@ -383,7 +384,7 @@ class Activity(PlasmaCog):
     async def generateAllTimeGraph(self, ctx, member:discord.Member=None):
         """Generate AllTime Graph"""
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id)).order_by(ActivityPoint.timestamp.asc())
+        activity_points = await ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id)).order_by(ActivityPoint.timestamp.asc()).aio_execute()
 
         # Convert activity_points to a list of timestamps
         timestamps = [point.timestamp for point in activity_points]
@@ -432,7 +433,7 @@ class Activity(PlasmaCog):
             return
 
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30))
+        activity_points = await ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).aio_execute()
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Monthly')
         await ctx.send(embed=embed, ephemeral=True)
 
@@ -448,7 +449,7 @@ class Activity(PlasmaCog):
             return
 
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365))
+        activity_points = await ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365)).aio_execute()
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Yearly')
         await ctx.send(embed=embed, ephemeral=True)
 
@@ -464,7 +465,7 @@ class Activity(PlasmaCog):
             return
 
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1))
+        activity_points = await ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1)).aio_execute()
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Daily')
         await ctx.send(embed=embed, ephemeral=True)
 
@@ -480,7 +481,7 @@ class Activity(PlasmaCog):
             return
 
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1))
+        activity_points = await ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1)).aio_execute()
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'Hourly')
         await ctx.send(embed=embed, ephemeral=True)
 
@@ -496,7 +497,7 @@ class Activity(PlasmaCog):
             return
 
         ActivityPoint = self.tables.ActivityPoint
-        activity_points = ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id))
+        activity_points = await ActivityPoint.select().where(ActivityPoint.user_id == str(member.id if member else ctx.author.id), ActivityPoint.guild_id == str(ctx.guild.id)).aio_execute()
         embed = await self.generate_activity_embed(ctx, activity_points, member if member else ctx.author, 'All-Time')
         await ctx.send(embed=embed, ephemeral=True)
 
@@ -521,7 +522,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = await ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc()).aio_execute()
         
         await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'Monthly'), ephemeral=True)
 
@@ -538,7 +539,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = await ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc()).aio_execute()
         
         await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'Daily'))
 
@@ -555,7 +556,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = await ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc()).aio_execute()
         
         await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'Hourly'))
     
@@ -572,7 +573,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = await ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc()).aio_execute()
         
         await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'Yearly'))
 
@@ -589,7 +590,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = await ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc()).aio_execute()
         
         await ctx.send(embed=await self.get_rank(activity_points, member if member else ctx.author, 'All-Time'), ephemeral=True)
 
@@ -630,7 +631,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = await ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-30)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc()).aio_execute()
 
         await self.generate_leaderboard(ctx, activity_points, 'Monthly')
 
@@ -647,7 +648,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = await ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc()).aio_execute()
 
         await self.generate_leaderboard(ctx, activity_points, 'Daily')
 
@@ -664,7 +665,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = await ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(hours=-1)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc()).aio_execute()
 
         await self.generate_leaderboard(ctx, activity_points, 'Hourly')
 
@@ -681,7 +682,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = await ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id), ActivityPoint.timestamp > datetime.datetime.utcnow() + datetime.timedelta(days=-365)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc()).aio_execute()
 
         await self.generate_leaderboard(ctx, activity_points, 'Yearly')
 
@@ -698,7 +699,7 @@ class Activity(PlasmaCog):
 
         ActivityPoint = self.tables.ActivityPoint
 
-        activity_points = ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc())
+        activity_points = await ActivityPoint.select(ActivityPoint.user_id, ActivityPoint.guild_id, peewee.fn.COUNT(ActivityPoint.user_id).alias('ct')).where(ActivityPoint.guild_id == str(ctx.guild.id)).group_by(ActivityPoint.user_id).order_by(peewee.fn.COUNT(ActivityPoint.user_id).desc()).aio_execute()
 
         await self.generate_leaderboard(ctx, activity_points, 'All-Time')
 
@@ -713,7 +714,7 @@ class Activity(PlasmaCog):
             )
             await ctx.send(embed=embed)
         else:
-            def get_page(page):
+            async def get_page(page):
                 lower = page * 15
                 upper = (page + 1) * 15
                 slice = activity_points[lower:upper]
@@ -721,7 +722,7 @@ class Activity(PlasmaCog):
                 embed_content = ''
 
                 for point in slice:
-                    activity_profile = ActivityStatus.select().where(ActivityStatus.user_id == point.user_id, ActivityStatus.guild_id == str(ctx.guild.id)).first()
+                    activity_profile = await aio_first(ActivityStatus.select().where(ActivityStatus.user_id == point.user_id, ActivityStatus.guild_id == str(ctx.guild.id)))
                     
                     if activity_profile is None:
                         member = ctx.guild.get_member(int(point.user_id))
@@ -764,7 +765,7 @@ class Activity(PlasmaCog):
             member = ctx.author
 
         ActivityUserBuff = self.tables.ActivityUserBuff
-        buffs = ActivityUserBuff.select().where(ActivityUserBuff.guild_id == str(ctx.guild.id), ActivityUserBuff.user_id == str(member.id))
+        buffs = await ActivityUserBuff.select().where(ActivityUserBuff.guild_id == str(ctx.guild.id), ActivityUserBuff.user_id == str(member.id)).aio_execute()
 
         if not buffs:
             await ctx.send(f'{ctx.author.display_name} has no buffs', ephemeral=True)
@@ -792,11 +793,11 @@ class Activity(PlasmaCog):
             return
 
         ActivityBuff = self.tables.ActivityBuff
-        buffs = ActivityBuff.select().where(ActivityBuff.guild_id == str(ctx.guild.id))
+        buffs = await ActivityBuff.select().where(ActivityBuff.guild_id == str(ctx.guild.id)).aio_execute()
         available_buffs = []
 
         ActivityUserBuff = self.tables.ActivityUserBuff
-        user_buffs = ActivityUserBuff.select().where(ActivityUserBuff.guild_id == str(ctx.guild.id), ActivityUserBuff.user_id == str(ctx.author.id))
+        user_buffs = await ActivityUserBuff.select().where(ActivityUserBuff.guild_id == str(ctx.guild.id), ActivityUserBuff.user_id == str(ctx.author.id)).aio_execute()
 
         for buff in buffs:
             found = False
@@ -843,16 +844,16 @@ class Activity(PlasmaCog):
             return
         
         ActivityStatus = self.tables.ActivityStatus
-        author_profile = ActivityStatus.select().where(ActivityStatus.user_id == str(ctx.author.id), ActivityStatus.guild_id == str(ctx.guild.id)).first()
-        opponent_profile = ActivityStatus.select().where(ActivityStatus.user_id == str(member.id), ActivityStatus.guild_id == str(ctx.guild.id)).first()
+        author_profile = await aio_first(ActivityStatus.select().where(ActivityStatus.user_id == str(ctx.author.id), ActivityStatus.guild_id == str(ctx.guild.id)))
+        opponent_profile = await aio_first(ActivityStatus.select().where(ActivityStatus.user_id == str(member.id), ActivityStatus.guild_id == str(ctx.guild.id)))
         
         if author_profile is None:
             author_profile = ActivityStatus(user_id=str(ctx.author.id), user_nick=ctx.author.display_name, guild_id=str(ctx.guild.id))
-            author_profile.save()
+            await author_profile.aio_save()
 
         if opponent_profile is None:
             opponent_profile = ActivityStatus(user_id=str(member.id), user_nick = member.display_name, guild_id=str(ctx.guild.id))
-            opponent_profile.save()
+            await opponent_profile.aio_save()
 
         if wager is not None and wager != 0:
             wager=round(abs(wager))
@@ -914,15 +915,15 @@ class Activity(PlasmaCog):
                 author_profile.current_xp += wager + guild_settings.xp_mean
                 author_profile.total_xp += wager + guild_settings.xp_mean
                 opponent_profile.current_xp -= wager
-                author_profile.save()
-                opponent_profile.save()
+                await author_profile.aio_save()
+                await opponent_profile.aio_save()
 
                 embed.description = f'{ctx.author.mention} won the faceoff and gained {int(wager + guild_settings.xp_mean)} XP'
                 await faceoff_message.edit(embed=embed)
             else:
                 author_profile.current_xp += guild_settings.xp_mean
                 author_profile.total_xp += guild_settings.xp_mean
-                author_profile.save()
+                await author_profile.aio_save()
 
                 embed.description = f'{ctx.author.mention} won the faceoff'
                 await faceoff_message.edit(embed=embed)
@@ -931,15 +932,15 @@ class Activity(PlasmaCog):
                 author_profile.current_xp -= wager
                 opponent_profile.current_xp += wager + guild_settings.xp_mean
                 opponent_profile.total_xp += wager + guild_settings.xp_mean
-                author_profile.save()
-                opponent_profile.save()
+                await author_profile.aio_save()
+                await opponent_profile.aio_save()
 
                 embed.description = f'{member.mention} won the faceoff and gained {int(wager + guild_settings.xp_mean)} XP'
                 await faceoff_message.edit(embed=embed)
             else:
                 opponent_profile.current_xp += guild_settings.xp_mean
                 opponent_profile.total_xp += guild_settings.xp_mean
-                opponent_profile.save()
+                await opponent_profile.aio_save()
 
                 embed.description = f'{member.display_name} won the faceoff'
                 await faceoff_message.edit(embed=embed)
@@ -952,7 +953,7 @@ class Activity(PlasmaCog):
             buff_value += 50
 
         ActivityUserBuff = self.tables.ActivityUserBuff
-        buffs = ActivityUserBuff.select().where(ActivityUserBuff.guild_id == str(member.guild.id), ActivityUserBuff.user_id == str(member.id))
+        buffs = await ActivityUserBuff.select().where(ActivityUserBuff.guild_id == str(member.guild.id), ActivityUserBuff.user_id == str(member.id)).aio_execute()
 
         for buff in buffs:
             buff_value += buff.item.value
@@ -973,17 +974,17 @@ class Activity(PlasmaCog):
             return
 
         ActivityBuff = self.tables.ActivityBuff
-        guild_buffs = ActivityBuff.select().where(ActivityBuff.guild_id == str(ctx.guild.id))
+        guild_buffs = await ActivityBuff.select().where(ActivityBuff.guild_id == str(ctx.guild.id)).aio_execute()
 
         if len(guild_buffs) >= 25:
             await ctx.send(f'{ctx.guild.name} has reached the maximum number of buffs (25)', ephemeral=True)
             return
 
-        buff = ActivityBuff.select().where(ActivityBuff.guild_id == str(ctx.guild.id), ActivityBuff.name == name).first()
+        buff = await aio_first(ActivityBuff.select().where(ActivityBuff.guild_id == str(ctx.guild.id), ActivityBuff.name == name))
 
         if buff is None:
             buff = ActivityBuff(guild_id=str(ctx.guild.id), name=name, value=value, cost=cost, description=description)
-            buff.save()
+            await buff.aio_save()
 
             await ctx.send(f'Buff `{name}` created', ephemeral=True)
         else:
@@ -997,10 +998,10 @@ class Activity(PlasmaCog):
             return
 
         ActivityBuff = self.tables.ActivityBuff
-        buff = ActivityBuff.select().where(ActivityBuff.guild_id == str(ctx.guild.id), ActivityBuff.name == name).first()
+        buff = await aio_first(ActivityBuff.select().where(ActivityBuff.guild_id == str(ctx.guild.id), ActivityBuff.name == name))
 
         if buff is not None:
-            buff.delete_instance()
+            await buff.aio_delete_instance()
 
             await ctx.send(f'Buff `{name}` deleted', ephemeral=True)
         else:
@@ -1014,7 +1015,7 @@ class Activity(PlasmaCog):
             return
         
         ActivityBuff = self.tables.ActivityBuff
-        buffs = ActivityBuff.select().where(ActivityBuff.guild_id == str(ctx.guild.id))
+        buffs = await ActivityBuff.select().where(ActivityBuff.guild_id == str(ctx.guild.id)).aio_execute()
 
         if not buffs:
             await ctx.send(f'{ctx.guild.name} has no buffs configured', ephemeral=True)
@@ -1046,12 +1047,12 @@ class Activity(PlasmaCog):
             return
 
         # Pull channel status
-        channel_disabled = ActivityDisabledChannel.select().where(ActivityDisabledChannel.guild_id == str(ctx.guild.id), ActivityDisabledChannel.channel_id == str(channel.id)).first()
+        channel_disabled = await aio_first(ActivityDisabledChannel.select().where(ActivityDisabledChannel.guild_id == str(ctx.guild.id), ActivityDisabledChannel.channel_id == str(channel.id)))
 
         # Disable channel if not already disabled
         if channel_disabled is None:
             channel_disabled = ActivityDisabledChannel(guild_id=str(ctx.guild.id), channel_id=str(channel.id))
-            channel_disabled.save()
+            await channel_disabled.aio_save()
 
             await ctx.send(f'{channel.mention} is now XP/AP Disabled', ephemeral=True)
         else:
@@ -1077,11 +1078,11 @@ class Activity(PlasmaCog):
             return
 
         # Pull channel status
-        channel_disabled = ActivityDisabledChannel.select().where(ActivityDisabledChannel.guild_id == str(ctx.guild.id), ActivityDisabledChannel.channel_id == str(channel.id)).first()
+        channel_disabled = await aio_first(ActivityDisabledChannel.select().where(ActivityDisabledChannel.guild_id == str(ctx.guild.id), ActivityDisabledChannel.channel_id == str(channel.id)))
 
         # Enable channel if not already enabled
         if channel_disabled is not None:
-            channel_disabled.delete_instance()
+            await channel_disabled.aio_delete_instance()
 
             await ctx.send(f'{channel.mention} is now XP/AP Enabled', ephemeral=True)
         else:
@@ -1098,16 +1099,16 @@ class Activity(PlasmaCog):
         ActivitySettings = self.tables.ActivitySettings
 
         # Pull guild settings
-        guild_settings = ActivitySettings.select().where(ActivitySettings.guild_id == str(ctx.guild.id)).first()
+        guild_settings = await aio_first(ActivitySettings.select().where(ActivitySettings.guild_id == str(ctx.guild.id)))
 
         # Create guild settings if not already created
         if guild_settings is None:
             guild_settings = ActivitySettings(guild_id=str(ctx.guild.id), xp_mean=mean, xp_std=std)
-            guild_settings.save()
+            await guild_settings.aio_save()
         else: # Set guild settings
             guild_settings.xp_mean = mean
             guild_settings.xp_std = std
-            guild_settings.save()
+            await guild_settings.aio_save()
 
         # Update guild settings cache
         self.guild_settings[str(ctx.guild)] = guild_settings
@@ -1120,15 +1121,15 @@ class Activity(PlasmaCog):
         ActivitySettings = self.tables.ActivitySettings
 
         # Pull guild settings
-        guild_settings = ActivitySettings.select().where(ActivitySettings.guild_id == str(ctx.guild.id)).first()
+        guild_settings = await aio_first(ActivitySettings.select().where(ActivitySettings.guild_id == str(ctx.guild.id)))
 
         # Create guild settings if not already created
         if guild_settings is None:
             guild_settings = ActivitySettings(guild_id=str(ctx.guild.id))
-            guild_settings.save()
+            await guild_settings.aio_save()
 
         ActivityDisabledChannel = self.tables.ActivityDisabledChannel
-        disabled_channels = ActivityDisabledChannel.select().where(ActivityDisabledChannel.guild_id == str(ctx.guild.id))
+        disabled_channels = await ActivityDisabledChannel.select().where(ActivityDisabledChannel.guild_id == str(ctx.guild.id)).aio_execute()
         disabled_channel_list = ''
 
         for channel in disabled_channels:
@@ -1150,7 +1151,7 @@ class Activity(PlasmaCog):
             return
         
         ActivityStatus = self.tables.ActivityStatus
-        activity_profile = ActivityStatus.select().where(ActivityStatus.user_id == str(member.id), ActivityStatus.guild_id == str(ctx.guild.id)).first()
+        activity_profile = await aio_first(ActivityStatus.select().where(ActivityStatus.user_id == str(member.id), ActivityStatus.guild_id == str(ctx.guild.id)))
 
         if activity_profile is None:
             if xp < 0:
@@ -1158,7 +1159,7 @@ class Activity(PlasmaCog):
                 return
 
             activity_profile = ActivityStatus(user_id=str(member.id), user_nick=member.display_name, guild_id=str(ctx.guild.id), current_xp=xp, total_xp = 0, last_activity=datetime.datetime.utcnow())
-            activity_profile.save()
+            await activity_profile.aio_save()
         else:
             if activity_profile.current_xp + xp < 0:
                 await ctx.send(f'{member.display_name} does not have enough XP', ephemeral=True)
@@ -1169,7 +1170,7 @@ class Activity(PlasmaCog):
             if xp > 0:
                 activity_profile.total_xp += xp
 
-            activity_profile.save()
+            await activity_profile.aio_save()
 
         await ctx.send(f'{xp} XP added to {member.display_name}', ephemeral=True)
 
@@ -1178,15 +1179,15 @@ class Activity(PlasmaCog):
     async def afk(self, ctx, *, message:str=''):
         """Set your AFK Status"""
         ActivityStatus = self.tables.ActivityStatus
-        activity_profile = ActivityStatus.select().where(ActivityStatus.user_id == str(ctx.author.id), ActivityStatus.guild_id == str(ctx.guild.id)).first()
+        activity_profile = await aio_first(ActivityStatus.select().where(ActivityStatus.user_id == str(ctx.author.id), ActivityStatus.guild_id == str(ctx.guild.id)))
 
         if activity_profile is None:
             activity_profile = ActivityStatus(user_id=str(ctx.author.id), user_nick=ctx.author.display_name, guild_id=str(ctx.guild.id), current_xp=0, total_xp = 0, last_activity=datetime.datetime.utcnow(), afk=True, afk_message=message)
-            activity_profile.save()
+            await activity_profile.aio_save()
         else:
             activity_profile.afk = True
             activity_profile.afk_message = message
-            activity_profile.save()
+            await activity_profile.aio_save()
 
         await ctx.send(f':sparkles: **{ctx.author.display_name}** is now AFK{': ' + message if message else ''} :sparkles:')
 
@@ -1195,11 +1196,11 @@ class Activity(PlasmaCog):
         """Update User Nickname"""
         if before.nick != after.nick:
             ActivityStatus = self.tables.ActivityStatus
-            activity_profile = ActivityStatus.select().where(ActivityStatus.user_id == str(after.id), ActivityStatus.guild_id == str(after.guild.id)).first()
+            activity_profile = await aio_first(ActivityStatus.select().where(ActivityStatus.user_id == str(after.id), ActivityStatus.guild_id == str(after.guild.id)))
 
             if activity_profile is not None:
                 activity_profile.user_nick = after.display_name
-                activity_profile.save()
+                await activity_profile.aio_save()
 
     @PlasmaCog.listener()
     async def on_message(self, message):
@@ -1218,14 +1219,14 @@ class Activity(PlasmaCog):
         
         # Get the user's XP
         ActivityStatus = self.tables.ActivityStatus
-        activity_profile = ActivityStatus.select().where(ActivityStatus.user_id == str(message.author.id), ActivityStatus.guild_id == str(message.guild.id)).first()
+        activity_profile = await aio_first(ActivityStatus.select().where(ActivityStatus.user_id == str(message.author.id), ActivityStatus.guild_id == str(message.guild.id)))
 
         # Check for AFK status
         if activity_profile is not None:
             if activity_profile.afk and (not message.content.lower().strip().startswith(self.bot.config['presence']['prefix'] + 'afk')):
                 activity_profile.afk = False
                 activity_profile.afk_message = ''
-                activity_profile.save()
+                await activity_profile.aio_save()
 
                 await message.channel.send(f':sparkles: **{message.author.display_name}** is no longer AFK :sparkles:')
 
@@ -1235,7 +1236,7 @@ class Activity(PlasmaCog):
         if message.mentions:
             for mention in message.mentions:
 
-                mention_profile = ActivityStatus.select().where(ActivityStatus.user_id == str(mention.id), ActivityStatus.guild_id == str(message.guild.id)).first()
+                mention_profile = await aio_first(ActivityStatus.select().where(ActivityStatus.user_id == str(mention.id), ActivityStatus.guild_id == str(message.guild.id)))
 
                 if mention_profile is not None:
                     if mention_profile.afk:
@@ -1256,7 +1257,7 @@ class Activity(PlasmaCog):
                 await message.channel.send(afk, delete_after=5)
 
         ActivityDisabledChannel = self.tables.ActivityDisabledChannel
-        channel_disabled = ActivityDisabledChannel.select().where(ActivityDisabledChannel.guild_id == str(message.guild.id), ActivityDisabledChannel.channel_id == str(message.channel.id)).first()
+        channel_disabled = await aio_first(ActivityDisabledChannel.select().where(ActivityDisabledChannel.guild_id == str(message.guild.id), ActivityDisabledChannel.channel_id == str(message.channel.id)))
 
         # Do not increment XP or AP if channel is disabled
         if channel_disabled:
@@ -1274,21 +1275,21 @@ class Activity(PlasmaCog):
 
         if activity_profile is None:
             activity_profile = ActivityStatus(user_id=str(message.author.id), user_nick=message.author.display_name, guild_id=str(message.guild.id), current_xp=random_xp, total_xp = random_xp, last_activity=message.created_at.replace(tzinfo=None))
-            activity_profile.save()
+            await activity_profile.aio_save()
 
             # Log message event
             message_log = self.tables.ActivityPoint(user_id=str(message.author.id), guild_id=str(message.guild.id), timestamp=message.created_at.replace(tzinfo=None))
-            message_log.save()
+            await message_log.aio_save()
 
         elif (message.created_at.replace(tzinfo=None) - activity_profile.last_activity).total_seconds() >= 60:
             activity_profile.current_xp += random_xp
             activity_profile.total_xp += random_xp
             activity_profile.last_activity = message.created_at
-            activity_profile.save()
+            await activity_profile.aio_save()
 
             # Log message event
             message_log = self.tables.ActivityPoint(user_id=str(message.author.id), guild_id=str(message.guild.id), timestamp=message.created_at.replace(tzinfo=None))
-            message_log.save()
+            await message_log.aio_save()
 
 
 async def setup(bot):

@@ -14,7 +14,7 @@ def setup_database(host:str,port:str,user:str,password:str,db:str):
         charset='utf8mb4'
     )
 
-    class BaseModel(peewee.Model):
+    class BaseModel(peewee_async.AioModel):
         class Meta:
             database = database
 
@@ -23,3 +23,7 @@ def setup_database(host:str,port:str,user:str,password:str,db:str):
     database.connect()
 
     return database
+
+async def aio_first(query):
+    result = await query.aio_execute()
+    return next(iter(result), None)

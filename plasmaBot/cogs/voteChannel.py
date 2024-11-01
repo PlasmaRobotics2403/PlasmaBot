@@ -5,6 +5,7 @@ import discord
 
 from plasmaBot import Client
 from plasmaBot.cog import PlasmaCog, chat_group
+from plasmaBot.database import aio_first
 
 from discord.ext.commands import guild_only
 
@@ -52,11 +53,11 @@ class VoterCommunicationButton(discord.ui.View):
     async def open_votechannel_modal(self, interaction: discord.Interaction, button: discord.Button):
         """Create Approval Thread Callback"""
         VoteChannelSettings = self.cog.tables.VoteChannelSettings
-        settings = VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(interaction.channel.id)).first()
+        settings = await aio_first(VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(interaction.channel.id)))
 
         if not settings:
             settings = VoteChannelSettings(channel_id = str(interaction.channel.id))
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await interaction.response.send_message('This Channel does not have Voting enabled', ephemeral=True)
@@ -110,11 +111,11 @@ class VoteChannels(PlasmaCog):
         """Create a Approval Thread"""
 
         VoteChannelSettings = self.tables.VoteChannelSettings
-        settings = VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(interaction.channel.id)).first()
+        settings = await aio_first(VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(interaction.channel.id)))
 
         if not settings:
             settings = VoteChannelSettings(channel_id = str(interaction.channel.id))
-            settings.save()
+            await settings.aio_save()
         
         if not settings.enabled:
             await interaction.response.send_message('This is not a Vote Channel', ephemeral=True)
@@ -167,7 +168,7 @@ class VoteChannels(PlasmaCog):
         VoteChannelMapping = self.tables.VoteChannelMapping
 
         mapping = VoteChannelMapping(guild_id = str(interaction.guild.id), user_thread = str(thread_channel_thread.id), proxy_thread = str(proxy_channel_thread.id))
-        mapping.save()
+        await mapping.aio_save()
 
         thread_embed = discord.Embed(description='This is an Approval Thread. You can use this to submit an option for voting. Please be patient while we respond to your request.', color=discord.Color.purple())
         thread_embed.set_author(name=interaction.guild.name, icon_url=interaction.guild.icon.url)
@@ -203,8 +204,8 @@ class VoteChannels(PlasmaCog):
             return
         
         VoteChannelMapping = self.tables.VoteChannelMapping
-        mapping = VoteChannelMapping.select().where(VoteChannelMapping.user_thread == str(ctx.channel.id)).first()
-        proxy_mapping = VoteChannelMapping.select().where(VoteChannelMapping.proxy_thread == str(ctx.channel.id)).first()
+        mapping = await aio_first(VoteChannelMapping.select().where(VoteChannelMapping.user_thread == str(ctx.channel.id)))
+        proxy_mapping = await aio_first(VoteChannelMapping.select().where(VoteChannelMapping.proxy_thread == str(ctx.channel.id)))
         proxy = False
 
         if not mapping:
@@ -250,8 +251,8 @@ class VoteChannels(PlasmaCog):
             return
         
         VoteChannelMapping = self.tables.VoteChannelMapping
-        mapping = VoteChannelMapping.select().where(VoteChannelMapping.user_thread == str(ctx.channel.id)).first()
-        proxy_mapping = VoteChannelMapping.select().where(VoteChannelMapping.proxy_thread == str(ctx.channel.id)).first()
+        mapping = await aio_first(VoteChannelMapping.select().where(VoteChannelMapping.user_thread == str(ctx.channel.id)))
+        proxy_mapping = await aio_first(VoteChannelMapping.select().where(VoteChannelMapping.proxy_thread == str(ctx.channel.id)))
         proxy = False
 
         if not mapping:
@@ -309,14 +310,14 @@ class VoteChannels(PlasmaCog):
             return
 
         VoteChannelSettings = self.tables.VoteChannelSettings
-        settings = VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)).first()
+        settings = await aio_first(VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)))
 
         if not settings:
             settings = VoteChannelSettings(channel_id = str(ctx.channel.id))
-            settings.save()
+            await settings.aio_save()
         else:
             settings.enabled = not settings.enabled
-            settings.save()
+            await settings.aio_save()
 
         await ctx.send(f'Voting is now {"Enabled" if settings.enabled else "Disabled"}', ephemeral=True)
 
@@ -328,18 +329,18 @@ class VoteChannels(PlasmaCog):
             return
 
         VoteChannelSettings = self.tables.VoteChannelSettings
-        settings = VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)).first()
+        settings = await aio_first(VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)))
 
         if not settings:
             settings = VoteChannelSettings(channel_id = str(ctx.channel.id))
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await ctx.send('This is not a Vote Channel', ephemeral=True)
             return
         
         settings.require_approval = not settings.require_approval
-        settings.save()
+        await settings.aio_save()
 
         await ctx.send(f'Approval Requirement is now {"Enabled" if settings.require_approval else "Disabled"}', ephemeral=True)
 
@@ -351,18 +352,18 @@ class VoteChannels(PlasmaCog):
             return
 
         VoteChannelSettings = self.tables.VoteChannelSettings
-        settings = VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)).first()
+        settings = await aio_first(VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)))
 
         if not settings:
             settings = VoteChannelSettings(channel_id = str(ctx.channel.id))
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await ctx.send('This is not a Vote Channel', ephemeral=True)
             return
         
         settings.add_vote_buttons = not settings.add_vote_buttons
-        settings.save()
+        await settings.aio_save()
 
         await ctx.send(f'Vote Buttons are now {"Enabled" if settings.add_vote_buttons else "Disabled"}', ephemeral=True)
 
@@ -374,11 +375,11 @@ class VoteChannels(PlasmaCog):
             return
         
         VoteChannelSettings = self.tables.VoteChannelSettings
-        settings = VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)).first()
+        settings = await aio_first(VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)))
 
         if not settings:
             settings = VoteChannelSettings(channel_id = str(ctx.channel.id))
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await ctx.send('This is not a Vote Channel', ephemeral=True)
@@ -401,7 +402,7 @@ class VoteChannels(PlasmaCog):
             return
         
         settings.moderation_role = str(role.id)
-        settings.save()
+        await settings.aio_save()
 
         await ctx.send(f'Moderation Role set to {role.name} in {proxy_channel.guild.name}', ephemeral=True)
         
@@ -413,11 +414,11 @@ class VoteChannels(PlasmaCog):
             return
         
         VoteChannelSettings = self.tables.VoteChannelSettings
-        settings = VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)).first()
+        settings = await aio_first(VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)))
 
         if not settings:
             settings = VoteChannelSettings(channel_id = str(ctx.channel.id))
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await ctx.send('This is not a Vote Channel', ephemeral=True)
@@ -433,7 +434,7 @@ class VoteChannels(PlasmaCog):
             return
         
         settings.proxy_channel = str(channel.id)
-        settings.save()
+        await settings.aio_save()
 
         await ctx.send(f'Proxy Channel set to {channel.mention}', ephemeral=True)
 
@@ -446,11 +447,11 @@ class VoteChannels(PlasmaCog):
                 return
 
             VoteChannelSettings = self.tables.VoteChannelSettings
-            settings = VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)).first()
+            settings = await aio_first(VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)))
 
             if not settings:
                 settings = VoteChannelSettings(channel_id = str(ctx.channel.id))
-                settings.save()
+                await settings.aio_save()
 
             if not settings.enabled:
                 embed = discord.Embed(description='**Voting is Disabled for this Channel**', color=discord.Color.purple())
@@ -476,7 +477,7 @@ class VoteChannels(PlasmaCog):
             return
 
         VoteChannelSettings = self.tables.VoteChannelSettings
-        settings = VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(message.channel.id)).first()
+        settings = await aio_first(VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(message.channel.id)))
 
         if settings:
             if settings.enabled and settings.add_vote_buttons:
@@ -494,14 +495,14 @@ class VoteChannels(PlasmaCog):
                 new_approval_message = await message.channel.send('Want to submit an option for voting?', view=VoterCommunicationButton(self))
                 
                 settings.last_approval_message = str(new_approval_message.id)
-                settings.save()            
+                await settings.aio_save()            
 
         if not isinstance(message.channel, discord.Thread):
             return
         
         VoteChannelMapping = self.tables.VoteChannelMapping
-        mapping = VoteChannelMapping.select().where(VoteChannelMapping.user_thread == str(message.channel.id)).first()
-        proxy_mapping = VoteChannelMapping.select().where(VoteChannelMapping.proxy_thread == str(message.channel.id)).first()
+        mapping = await aio_first(VoteChannelMapping.select().where(VoteChannelMapping.user_thread == str(message.channel.id)))
+        proxy_mapping = await aio_first(VoteChannelMapping.select().where(VoteChannelMapping.proxy_thread == str(message.channel.id)))
         proxy = False
 
         if not mapping:

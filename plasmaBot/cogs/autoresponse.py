@@ -5,6 +5,7 @@ import discord
 
 from plasmaBot import Client
 from plasmaBot.cog import PlasmaCog, chat_group
+from plasmaBot.database import aio_first
 
 
 class AutoResponseVoter(discord.ui.View):
@@ -75,7 +76,7 @@ class AutoResponseEditModal(discord.ui.Modal):
         response = self.responseItem.value
 
         AutoResponseEntry = self.cog.tables.AutoResponseEntry
-        entry = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == self.settings.guild_id, AutoResponseEntry.hotword_regex == hotword).first()
+        entry = await aio_first(AutoResponseEntry.select().where(AutoResponseEntry.guild_id == self.settings.guild_id, AutoResponseEntry.hotword_regex == hotword))
 
         if not entry:
             entry = AutoResponseEntry(
@@ -83,13 +84,13 @@ class AutoResponseEditModal(discord.ui.Modal):
                 hotword_regex = hotword,
                 response = response
             )
-            entry.save()
+            await entry.aio_save()
 
             await interaction.response.send_message('AutoResponse Entry Created', ephemeral=True)
             return
         
         entry.response = response
-        entry.save()
+        await entry.aio_save()
 
         await interaction.response.send_message('AutoResponse Entry Updated', ephemeral=True)
 
@@ -152,7 +153,7 @@ class AutoResponse(PlasmaCog):
             settings = AutoResponseSettings(
                 guild_id= str(ctx.guild.id)
             )
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             embed = discord.Embed(description='**AutoResponse is Disabled**', color=discord.Color.purple())
@@ -182,10 +183,10 @@ class AutoResponse(PlasmaCog):
             settings = AutoResponseSettings(
                 guild_id= str(ctx.guild.id)
             )
-            settings.save()
+            await settings.aio_save()
 
         settings.enabled = not settings.enabled
-        settings.save()
+        await settings.aio_save()
 
         await ctx.send(f'AutoResponse is now {"Enabled" if settings.enabled else "Disabled"}', ephemeral=True)
 
@@ -203,10 +204,10 @@ class AutoResponse(PlasmaCog):
             settings = AutoResponseSettings(
                 guild_id= str(ctx.guild.id)
             )
-            settings.save()
+            await settings.aio_save()
 
         settings.removalVoteThreshold = threshold
-        settings.save()
+        await settings.aio_save()
 
         await ctx.send(f'Removal Vote Threshold set to {threshold}', ephemeral=True)
 
@@ -214,7 +215,7 @@ class AutoResponse(PlasmaCog):
     async def list_responses(self, ctx):
         """List AutoResponse Entries"""
         AutoResponseEntry = self.tables.AutoResponseEntry
-        entries = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id)
+        entries = await AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id).aio_execute()
 
         AutoResponseSettings = self.tables.AutoReponseSettings
         settings = AutoResponseSettings.get_or_none(guild_id=ctx.guild.id)
@@ -223,7 +224,7 @@ class AutoResponse(PlasmaCog):
             settings = AutoResponseSettings(
                 guild_id= str(ctx.guild.id)
             )
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await ctx.send('AutoResponse is Disabled', ephemeral=True)
@@ -254,10 +255,10 @@ class AutoResponse(PlasmaCog):
             settings = AutoResponseSettings(
                 guild_id= str(ctx.guild.id)
             )
-            settings.save()
+            await settings.aio_save()
 
         settings.cooldown = cooldown
-        settings.save()
+        await settings.aio_save()
 
         await ctx.send(f'AutoResponse Cooldown set to {cooldown}', ephemeral=True)
 
@@ -276,13 +277,13 @@ class AutoResponse(PlasmaCog):
             settings = AutoResponseSettings(
                 guild_id= str(ctx.guild.id)
             )
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await ctx.send('AutoResponse is Disabled', ephemeral=True)
 
         AutoResponseEntry = self.tables.AutoResponseEntry
-        entry = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.hotword_regex == hotword_regex).first()
+        entry = await aio_first(AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.hotword_regex == hotword_regex))
 
         if entry:
             await ctx.send(f'AutoResponse Entry already exists as #{entry.db_id}', ephemeral=True)
@@ -310,7 +311,7 @@ class AutoResponse(PlasmaCog):
             return
 
         AutoResponseEntry = self.tables.AutoResponseEntry
-        entry = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.entry_id == entry_id).first()
+        entry = await aio_first(AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.entry_id == entry_id))
 
         if not entry:
             await ctx.send('AutoResponse Entry not found', ephemeral=True)
@@ -334,13 +335,13 @@ class AutoResponse(PlasmaCog):
             settings = AutoResponseSettings(
                 guild_id= str(ctx.guild.id)
             )
-            settings.save()
+            await settings.aio_save()
 
         if not settings.enabled:
             await ctx.send('AutoResponse is Disabled', ephemeral=True)
 
         AutoResponseEntry = self.tables.AutoResponseEntry
-        entry = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.db_id == entry_id).first()
+        entry = await aio_first(AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.db_id == entry_id))
 
         if not entry:
             await ctx.send(f'AutoResponse Entry does not exist.', ephemeral=True)
@@ -368,14 +369,14 @@ class AutoResponse(PlasmaCog):
             return
 
         AutoResponseEntry = self.tables.AutoResponseEntry
-        entry = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.db_id == entry_id).first()
+        entry = await aio_first(AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.db_id == entry_id))
 
         if not entry:
             await ctx.send('AutoResponse Entry not found', ephemeral=True)
             return
 
         AutoResponseEntryChannelLimit = self.tables.AutoResponseEntryChannelLimit
-        limit = AutoResponseEntryChannelLimit.select().where(AutoResponseEntryChannelLimit.entry == entry, AutoResponseEntryChannelLimit.channel_id == channel.id).first()
+        limit = await aio_first(AutoResponseEntryChannelLimit.select().where(AutoResponseEntryChannelLimit.entry == entry, AutoResponseEntryChannelLimit.channel_id == channel.id))
 
         if limit:
             await ctx.send('Channel Limit already exists', ephemeral=True)
@@ -385,7 +386,7 @@ class AutoResponse(PlasmaCog):
             entry=entry,
             channel_id=channel.id
         )
-        limit.save()
+        await limit.aio_save()
 
         await ctx.send('Channel Limit Added', ephemeral=True)
 
@@ -397,14 +398,14 @@ class AutoResponse(PlasmaCog):
             return
 
         AutoResponseEntry = self.tables.AutoResponseEntry
-        entry = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.db_id==entry_id).first()
+        entry = await aio_first(AutoResponseEntry.select().where(AutoResponseEntry.guild_id == ctx.guild.id, AutoResponseEntry.db_id==entry_id))
 
         if not entry:
             await ctx.send('AutoResponse Entry not found', ephemeral=True)
             return
 
         AutoResponseEntryChannelLimit = self.tables.AutoResponseEntryChannelLimit
-        limit = AutoResponseEntryChannelLimit.select().where(AutoResponseEntryChannelLimit.entry == entry, AutoResponseEntryChannelLimit.channel_id == channel.id).first()
+        limit = await aio_first(AutoResponseEntryChannelLimit.select().where(AutoResponseEntryChannelLimit.entry == entry, AutoResponseEntryChannelLimit.channel_id == channel.id))
 
         if not limit:
             await ctx.send('Channel Limit not found', ephemeral=True)
@@ -437,7 +438,7 @@ class AutoResponse(PlasmaCog):
 
         # Check for Hotword Triggers
         AutoResponseEntry = self.tables.AutoResponseEntry
-        entries = AutoResponseEntry.select().where(AutoResponseEntry.guild_id == message.guild.id)
+        entries = await AutoResponseEntry.select().where(AutoResponseEntry.guild_id == message.guild.id).aio_execute()
 
         for entry in entries:
             pattern = re.compile(entry.hotword_regex)
@@ -451,7 +452,7 @@ class AutoResponse(PlasmaCog):
                         continue
 
                 entry.last_sent = message.created_at
-                entry.save()
+                await entry.aio_save()
 
                 new_message = await message.reply(entry.response)
                 view = AutoResponseVoter(self, settings, new_message, message.author)

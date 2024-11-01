@@ -20,7 +20,8 @@ class PlasmaCog(commands.Cog):
         for table in tables:
             setattr(self.tables, table.__name__, table)
 
-        self.bot.database.create_tables(tables)
+        with self.bot.database.allow_sync():
+            self.bot.database.create_tables(tables)
 
     async def cog_load(self):
         """Loads the cog"""

@@ -20,17 +20,23 @@ class Pagination(discord.ui.View):
             return False
         
     async def navigate(self):
-        pages = self.pages(self.index)
+        pages = await self.pages(self.index)
         embed, self.total = pages
         
         if self.total == 1:
-            self.message = await self.ctx.send(embed=embed, ephemeral=True)
+            if self.ctx.interaction:
+                self.message = await self.ctx.send(embed=embed, ephemeral=True)
+            else:
+                await self.ctx.message.reply(embed=embed)
         else:
             await self.update_buttons()
-            self.message = await self.ctx.send(embed=embed, view=self, ephemeral=True)
+            if self.ctx.interaction:
+                self.message = await self.ctx.send(embed=embed, view=self, ephemeral=True)
+            else:
+                self.message = await self.ctx.message.reply(embed=embed, view=self)
 
     async def edit_page(self, interaction: discord.Interaction):
-        embed, self.total = self.pages(self.index)
+        embed, self.total = await self.pages(self.index)
         await self.update_buttons()
         await interaction.response.edit_message(embed=embed, view=self)
 
