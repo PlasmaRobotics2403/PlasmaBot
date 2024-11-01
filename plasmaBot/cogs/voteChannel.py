@@ -167,7 +167,7 @@ class VoteChannels(PlasmaCog):
 
         VoteChannelMapping = self.tables.VoteChannelMapping
 
-        mapping = VoteChannelMapping(guild_id = str(interaction.guild.id), user_thread = str(thread_channel_thread.id), proxy_thread = str(proxy_channel_thread.id))
+        mapping = VoteChannelMapping(channel_id = str(interaction.channel.id), user_thread = str(thread_channel_thread.id), proxy_thread = str(proxy_channel_thread.id))
         await mapping.aio_save()
 
         thread_embed = discord.Embed(description='This is an Approval Thread. You can use this to submit an option for voting. Please be patient while we respond to your request.', color=discord.Color.purple())
