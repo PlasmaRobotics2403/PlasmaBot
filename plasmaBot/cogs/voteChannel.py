@@ -91,7 +91,7 @@ class VoterCommunicationButton(discord.ui.View):
             VoterCommunicationModal(
                 self.cog, 
                 interaction.user, 
-                is_moderator=(interaction.user.guild_permissions.manage_messages or interaction.user.id in self.bot.developers)
+                is_moderator=(interaction.user.guild_permissions.manage_messages or interaction.user.id in self.cog.bot.developers)
             )
         )
 
