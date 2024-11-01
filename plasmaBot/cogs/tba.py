@@ -88,51 +88,48 @@ class TBA(PlasmaCog):
     @tba.command(name='teams', description='Information about a specific team')
     async def tba_teams(self, ctx, year:int=None):
         """List all teams (optionally for a specific year)"""
-        try:
-            await ctx.defer(ephemeral=True)
-            
-            current_date = datetime.now()
-            current_year = current_date.year
+        await ctx.defer(ephemeral=True)
+        
+        current_date = datetime.now()
+        current_year = current_date.year
 
-            if year:
-                if year < 1992 or (year > datetime.now().year + 1):
-                    await ctx.send('Invalid Year', ephemeral=True)
-                    return
-            else:
-                year = 0
+        if year:
+            if year < 1992 or (year > datetime.now().year + 1):
+                await ctx.send('Invalid Year', ephemeral=True)
+                return
+        else:
+            year = 0
 
-            TBATeamsCacheLog = self.tables.TBATeamsCacheLog
-            year_log = await aio_first(TBATeamsCacheLog.select().where(TBATeamsCacheLog.year == year))
+        TBATeamsCacheLog = self.tables.TBATeamsCacheLog
+        year_log = await aio_first(TBATeamsCacheLog.select().where(TBATeamsCacheLog.year == year))
 
-            if year_log:
-                if year == 0 and (current_date - year_log.last_checked).days >= 7:
-                    if not ctx.interaction:
-                        await ctx.send('Please wait while I fetch data and update the Team Cache...')
+        if year_log:
+            if year == 0 and (current_date - year_log.last_checked).days >= 7:
+                if not ctx.interaction:
+                    await ctx.send('Please wait while I fetch data and update the Team Cache...')
 
-                    TBATeamCache = self.tables.TBATeamCache
-                    all_teams = await TBATeamCache.select().order_by(TBATeamCache.team_number).aio_execute()
-                    teams = await self.cache_new_teams(year, all_teams)
-                elif year >= current_year and (current_date - year_log.last_checked).days >= 7:
-                    if not ctx.interaction:
-                        await ctx.send('Please wait while I fetch data and update the Team Cache...')
-                    
-                    TBATeamCache = self.tables.TBATeamCache
-                    all_teams = await TBATeamCache.select().order_by(TBATeamCache.team_number).aio_execute()
-                    teams = await self.cache_new_teams(year, all_teams)
-                else: 
-                    teams = year_log.teams
-
-                await self.generate_teams_pagination(ctx, teams, year)
-            else:
+                TBATeamCache = self.tables.TBATeamCache
+                all_teams = await TBATeamCache.select().order_by(TBATeamCache.team_number).aio_execute()
+                teams = await self.cache_new_teams(year, all_teams)
+            elif year >= current_year and (current_date - year_log.last_checked).days >= 7:
                 if not ctx.interaction:
                     await ctx.send('Please wait while I fetch data and update the Team Cache...')
                 
                 TBATeamCache = self.tables.TBATeamCache
                 all_teams = await TBATeamCache.select().order_by(TBATeamCache.team_number).aio_execute()
                 teams = await self.cache_new_teams(year, all_teams)
-                await self.generate_teams_pagination(ctx, teams, year)
-        except Exception as e:
-            terminal.add_message(e)
+            else: 
+                teams = year_log.teams
+
+            await self.generate_teams_pagination(ctx, teams, year)
+        else:
+            if not ctx.interaction:
+                await ctx.send('Please wait while I fetch data and update the Team Cache...')
+            
+            TBATeamCache = self.tables.TBATeamCache
+            all_teams = await TBATeamCache.select().order_by(TBATeamCache.team_number).aio_execute()
+            teams = await self.cache_new_teams(year, all_teams)
+            await self.generate_teams_pagination(ctx, teams, year)
 
     async def cache_new_teams(self, year, currentTeams):
         """Cache new teams from TBA API"""
@@ -251,9 +248,6 @@ class TBA(PlasmaCog):
 
 async def setup(bot: Client):
     new_cog = TBA(bot)
-
-    class LongTextField(peewee.TextField):
-        field_type = 'LONGTEXT'
 
     class TBATeamCache(bot.database.base_model):
         """Cache for TBA Teams in a given year"""
