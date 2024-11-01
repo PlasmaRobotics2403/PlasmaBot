@@ -10,6 +10,7 @@ from plasmaBot import Client
 from plasmaBot.cog import PlasmaCog, chat_group
 from plasmaBot.pagination import Pagination
 from plasmaBot.interface import terminal
+from plasmaBot.database import aio_first
 
 
 class SimpleTeam:
@@ -84,97 +85,169 @@ class TBA(PlasmaCog):
 
         await ctx.send(embed=embed, ephemeral=True)
 
-    @tba.command(name='teams', description='List all teams')
-    async def tba_teams(self, ctx, year=None):
+    @tba.command(name='teams', description='Information about a specific team')
+    async def tba_teams(self, ctx, year:int=None):
         """List all teams (optionally for a specific year)"""
-        await ctx.defer(ephemeral=True)
+        try:
+            await ctx.defer(ephemeral=True)
+            
+            current_date = datetime.now()
+            current_year = current_date.year
 
-        teams, last_checked = await self.get_teams_from_cache(year if year else 'All')
+            if year:
+                if year < 1992 or (year > datetime.now().year + 1):
+                    await ctx.send('Invalid Year', ephemeral=True)
+                    return
+            else:
+                year = 0
+
+            TBATeamsCacheLog = self.tables.TBATeamsCacheLog
+            year_log = await aio_first(TBATeamsCacheLog.select().where(TBATeamsCacheLog.year == year))
+
+            if year_log:
+                if year == 0 and (current_date - year_log.last_checked).days >= 7:
+                    if not ctx.interaction:
+                        await ctx.send('Please wait while I fetch data and update the Team Cache...')
+
+                    TBATeamCache = self.tables.TBATeamCache
+                    all_teams = await TBATeamCache.select().order_by(TBATeamCache.team_number).aio_execute()
+                    teams = await self.cache_new_teams(year, all_teams)
+                elif year >= current_year and (current_date - year_log.last_checked).days >= 7:
+                    if not ctx.interaction:
+                        await ctx.send('Please wait while I fetch data and update the Team Cache...')
+                    
+                    TBATeamCache = self.tables.TBATeamCache
+                    all_teams = await TBATeamCache.select().order_by(TBATeamCache.team_number).aio_execute()
+                    teams = await self.cache_new_teams(year, all_teams)
+                else: 
+                    teams = year_log.teams
+
+                await self.generate_teams_pagination(ctx, teams, year)
+            else:
+                if not ctx.interaction:
+                    await ctx.send('Please wait while I fetch data and update the Team Cache...')
+                
+                TBATeamCache = self.tables.TBATeamCache
+                all_teams = await TBATeamCache.select().order_by(TBATeamCache.team_number).aio_execute()
+                teams = await self.cache_new_teams(year, all_teams)
+                await self.generate_teams_pagination(ctx, teams, year)
+        except Exception as e:
+            terminal.add_message(e)
+
+    async def cache_new_teams(self, year, currentTeams):
+        """Cache new teams from TBA API"""
+        now = datetime.now()
+
+        try:
+            tba_teams = await self.tba_session.teams(page=None, year=year)
+        except aiotba.http.AioTBAError:
+            return []
         
-        def get_page(page):
+        TBATeamsCacheLog = self.tables.TBATeamsCacheLog
+        current_year_log = await aio_first(TBATeamsCacheLog.select().where(TBATeamsCacheLog.year == year))
+
+        if current_year_log:
+            log = current_year_log
+        else:
+            new_year_log = TBATeamsCacheLog(year=year, last_checked=now)
+            await new_year_log.aio_save()
+            log = new_year_log
+
+        TBATeamCache = self.tables.TBATeamCache
+        TBAYearRelator = self.tables.TBATeamYearRelator
+
+        team_returns = []
+        update_teams = []
+        create_teams = []
+        create_relators = []
+
+        for team in tba_teams:
+            found_team = next((t for t in currentTeams if t.team_number == int(team.team_number)), None)
+            currentTeams.remove(found_team)
+
+            if found_team:
+                if found_team.nickname != team.nickname or found_team.name != team.name or found_team.city != team.city or found_team.state_prov != team.state_prov or found_team.country != team.country or found_team.address != team.address or found_team.postal_code != team.postal_code or found_team.gmaps_place_id != team.gmaps_place_id or found_team.gmaps_url != team.gmaps_url or found_team.lat != team.lat or found_team.lng != team.lng or found_team.location_name != team.location_name or found_team.website != team.website or found_team.rookie_year != team.rookie_year or found_team.home_championship != team.home_championship:
+                    found_team.nickname = team.nickname
+                    found_team.name = team.name
+                    found_team.city = team.city
+                    found_team.state_prov = team.state_prov
+                    found_team.country = team.country
+                    found_team.address = team.address
+                    found_team.postal_code = team.postal_code
+                    found_team.gmaps_place_id = team.gmaps_place_id
+                    found_team.gmaps_url = team.gmaps_url
+                    found_team.lat = team.lat
+                    found_team.lng = team.lng
+                    found_team.location_name = team.location_name
+                    found_team.website = team.website
+                    found_team.rookie_year = team.rookie_year
+                    found_team.home_championship = team.home_championship
+                    found_team.last_checked = now
+                    update_teams.append(found_team)
+
+                new_year_relator = TBAYearRelator(team=found_team, year=log)
+                create_relators.append(new_year_relator)
+
+                team_returns.append(new_year_relator)
+            else:
+                new_team = TBATeamCache(
+                    team_number=int(team.team_number),
+                    nickname=team.nickname,
+                    name=team.name,
+                    city=team.city,
+                    state_prov=team.state_prov,
+                    country=team.country,
+                    address=team.address,
+                    postal_code=team.postal_code,
+                    gmaps_place_id=team.gmaps_place_id,
+                    gmaps_url=team.gmaps_url,
+                    lat=team.lat,
+                    lng=team.lng,
+                    location_name=team.location_name,
+                    website=team.website,
+                    rookie_year=team.rookie_year,
+                    home_championship=team.home_championship,
+                    last_checked=now
+                )
+                create_teams.append(new_team)
+
+                new_year_relator = TBAYearRelator(team=new_team, year=log)
+                create_relators.append(new_year_relator)
+
+                team_returns.append(new_year_relator)
+
+        if len(create_teams) > 0:
+            TBATeamCache.bulk_create(create_teams, batch_size=100)
+
+        if len(update_teams) > 0:
+            TBATeamCache.bulk_update(update_teams, batch_size=50)
+
+        if len(create_relators) > 0:
+            TBAYearRelator.bulk_create(create_relators, batch_size=100)
+
+        return team_returns
+
+    async def generate_teams_pagination(self, ctx, teams, year):
+        """Generate a Pagination for Teams"""
+        async def get_page(page):
             lower = page * 20
             upper = (page + 1) * 20
             slice = teams[lower:upper]
 
             embed_content = ''
 
-            for team in slice:
+            for year_relator in slice:
+                team = year_relator.team
                 embed_content += f'**Team {team.team_number}**: [{team.nickname}](https://www.thebluealliance.com/team/{team.team_number})\n'
 
-            embed = discord.Embed(title = f'{f"Participating " if year else "All "}Teams{f" for {year}" if year else ""}', description=embed_content, color=discord.Color.purple())
-            embed.set_footer(text=f'Page {page + 1} of {len(teams) // 20 + 1} | Accurate as of {last_checked.strftime("%d %b %Y")}')
+            embed = discord.Embed(title = f'{f"Participating " if year!=0 else "All "}Teams{f" for {year}" if year!=0 else ""}', description=embed_content, color=discord.Color.purple())
+            embed.set_footer(text=f'Page {page + 1} of {len(teams) // 20 + 1}')
 
             return embed, len(teams) // 20 + 1
 
         pagination = Pagination(ctx.author, ctx, get_page, timeout=60)
         await pagination.navigate()
-
-    async def get_teams_from_cache(self, year='All'):
-        """Retrieve Teams from Cache (fallback to TBA API)"""
-        try:
-            year = int(year)
-            if year < 1992 or (year > datetime.now().year + 1):
-                return [], datetime.now()
-        except:
-            pass
-        
-        TBATeamsCache = self.tables.TBATeamsCache
-        teams = TBATeamsCache.select(
-            TBATeamsCache.teams, 
-            TBATeamsCache.last_checked
-        ).where(
-            TBATeamsCache.year == year
-        ).first()
-
-        if teams and (year == datetime.now().year or year == datetime.now().year + 1):
-            if teams.last_checked and (datetime.now() - teams.last_checked).days < 1:
-                teams_obj = json.loads(teams.teams, cls=SimpleTeamDecoder)
-                return teams_obj, teams.last_checked
-            else:
-                teams_obj, last_checked = await self.load_new_teams(year)
-
-                teams.teams = json.dumps(teams_obj, cls=SimpleTeamEncoder)
-                teams.last_checked = last_checked
-                teams.save()
-                
-                return teams_obj, last_checked
-        elif teams and year != 'All':
-            teams_obj = json.loads(teams.teams, cls=SimpleTeamDecoder)
-            return teams_obj, teams.last_checked
-        elif teams and year == 'All':
-            if teams.last_checked and (datetime.now() - teams.last_checked).days < 7:
-                teams_obj = json.loads(teams.teams, cls=SimpleTeamDecoder)
-                return teams_obj, teams.last_checked
-            else:
-                teams_obj, last_checked = await self.load_new_teams(year)
-
-                teams.teams = json.dumps(teams_obj, cls=SimpleTeamEncoder)
-                teams.last_checked = last_checked
-                teams.save()
-
-                return teams_obj, last_checked
-        else:
-            teams_obj, last_checked = await self.load_new_teams(year)
-            terminal.add_message('TEST')
     
-            new_teams = TBATeamsCache.create(
-                year=year,
-                teams=json.dumps(teams_obj, cls=SimpleTeamEncoder),
-                last_checked=last_checked
-            )
-            new_teams.save()
-
-            return teams_obj, last_checked
-
-    async def load_new_teams(self, year='All'):
-        """Load new teams from TBA API"""
-        try:
-            tba_teams = await self.tba_session.teams(page=None, year=None if year == 'All' else year)
-        except aiotba.http.AioTBAError:
-            return []
-
-        return [SimpleTeam(team.team_number, team.nickname) for team in tba_teams], datetime.now()
-
 
 async def setup(bot: Client):
     new_cog = TBA(bot)
@@ -182,15 +255,44 @@ async def setup(bot: Client):
     class LongTextField(peewee.TextField):
         field_type = 'LONGTEXT'
 
-    class TBATeamsCache(bot.database.base_model):
+    class TBATeamCache(bot.database.base_model):
         """Cache for TBA Teams in a given year"""
+        db_id = peewee.AutoField(primary_key=True)
+        team_number = peewee.IntegerField()
+        nickname = peewee.TextField(null=True)
+        name = peewee.TextField(null=True)
+        city = peewee.TextField(null=True)
+        state_prov = peewee.TextField(null=True)
+        country = peewee.TextField(null=True)
+        address = peewee.TextField(null=True)
+        postal_code = peewee.TextField(null=True)
+        gmaps_place_id = peewee.TextField(null=True)
+        gmaps_url = peewee.TextField(null=True)
+        lat = peewee.FloatField(null=True)
+        lng = peewee.FloatField(null=True)
+        location_name = peewee.TextField(null=True)
+        website = peewee.TextField(null=True)
+        rookie_year = peewee.IntegerField(null=True)
+        home_championship = peewee.TextField(null=True)
+        last_checked = peewee.DateTimeField(default=datetime.now)
+
+    class TBATeamsCacheLog(bot.database.base_model):
+        """Cache for TBA Teams in a given year"""
+        db_id = peewee.AutoField(primary_key=True)
         year = peewee.IntegerField()
-        teams = peewee.TextField()
         last_checked = peewee.DateTimeField(null=True)
+
+    class TBATeamYearRelator(bot.database.base_model):
+        """Relator for TBATeamCache and TBATeamsCache"""
+        db_id = peewee.AutoField(primary_key=True)
+        team = peewee.ForeignKeyField(TBATeamCache, backref='years')
+        year = peewee.ForeignKeyField(TBATeamsCacheLog, backref='teams')
 
     new_cog.register_tables(
         [
-            TBATeamsCache
+            TBATeamCache,
+            TBATeamsCacheLog,
+            TBATeamYearRelator
         ]
     )
 
