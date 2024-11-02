@@ -15,17 +15,17 @@ class VoterCommunicationModal(discord.ui.Modal):
 
     # Define the Components of the Modal
     subject = discord.ui.TextInput(
-        label='Subject', 
+        label='Submission Name', 
         required=True, 
         custom_id='vcm_subject', 
-        placeholder='VoteChannel Subject', 
+        placeholder='The Name of your Submission', 
         max_length=100
     )
     message = discord.ui.TextInput(
-        label='Message', 
+        label='Initial Message', 
         required=True, 
         custom_id='vcm_message', 
-        placeholder='First Message', 
+        placeholder='Images and Attachments can be sent after Submission', 
         style=discord.TextStyle.paragraph
     )
 
