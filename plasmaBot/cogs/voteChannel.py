@@ -226,10 +226,11 @@ class VoteChannels(PlasmaCog):
             await ctx.send('This thread is not an Approval thread', ephemeral=True)
             return
         
+        origin_guild = self.bot.get_channel(int(mapping.channel_id)).guild
         destination = self.bot.get_channel(int(mapping.user_thread if proxy else mapping.proxy_thread))
 
         embed = discord.Embed(description='This thread has been closed.', color=discord.Color.purple())
-        embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+        embed.set_author(name=origin_guild.name, icon_url=origin_guild.icon.url)
         embed.set_footer(text='Thank you for suggesting an option!')
 
         await destination.send(embed=embed)

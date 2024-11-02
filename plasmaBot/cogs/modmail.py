@@ -301,10 +301,11 @@ class ModMail(PlasmaCog):
             await ctx.send('This thread is not a ModMail thread', ephemeral=True)
             return
         
+        origin_guild = self.bot.get_guild(int(mapping.guild_id))
         destination = self.bot.get_channel(int(mapping.user_thread if proxy else mapping.proxy_thread))
 
         embed = discord.Embed(description='This thread has been closed.', color=discord.Color.purple())
-        embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url)
+        embed.set_author(name=origin_guild.name, icon_url=origin_guild.icon.url)
         embed.set_footer(text='Thank you for using ModMail!')
 
         await destination.send(embed=embed)
