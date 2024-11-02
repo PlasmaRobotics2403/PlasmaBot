@@ -111,7 +111,7 @@ class Activity(PlasmaCog):
         super().__init__(bot)
 
         self.font = mpl_fm.FontEntry(os.getcwd() + '/plasmaBot/resources/Symbola_hint.ttf', name='Symbola')
-        matplotlib.rcParams['font.family'] = 'Arial', self.font.name
+        matplotlib.rcParams['font.family'] = 'DejaVu Sans', self.font.name
 
     async def get_guild_settings(self, guild):
         """Get Guild Settings"""
