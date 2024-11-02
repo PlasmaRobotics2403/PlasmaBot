@@ -10,8 +10,6 @@ import matplotlib
 import matplotlib.font_manager as mpl_fm
 import matplotlib.pyplot as plt
 
-from pyfonts import load_font
-
 import discord
 from discord.ext.commands import guild_only, check, has_permissions, Context
 
