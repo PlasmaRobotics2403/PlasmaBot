@@ -6,7 +6,8 @@ import random
 import asyncio
 import traceback
 
-from matplotlib import font_manager
+import matplotlib
+import matplotlib.font_manager as mpl_fm
 import matplotlib.pyplot as plt
 
 import discord
@@ -109,8 +110,8 @@ class Activity(PlasmaCog):
         self.guild_settings = {}
         super().__init__(bot)
 
-        self.AppleColorEmoji = font_manager.FontProperties(fname='/System/Library/Fonts/Apple Color Emoji.ttc')
-
+        self.font = mpl_fm.FontEntry(os.getcwd() + '/plasmaBot/resources/Symbola_hint.ttf', name='Symbola')
+        matplotlib.rcParams['font.family'] = 'Arial', self.font.name
 
     async def get_guild_settings(self, guild):
         """Get Guild Settings"""
@@ -249,10 +250,8 @@ class Activity(PlasmaCog):
         async with self.graph_lock:
             try:
                 # Generate the graph
-                plt.plot(range(-59, 1), buckets[::-1])
-                plt.rcParams['font.family'] = 'sans-serif'
-                plt.rcParams['font.sans-serif'] = ['Arial', self.AppleColorEmoji.get_name()]
-                plt.title("Hourly Activity for " + (member.display_name if member else ctx.author.display_name))
+                plt.plot(range(-59, 1), buckets[::-1], color='purple')
+                plt.title("Hourly Activity for " + (member.display_name if member else ctx.author.display_name), fontsize='x-large')
                 plt.xlabel("Minutes")
                 plt.ylabel("Activity Points")
 
@@ -292,8 +291,8 @@ class Activity(PlasmaCog):
 
         async with self.graph_lock:
             # Generate the graph
-            plt.plot(range(-23, 1), buckets[::-1])
-            plt.title("Daily Activity for " + (member.display_name if member else ctx.author.display_name))
+            plt.plot(range(-23, 1), buckets[::-1], color='purple')
+            plt.title("Daily Activity for " + (member.display_name if member else ctx.author.display_name), fontsize='x-large')
             plt.xlabel("Hours")
             plt.ylabel("Activity Points")
 
@@ -331,8 +330,8 @@ class Activity(PlasmaCog):
 
         async with self.graph_lock:
             # Generate the graph
-            plt.plot(range(-29, 1), buckets[::-1])
-            plt.title("Monthly Activity for " + (member.display_name if member else ctx.author.display_name))
+            plt.plot(range(-29, 1), buckets[::-1], color='purple')
+            plt.title("Monthly Activity for " + (member.display_name if member else ctx.author.display_name), fontsize='x-large')
             plt.xlabel("Days")
             plt.ylabel("Activity Points")
 
@@ -370,8 +369,8 @@ class Activity(PlasmaCog):
 
         async with self.graph_lock:
             # Generate the graph
-            plt.plot(range(-11, 1), buckets[::-1])
-            plt.title("Yearly Activity for " + (member.display_name if member else ctx.author.display_name))
+            plt.plot(range(-11, 1), buckets[::-1], color='purple')
+            plt.title("Yearly Activity for " + (member.display_name if member else ctx.author.display_name), fontsize='x-large')
             plt.xlabel("Months")
             plt.ylabel("Activity Points")
 
@@ -409,8 +408,8 @@ class Activity(PlasmaCog):
 
         async with self.graph_lock:
             # Generate the graph
-            plt.plot(range(-(len(buckets)-1), 1), buckets[::-1])
-            plt.title("All Time Activity for " + (member.display_name if member else ctx.author.display_name))
+            plt.plot(range(-(len(buckets)-1), 1), buckets[::-1], color='purple')
+            plt.title("All Time Activity for " + (member.display_name if member else ctx.author.display_name), fontsize='x-large')
             plt.xlabel("Months")
             plt.ylabel("Activity Points")
 
