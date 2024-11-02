@@ -311,8 +311,8 @@ class ModMail(PlasmaCog):
         await destination.send(embed=embed)
         await ctx.send(embed=embed)
 
-        await destination.edit(archived=True)
-        await ctx.channel.edit(archived=True)
+        await destination.edit(locked=True)
+        await ctx.channel.edit(locked=True)
 
         await asyncio.sleep(300)
 

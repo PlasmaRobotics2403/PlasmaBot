@@ -5,6 +5,8 @@ import datetime
 import random
 import asyncio
 import traceback
+
+from matplotlib import font_manager
 import matplotlib.pyplot as plt
 
 import discord
@@ -14,6 +16,7 @@ from plasmaBot.cog import PlasmaCog, chat_command, chat_group
 from plasmaBot.interface import terminal
 from plasmaBot.pagination import Pagination
 from plasmaBot.database import aio_first
+from plasmaBot.interface import terminal
 
 
 class StoreButton(discord.ui.Button):
@@ -105,6 +108,9 @@ class Activity(PlasmaCog):
     def __init__(self, bot):
         self.guild_settings = {}
         super().__init__(bot)
+
+        self.AppleColorEmoji = font_manager.FontProperties(fname='/System/Library/Fonts/Apple Color Emoji.ttc')
+
 
     async def get_guild_settings(self, guild):
         """Get Guild Settings"""
@@ -241,19 +247,24 @@ class Activity(PlasmaCog):
                 buckets[minute] += 1
 
         async with self.graph_lock:
-            # Generate the graph
-            plt.plot(range(-59, 1), buckets[::-1])
-            plt.title("Hourly Activity for " + (member.display_name if member else ctx.author.display_name))
-            plt.xlabel("Minutes")
-            plt.ylabel("Activity Points")
+            try:
+                # Generate the graph
+                plt.plot(range(-59, 1), buckets[::-1])
+                plt.rcParams['font.family'] = 'sans-serif'
+                plt.rcParams['font.sans-serif'] = ['Arial', self.AppleColorEmoji.get_name()]
+                plt.title("Hourly Activity for " + (member.display_name if member else ctx.author.display_name))
+                plt.xlabel("Minutes")
+                plt.ylabel("Activity Points")
 
-            # Save the graph as a PNG file in memory
-            image_data = io.BytesIO()
-            plt.savefig(image_data, format='png')
-            image_data.seek(0)
+                # Save the graph as a PNG file in memory
+                image_data = io.BytesIO()
+                plt.savefig(image_data, format='png')
+                image_data.seek(0)
 
-            # Clear the plot
-            plt.clf()
+                # Clear the plot
+                plt.clf()
+            except Exception as e:
+                terminal.add_message(f'Error: {e}')
 
         # Create a discord.File object from the image data
         file = discord.File(image_data, filename=f'hourlyActivity{member.id if member else ctx.author.id}.png')
