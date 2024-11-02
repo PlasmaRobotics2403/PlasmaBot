@@ -11,3 +11,4 @@ peewee-async[mysql]>=1.0.0
 mysqlclient>=2.2.1
 matplotlib>=3.8.4
 aiotba>=0.0.3.post2
+fonttools>=4.54.1

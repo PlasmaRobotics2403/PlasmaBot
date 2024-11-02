@@ -6,6 +6,8 @@ import random
 import asyncio
 import traceback
 
+from fontTools import ttLib
+
 import matplotlib
 import matplotlib.font_manager as mpl_fm
 import matplotlib.pyplot as plt
@@ -110,8 +112,13 @@ class Activity(PlasmaCog):
         self.guild_settings = {}
         super().__init__(bot)
 
-        self.font = mpl_fm.FontEntry(os.getcwd() + '/plasmaBot/resources/Symbola_hint.ttf', name='Symbola')
-        matplotlib.rcParams['font.family'] = 'DejaVu Sans', self.font.name
+        fonts = []
+
+        for font in os.listdir('plasmaBot/resources/fonts'):
+            if font.endswith('.ttf'):
+                fonts.append(ttLib.TTFont(os.getcwd() + '/plasmaBot/resources/fonts/' + font)['name'].getDebugName(1))
+
+        matplotlib.rcParams['font.family'] = fonts
 
     async def get_guild_settings(self, guild):
         """Get Guild Settings"""
