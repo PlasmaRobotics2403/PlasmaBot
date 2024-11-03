@@ -33,6 +33,5 @@ case "$(uname -sr)" in
      ;;
 esac
 
-
 # Run the starting Python file
 python3 run.py
