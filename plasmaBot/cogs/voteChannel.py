@@ -183,13 +183,13 @@ class VoteChannels(PlasmaCog):
         await proxy_channel_thread.send(embed=proxy_embed)
 
         first_message_embed_origin = discord.Embed(description=message, color=discord.Color.purple())
-        first_message_embed_origin.set_author(name=interaction.user.name, icon_url=interaction.user.avatar.url)
+        first_message_embed_origin.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
         first_message_embed_origin.set_footer(text='To reply, type your message in this thread')
 
         await thread_channel_thread.send(embed=first_message_embed_origin)
 
         first_message_embed_destination = discord.Embed(description=message, color=discord.Color.purple())
-        first_message_embed_destination.set_author(name=interaction.user.name, icon_url=interaction.user.avatar.url)
+        first_message_embed_destination.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
         first_message_embed_destination.set_footer(text='To reply, use the `/approvals reply` command')
 
         await proxy_channel_thread.send(embed=first_message_embed_destination)
@@ -284,11 +284,11 @@ class VoteChannels(PlasmaCog):
             destination_files.append(await attachment.to_file())
 
         embed_origin = discord.Embed(description=message, color=discord.Color.purple())
-        embed_origin.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
+        embed_origin.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
         embed_origin.set_footer(text='To reply, type your message in this thread' if not proxy else 'To reply, use the `/approvals reply` command')
 
         embed_destination = discord.Embed(description=message, color=discord.Color.purple())
-        embed_destination.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
+        embed_destination.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
         embed_destination.set_footer(text='To reply, type your message in this thread' if proxy else 'To reply, use the `/approvals reply` command')
 
         if not ctx.interaction:
@@ -533,11 +533,11 @@ class VoteChannels(PlasmaCog):
             destination_files.append(await attachment.to_file())
 
         embed_origin = discord.Embed(description=message.content, color=discord.Color.purple())
-        embed_origin.set_author(name=message.author.name, icon_url=message.author.avatar.url)
+        embed_origin.set_author(name=message.author.name, icon_url=message.author.display_avatar.url)
         embed_origin.set_footer(text='To reply, type your message in this thread')
 
         embed_destination = discord.Embed(description=message.content, color=discord.Color.purple())
-        embed_destination.set_author(name=message.author.name, icon_url=message.author.avatar.url)
+        embed_destination.set_author(name=message.author.name, icon_url=message.author.display_avatar.url)
         embed_destination.set_footer(text='To reply, use the `/approvals reply` command')
 
         await message.delete()
