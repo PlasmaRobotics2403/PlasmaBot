@@ -255,22 +255,19 @@ class Activity(PlasmaCog):
                 buckets[minute] += 1
 
         async with self.graph_lock:
-            try:
-                # Generate the graph
-                plt.plot(range(-59, 1), buckets[::-1], color='purple')
-                plt.title("Hourly Activity for " + (member.display_name if member else ctx.author.display_name), fontsize='x-large')
-                plt.xlabel("Minutes")
-                plt.ylabel("Activity Points")
+            # Generate the graph
+            plt.plot(range(-59, 1), buckets[::-1], color='purple')
+            plt.title("Hourly Activity for " + (member.display_name if member else ctx.author.display_name), fontsize='x-large')
+            plt.xlabel("Minutes")
+            plt.ylabel("Activity Points")
 
-                # Save the graph as a PNG file in memory
-                image_data = io.BytesIO()
-                plt.savefig(image_data, format='png')
-                image_data.seek(0)
+            # Save the graph as a PNG file in memory
+            image_data = io.BytesIO()
+            plt.savefig(image_data, format='png')
+            image_data.seek(0)
 
-                # Clear the plot
-                plt.clf()
-            except Exception as e:
-                terminal.add_message(f'Error: {e}')
+            # Clear the plot
+            plt.clf()
 
         # Create a discord.File object from the image data
         file = discord.File(image_data, filename=f'hourlyActivity{member.id if member else ctx.author.id}.png')
