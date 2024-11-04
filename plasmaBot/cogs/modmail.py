@@ -174,7 +174,7 @@ class ModMail(PlasmaCog):
 
     async def start_modmail_thread(self, interaction: discord.Interaction, subject: str = None, message: str = None, *, additionalUsers: list = []):
         """Create a ModMail Thread"""
-        await interaction.response.defer()
+        await interaction.response.defer(ephemeral=True)
 
         ModMailSettings = self.tables.ModMailSettings
         settings = await aio_first(ModMailSettings.select().where(ModMailSettings.guild_id == str(interaction.guild.id)))
@@ -270,7 +270,7 @@ class ModMail(PlasmaCog):
 
         await proxy_channel_thread.send(embed=first_message_embed_destination)
 
-        await interaction.response.send_message(f'ModMail Thread Created! See <#{thread_channel_thread.id}>', ephemeral=True)
+        await interaction.folllowup.send(f'ModMail Thread Created! See <#{thread_channel_thread.id}>', ephemeral=True)
 
     @modmail.command(name='close', description='Close a ModMail Thread')
     async def modmail_close(self, ctx):

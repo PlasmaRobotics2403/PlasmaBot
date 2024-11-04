@@ -109,7 +109,7 @@ class VoteChannels(PlasmaCog):
 
     async def start_approval_thread(self, interaction: discord.Interaction, subject: str = None, message: str = None, *, additionalUsers: list = []):
         """Create a Approval Thread"""
-        await interaction.response.defer()
+        await interaction.response.defer(ephemeral=True)
 
         VoteChannelSettings = self.tables.VoteChannelSettings
         settings = await aio_first(VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(interaction.channel.id)))
@@ -195,7 +195,7 @@ class VoteChannels(PlasmaCog):
 
         await proxy_channel_thread.send(embed=first_message_embed_destination)
 
-        await interaction.response.send_message(f'Approval Thread Created! See <#{thread_channel_thread.id}>', ephemeral=True)
+        await interaction.followup.send(f'Approval Thread Created! See <#{thread_channel_thread.id}>', ephemeral=True)
 
     @approvals.command(name='close', description='Close an Approval Thread')
     async def votechannel_close(self, ctx):
