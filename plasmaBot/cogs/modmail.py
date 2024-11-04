@@ -174,6 +174,7 @@ class ModMail(PlasmaCog):
 
     async def start_modmail_thread(self, interaction: discord.Interaction, subject: str = None, message: str = None, *, additionalUsers: list = []):
         """Create a ModMail Thread"""
+        await interaction.response.defer()
 
         ModMailSettings = self.tables.ModMailSettings
         settings = await aio_first(ModMailSettings.select().where(ModMailSettings.guild_id == str(interaction.guild.id)))

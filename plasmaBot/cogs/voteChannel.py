@@ -109,6 +109,7 @@ class VoteChannels(PlasmaCog):
 
     async def start_approval_thread(self, interaction: discord.Interaction, subject: str = None, message: str = None, *, additionalUsers: list = []):
         """Create a Approval Thread"""
+        await interaction.response.defer()
 
         VoteChannelSettings = self.tables.VoteChannelSettings
         settings = await aio_first(VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(interaction.channel.id)))
