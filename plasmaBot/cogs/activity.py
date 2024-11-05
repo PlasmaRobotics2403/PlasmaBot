@@ -140,6 +140,8 @@ class Activity(PlasmaCog):
     @guild_only()
     async def xp(self, ctx, member:discord.Member=None):
         """View your XP"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -175,6 +177,8 @@ class Activity(PlasmaCog):
     @guild_only()
     async def graph(self, ctx, member:discord.Member=None):
         """View your XP Graph"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -188,6 +192,8 @@ class Activity(PlasmaCog):
     @graph.command(name='hourly', description='View your Hourly XP Graph', aliases=['hour'])
     async def graph_hourly(self, ctx, member:discord.Member=None):
         """View your Hourly XP Graph"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -201,6 +207,8 @@ class Activity(PlasmaCog):
     @graph.command(name='daily', description='View your Daily XP Graph', aliases=['day'])
     async def graph_daily(self, ctx, member:discord.Member=None):
         """View your Daily XP Graph"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -214,6 +222,8 @@ class Activity(PlasmaCog):
     @graph.command(name='yearly', description='View your Yearly XP Graph', aliases=['year'])
     async def graph_yearly(self, ctx, member:discord.Member=None):
         """View your Yearly XP Graph"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -227,6 +237,8 @@ class Activity(PlasmaCog):
     @graph.command(name='all', description='View your All-Time XP Graph', aliases=['all-time', 'alltime'])
     async def graph_all(self, ctx, member:discord.Member=None):
         """View your All-Time XP Graph"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -438,6 +450,8 @@ class Activity(PlasmaCog):
     @guild_only()
     async def activity(self, ctx, member:discord.Member=None):
         """View your activity"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -454,6 +468,8 @@ class Activity(PlasmaCog):
     @activity.command(name='yearly', description='View your Yearly activity', aliases=['year'])
     async def activity_yearly(self, ctx, member:discord.Member=None):
         """View your activity"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -470,6 +486,8 @@ class Activity(PlasmaCog):
     @activity.command(name='daily', description='View your Daily activity', aliases=['day'])
     async def activity_daily(self, ctx, member:discord.Member=None):
         """View your activity"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -486,6 +504,8 @@ class Activity(PlasmaCog):
     @activity.command(name='hourly', description='View your Hourly activity', aliases=['hour'])
     async def activity_hourly(self, ctx, member:discord.Member=None):
         """View your activity"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -502,6 +522,8 @@ class Activity(PlasmaCog):
     @activity.command(name='all', description='View your All-Time activity', aliases=['all-time', 'alltime'])
     async def activity_alltime(self, ctx, member:discord.Member=None):
         """View your activity"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -526,6 +548,8 @@ class Activity(PlasmaCog):
     @guild_only()
     async def rank(self, ctx, member:discord.Member=None):
         """View your Monthly Rank"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -543,6 +567,8 @@ class Activity(PlasmaCog):
     @rank.command(name='daily', description='View your Daily Rank', aliases=['day'])
     async def rank_daily(self, ctx, member:discord.Member=None):
         """View your Daily Rank"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -560,6 +586,8 @@ class Activity(PlasmaCog):
     @rank.command(name='hourly', description='View your Hourly Rank', aliases=['hour'], ephemeral=True)
     async def rank_hourly(self, ctx, member:discord.Member=None):
         """View your Hourly Rank"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -577,6 +605,8 @@ class Activity(PlasmaCog):
     @rank.command(name='yearly', description='View your Yearly Rank', aliases=['year'], ephemeral=True)
     async def rank_yearly(self, ctx, member:discord.Member=None):
         """View your Yearly Rank"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -594,6 +624,8 @@ class Activity(PlasmaCog):
     @rank.command(name='all', description='View your All-Time Rank', aliases=['all-time', 'alltime'])
     async def rank_alltime(self, ctx, member:discord.Member=None):
         """View your All-Time Rank"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -635,6 +667,8 @@ class Activity(PlasmaCog):
     @guild_only()
     async def leaderboard(self, ctx):
         """View the Activity Leaderboard"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -652,6 +686,8 @@ class Activity(PlasmaCog):
     @leaderboard.command(name='daily', description='View the Daily Leaderboard', aliases=['day'])
     async def leaderboard_daily(self, ctx):
         """View the Daily Leaderboard"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -669,6 +705,8 @@ class Activity(PlasmaCog):
     @leaderboard.command(name='hourly', description='View the Hourly Leaderboard', aliases=['hour'])
     async def leaderboard_hourly(self, ctx):
         """View the Hourly Leaderboard"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -686,6 +724,8 @@ class Activity(PlasmaCog):
     @leaderboard.command(name='yearly', description='View the Yearly Leaderboard', aliases=['year'])
     async def leaderboard_yearly(self, ctx):
         """View the Yearly Leaderboard"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -703,6 +743,8 @@ class Activity(PlasmaCog):
     @leaderboard.command(name='all', description='View the All-Time Leaderboard', aliases=['all-time', 'alltime'])
     async def leaderboard_allTime(self, ctx):
         """View the All-Time Leaderboard"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -767,6 +809,8 @@ class Activity(PlasmaCog):
         
     async def view_user_buffs(self, ctx, member:discord.Member=None):
         """View User Buffs"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -798,6 +842,8 @@ class Activity(PlasmaCog):
     @buffs.command(name='buy', description='Buy a buff', aliases=['purchase', 'store'])
     async def buffs_buy(self, ctx):
         """Buy a buff"""
+        await ctx.defer(ephemeral=True)
+
         guild_settings = await self.get_guild_settings(ctx.guild)
 
         if guild_settings.enabled is False:
@@ -835,6 +881,8 @@ class Activity(PlasmaCog):
     @guild_only()
     async def faceoff(self, ctx, member:discord.Member, wager:int=None):
         """Faceoff against another user"""
+        await ctx.defer(ephemeral=True)
+
         embed = discord.Embed(color=discord.Color.purple())
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
         embed.set_footer(text=f'Faceoff against {member.display_name}')
