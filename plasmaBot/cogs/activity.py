@@ -424,7 +424,7 @@ class Activity(PlasmaCog):
 
         async with self.graph_lock:
             # Generate the graph
-            plt.plot(range(-(len(buckets)-1), 1), buckets[::-1], color='purple')
+            plt.plot(range(-(len(buckets)), 1), [0] + buckets[::-1], color='purple')
             plt.title("All Time Activity for " + (member.display_name if member else ctx.author.display_name), fontsize='x-large')
             plt.xlabel("Months")
             plt.ylabel("Activity Points")
