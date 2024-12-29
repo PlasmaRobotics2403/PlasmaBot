@@ -42,7 +42,10 @@ class Guesser(PlasmaCog):
 
         await ctx.author.add_roles(role, reason="Guesser Guess Added")
 
-        await ctx.send('You have been added to the Guesser Channel', ephemeral=True)
+        embed = discord.Embed(description=f"**{ctx.author.mention}** has been added to the Guesser Channel")
+        embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
+        embed.set_footer(text='Guesser Game')
+        await ctx.send(embed=embed, ephemeral=True)
 
     @chat_group(name='config_guesser', help='Configure the Guesser Game')
     async def config_guesser(self, ctx):
@@ -63,7 +66,11 @@ class Guesser(PlasmaCog):
             settings = GuesserSettings(guild_id=str(ctx.guild.id))
             await settings.aio_save()
         
-        await ctx.send(f"Enabled: {settings.enabled}\nGuesser Channel: {settings.guesser_channel}\nGuesser Role: {settings.guesser_role}\nGuesser Message: {settings.guesser_message}")
+        embed = discord.Embed(description=f"**Guesser is {'Enabled' if settings.enabled else 'Disabled'}**\n\n**Guesser Channel:** {settings.guesser_channel}\n**Guesser Role:** {settings.guesser_role}\n**Guesser Message:** {settings.guesser_message}")
+        embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.guild.icon_url)
+        embed.set_footer(text='Guesser Game Settings')
+
+        await ctx.send(embed=embed, ephemeral=True)
 
     @config_guesser.command(name='toggle', help='Toggle the Guesser Game')
     async def toggle(self, ctx):
@@ -82,7 +89,7 @@ class Guesser(PlasmaCog):
         settings.enabled = not settings.enabled
         await settings.aio_save()
 
-        await ctx.send(f"Guesser Game {'Enabled' if settings.enabled else 'Disabled'}")
+        await ctx.send(f"Guesser Game {'Enabled' if settings.enabled else 'Disabled'}", ephemeral=True)
 
     @config_guesser.command(name='set_channel', help='Set the Guesser Channel')
     async def set_channel(self, ctx, channel: discord.TextChannel):
@@ -101,7 +108,7 @@ class Guesser(PlasmaCog):
         settings.guesser_channel = str(channel.id)
         await settings.aio_save()
 
-        await ctx.send(f"Guesser Channel set to {channel.mention}")
+        await ctx.send(f"Guesser Channel set to {channel.mention}", ephemeral=True)
 
     @config_guesser.command(name='set_role', help='Set the Guesser Role')
     async def set_role(self, ctx, role: discord.Role):
@@ -120,7 +127,7 @@ class Guesser(PlasmaCog):
         settings.guesser_role = str(role.id)
         await settings.aio_save()
 
-        await ctx.send(f"Guesser Role set to @{role.name} ({role.id})")
+        await ctx.send(f"Guesser Role set to @{role.name} ({role.id})", ephemeral=True)
 
     @config_guesser.command(name='set_message', help='Set the Guesser Message')
     async def set_message(self, ctx, *, message: str):
@@ -139,7 +146,7 @@ class Guesser(PlasmaCog):
         settings.guesser_message = message
         await settings.aio_save()
 
-        await ctx.send(f"Guesser Message set to:\n{message}")
+        await ctx.send(f"Guesser Message set to:\n{message}", ephemeral=True)
 
     @PlasmaCog.listener()
     async def on_message(self, message):
