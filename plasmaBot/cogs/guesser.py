@@ -43,7 +43,7 @@ class Guesser(PlasmaCog):
         await ctx.author.add_roles(role, reason="Guesser Guess Added")
 
         embed = discord.Embed(description=f"**{ctx.author.mention}** has been added to the Guesser Channel")
-        embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.avatar_url)
+        embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.display_avatar.url)
         embed.set_footer(text='Guesser Game')
         await ctx.send(embed=embed, ephemeral=True)
 
@@ -67,7 +67,7 @@ class Guesser(PlasmaCog):
             await settings.aio_save()
         
         embed = discord.Embed(description=f"**Guesser is {'Enabled' if settings.enabled else 'Disabled'}**\n\n**Guesser Channel:** {settings.guesser_channel}\n**Guesser Role:** {settings.guesser_role}\n**Guesser Message:** {settings.guesser_message}")
-        embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.guild.icon_url)
+        embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.guild.icon.url)
         embed.set_footer(text='Guesser Game Settings')
 
         await ctx.send(embed=embed, ephemeral=True)
