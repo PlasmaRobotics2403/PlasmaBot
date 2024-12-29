@@ -110,8 +110,8 @@ class Guesser(PlasmaCog):
 
         await ctx.send(f"Guesser Channel set to {channel.mention}", ephemeral=True)
 
-    @config_guesser.command(name='set_role', help='Set the Guesser Role')
-    async def set_role(self, ctx, role: discord.Role):
+    @config_guesser.command(name='set_guesser_role', help='Set the Guesser Role')
+    async def set_guesser_role(self, ctx, role: discord.Role):
         """Set the Guesser Role"""
         if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
             await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
@@ -128,6 +128,25 @@ class Guesser(PlasmaCog):
         await settings.aio_save()
 
         await ctx.send(f"Guesser Role set to @{role.name} ({role.id})", ephemeral=True)
+
+    @config_guesser.command(name='set_lockout_role', help='Set the Guesser Lockout Role')
+    async def set_lockout_role(self, ctx, role: discord.Role):
+        """Set the Guesser Lockout Role"""
+        if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
+            await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
+            return
+        
+        GuesserSettings = self.tables.GuesserSettings
+        settings = await aio_first(GuesserSettings.select().where(GuesserSettings.guild_id == str(ctx.guild.id)))
+
+        if not settings:
+            settings = GuesserSettings(guild_id=str(ctx.guild.id))
+            await settings.aio_save()
+        
+        settings.lockout_role = str(role.id)
+        await settings.aio_save()
+
+        await ctx.send(f"Guesser Lockout Role set to @{role.name} ({role.id})", ephemeral=True)
 
     @config_guesser.command(name='set_message', help='Set the Guesser Message')
     async def set_message(self, ctx, *, message: str):
@@ -171,10 +190,10 @@ class Guesser(PlasmaCog):
         if message.channel.id != int(settings.guesser_channel):
             return
         
-        if not settings.guesser_role:
+        if not settings.lockout_role:
             return
         
-        role = message.guild.get_role(int(settings.guesser_role))
+        role = message.guild.get_role(int(settings.lockout_role))
 
         if not role:
             return
@@ -183,7 +202,7 @@ class Guesser(PlasmaCog):
             await message.delete()
             return
         
-        await message.author.remove_roles(role, reason="Guesser Guess Logged")
+        await message.author.add_roles(role, reason="Guesser Guess Logged")
 
         await message.add_reaction("✅")
 
@@ -211,6 +230,7 @@ async def setup(bot):
         enabled = peewee.BooleanField(default=False)
         guesser_channel = peewee.TextField(null=True)
         guesser_role = peewee.TextField(null=True)
+        lockout_role = peewee.TextField(null=True)
         guesser_message = peewee.TextField(null=True)
         guesser_message_id = peewee.TextField(null=True)
 
