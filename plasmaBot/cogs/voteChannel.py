@@ -443,31 +443,27 @@ class VoteChannels(PlasmaCog):
     @config_vote_channel.command(name='list_settings', description='List Vote Channel Settings')
     async def config_vote_channel_list_settings(self, ctx):
         """List Vote Channel Settings""" 
-        try:
-            if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
-                await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
-                return
+        if not (ctx.author.guild_permissions.manage_guild or ctx.author.id in self.bot.developers):
+            await ctx.send('You must have `Manage Server` permissions to use this command', ephemeral=True)
+            return
 
-            VoteChannelSettings = self.tables.VoteChannelSettings
-            settings = await aio_first(VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)))
+        VoteChannelSettings = self.tables.VoteChannelSettings
+        settings = await aio_first(VoteChannelSettings.select().where(VoteChannelSettings.channel_id == str(ctx.channel.id)))
 
-            if not settings:
-                settings = VoteChannelSettings(channel_id = str(ctx.channel.id))
-                await settings.aio_save()
+        if not settings:
+            settings = VoteChannelSettings(channel_id = str(ctx.channel.id))
+            await settings.aio_save()
 
-            if not settings.enabled:
-                embed = discord.Embed(description='**Voting is Disabled for this Channel**', color=discord.Color.purple())
-                embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.guild.icon.url)
-                embed.set_footer(text='Vote Channel Settings')
-            else:
-                embed = discord.Embed(description=f"**Voting is Enabled for this channel**\n\n**Require Approval:** {settings.require_approval}\n**Add Vote Buttons:** {settings.add_vote_buttons}\n**Proxy Channel:** {self.bot.get_channel(int(settings.proxy_channel)).mention if settings.proxy_channel else 'None'}\n**Moderation Role**: {settings.moderation_role}", color=discord.Color.purple())
-                embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.guild.icon.url)
-                embed.set_footer(text='Vote Channel Settings')
+        if not settings.enabled:
+            embed = discord.Embed(description='**Voting is Disabled for this Channel**', color=discord.Color.purple())
+            embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.guild.icon.url)
+            embed.set_footer(text='Vote Channel Settings')
+        else:
+            embed = discord.Embed(description=f"**Voting is Enabled for this channel**\n\n**Require Approval:** {settings.require_approval}\n**Add Vote Buttons:** {settings.add_vote_buttons}\n**Proxy Channel:** {self.bot.get_channel(int(settings.proxy_channel)).mention if settings.proxy_channel else 'None'}\n**Moderation Role**: {settings.moderation_role}", color=discord.Color.purple())
+            embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.guild.icon.url)
+            embed.set_footer(text='Vote Channel Settings')
 
-            await ctx.send(embed=embed, ephemeral=True)
-        except Exception:
-            import traceback
-            await ctx.send(traceback.format_exc(), ephemeral=True)
+        await ctx.send(embed=embed, ephemeral=True)
 
     @PlasmaCog.listener()
     async def on_message(self, message):
@@ -497,7 +493,7 @@ class VoteChannels(PlasmaCog):
                 new_approval_message = await message.channel.send('Want to submit an option for voting?', view=VoterCommunicationButton(self))
                 
                 settings.last_approval_message = str(new_approval_message.id)
-                await settings.aio_save()            
+                await settings.aio_save()
 
         if not isinstance(message.channel, discord.Thread):
             return
