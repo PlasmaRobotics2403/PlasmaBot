@@ -143,7 +143,7 @@ class Guesser(PlasmaCog):
             settings = GuesserSettings(guild_id=str(ctx.guild.id))
             await settings.aio_save()
         
-        settings.guesser_message = message
+        settings.guesser_message = message.replace('|||', '\n')
         await settings.aio_save()
 
         await ctx.send(f"Guesser Message set to:\n{message}", ephemeral=True)
