@@ -66,7 +66,7 @@ class Guesser(PlasmaCog):
             settings = GuesserSettings(guild_id=str(ctx.guild.id))
             await settings.aio_save()
         
-        embed = discord.Embed(description=f"**Guesser is {'Enabled' if settings.enabled else 'Disabled'}**\n\n**Guesser Channel:** {settings.guesser_channel}\n**Guesser Role:** {settings.guesser_role}\n**Guesser Message:** {settings.guesser_message}")
+        embed = discord.Embed(description=f"**Guesser is {'Enabled' if settings.enabled else 'Disabled'}**\n\n**Guesser Channel:** {settings.guesser_channel}\n**Guesser Role:** {settings.guesser_role}\n**Lockout Role**: {settings.lockout_role}\n**Guesser Message:** {settings.guesser_message}")
         embed.set_author(name=f"{ctx.guild.name}", icon_url=ctx.guild.icon.url)
         embed.set_footer(text='Guesser Game Settings')
 
