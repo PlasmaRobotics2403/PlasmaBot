@@ -40,7 +40,7 @@ class Guesser(PlasmaCog):
             await ctx.send('You are already in the Guesser Channel', ephemeral=True)
             return
 
-        await ctx.author.add_roles(role, reason="Guesser Guess Added")
+        await ctx.author.add_roles(role, reason="Guesser Access")
 
         embed = discord.Embed(description=f"**{ctx.author.mention}** has been added to the Guesser Channel")
         embed.set_author(name=f"{ctx.author}", icon_url=ctx.author.display_avatar.url)
@@ -198,7 +198,7 @@ class Guesser(PlasmaCog):
         if not role:
             return
         
-        if role not in message.author.roles:
+        if role in message.author.roles:
             await message.delete()
             return
         
