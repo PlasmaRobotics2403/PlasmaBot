@@ -5,6 +5,7 @@ import time
 import signal
 import subprocess
 import traceback
+import logging
 import importlib
 
 from utils.state import BotState, get_state, update_state, FatalException
@@ -88,6 +89,9 @@ def startup():
         print('\nNo Supported Version Found...')
         print('Please restart PlasmaBot using Python3.12 or greater.')
         return
+    
+    # Setup Container Loggin (Podman / Docker)
+    logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 
     # Check for Requirements and load Interface
     try:
@@ -130,14 +134,16 @@ def startup():
                 if client:
                     asyncio.create_task(client.shutdown) # Shutdown
             
-            except (SyntaxError):
+            except (SyntaxError) as err:
+                logging.error(str(err)) # Log to Container Logs
                 last_traceback_type = 'Syntax Error'
                 last_traceback_content = traceback.format_exc()
 
-            except ImportError as import_error:
+            except ImportError as err:
+                logging.error(str(err)) # Log to Container Logs
                 terminal.update_renderable(
                     Popup(
-                        'Please resolve the following missing dependency:\n[red]{}[/red]'.format(import_error)+
+                        'Please resolve the following missing dependency:\n[red]{}[/red]'.format(err)+
                         '\n\n[italic]Press any key to continue...[/italic]',
                         title='[red]Missing Dependency[/red]'
                     )
@@ -146,11 +152,13 @@ def startup():
                 return
                 
             except FatalException as err: # Fatal Error - display error and quit
+                logging.error(str(err)) # Log to Container Logs
                 terminal.update_renderable(Popup(err.message(), title='[red]{}[/red]'.format(err.title())))
                 press_continue() # Wait for user input
                 return
             
-            except:
+            except Exception as err:
+                logging.error(str(err)) # Log to Container Logs
                 last_traceback_type = 'Uncaught Exception'
                 last_traceback_content = traceback.format_exc()
 
@@ -168,7 +176,8 @@ def startup():
 
                         asyncio.gather(*scheduled_tasks)
                         asyncio.get_event_loop().stop()
-                except:
+                except Exception as err:
+                    logging.error(str(err)) # Log to Container Logs
                     terminal.update_renderable(
                         Popup(
                             f'[red]{traceback.format_exc()}[/red]',
@@ -183,7 +192,8 @@ def startup():
                 loop = asyncio.get_event_loop()
                 for s in (signal.SIGQUIT, signal.SIGTERM, signal.SIGINT):
                     loop.remove_signal_handler(s)
-            except:
+            except Exception as err:
+                logging.error(str(err)) # Log to Container Logs
                 pass
 
             try: # Handle graceful shutdown during restart process
