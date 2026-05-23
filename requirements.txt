@@ -6,8 +6,8 @@ packaging>=20.9
 readchar>=4.0.5
 fuzzywuzzy>=0.18.0
 python-Levenshtein==0.23.0
-peewee>=3.17.0
-peewee-async[mysql]>=1.0.0
+peewee<4
+peewee-async[mysql]<=2
 mysqlclient>=2.2.1
 matplotlib>=3.8.4
 aiotba>=0.0.3.post2
